@@ -4,7 +4,6 @@ import type {
   CreateProjectResponse,
 } from "@/dto/createProjectDto";
 import { clientFetch } from "@/lib/client-api";
-// import { nestGet } from "@/lib/server-api";
 import { ProjectListItem } from "@/dto/projectDto";
 
 export async function getCalendarEvents(): Promise<GetCalenderEventRespond[]> {
@@ -72,3 +71,4 @@ export async function getProjects(params: {
 
   return r.data ?? [];
 }
+

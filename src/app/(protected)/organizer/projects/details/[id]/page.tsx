@@ -34,7 +34,7 @@ import { Th } from "@/components/approve/Helper";
 
 type Project = {
   id: string;
-
+  budgetPlanStatus:string;
   status: "draft" | "in_progress" | "on_hold" | "done";
   progress: number;
   updatedAt: string;
@@ -205,7 +205,7 @@ async function getProject(id: string): Promise<Project | null> {
       status: "in_progress",
       progress: 0,
       updatedAt: apiData.updated_at,
-
+      budgetPlanStatus: apiData.budget_plan_status,
       generalInfo,
       strategy,
       duration,
@@ -312,7 +312,7 @@ export default async function Page({ params }: { params: PageParams }) {
             ความคืบหน้า
           </span>
           <span className="text-sm font-semibold text-gray-900 tabular-nums">
-            {p.progress}%
+            {p.budgetPlanStatus}
           </span>
         </div>
         <div className="mt-3">

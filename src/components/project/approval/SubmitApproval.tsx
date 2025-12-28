@@ -1,15 +1,17 @@
 "use client";
+import { submitBudgetPlan } from "@/api/approval.client";
 import ConfirmSubmitPopup from "@/components/popup/ConfirmPopup";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 type Props = {
-  projectId: string;
+  budgetPlanId: string;
   projectName: string;
 };
 
 export default function SubmitApprovalClient({
-  projectId,
+  budgetPlanId,
   projectName,
 }: Props) {
   const router = useRouter();
@@ -20,18 +22,29 @@ export default function SubmitApprovalClient({
   const handleConfirm = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      await new Promise((r) => setTimeout(r, 1000));
+      const res = await submitBudgetPlan(budgetPlanId);
+
+      console.log("Submit approval success", {
+        budgetPlanId: budgetPlanId,
+        response: res,
+      });
 
       setOpen(false);
-      router.back();
+      toast.success("ส่งอนุมัติสำเร็จ");
+      router.push("/success-screen");
     } catch (e) {
+       console.error(" Submit approval failed", {
+      budgetPlanId: budgetPlanId,
+      error: e,
+    });
+
       setError("ไม่สามารถส่งอนุมัติได้ กรุณาลองใหม่");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <>
       {error && (
@@ -43,7 +56,7 @@ export default function SubmitApprovalClient({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <button
           type="button"
-          onClick={() => history.back()}
+          onClick={() => router.back()}
           disabled={loading}
           className="rounded-lg bg-gray-200 hover:bg-gray-400 hover:text-white px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-60"
         >

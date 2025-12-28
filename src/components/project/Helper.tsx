@@ -75,6 +75,7 @@ export function StatusBadge({ status }: { status: Project["status"] }) {
     </span>
   );
 }
+
 export function ProgressBar({
   value,
   status,

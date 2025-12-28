@@ -31,6 +31,8 @@ import { cookies } from "next/headers";
 import { fetchProjectInformationServer } from "@/api/project.server";
 import BackGroundLight from "@/components/background/bg-light";
 import { Td, Th } from "@/components/approve/Helper";
+import { checkApprovalPermissionServer } from "@/api/approval.server";
+import { ArrowRight, FileClock } from "lucide-react";
 
 type Project = {
   id: string;
@@ -38,7 +40,7 @@ type Project = {
   status: "draft" | "in_progress" | "on_hold" | "done";
   progress: number;
   updatedAt: string;
-
+  budgetPlanId: string;
   generalInfo: GeneralInfoParams;
   strategy: StrategyParams;
   duration: DateDurationValue;
@@ -53,8 +55,8 @@ type Project = {
 
 async function getProject(id: string): Promise<Project | null> {
   try {
-    const cookieStore = cookies();
-    const accessToken = (await cookieStore).get("api_token")?.value;
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("api_token")?.value;
 
     if (!accessToken) {
       console.error("getProject: no api_token in server cookies");
@@ -194,7 +196,7 @@ async function getProject(id: string): Promise<Project | null> {
       status: "in_progress",
       progress: 0,
       updatedAt: apiData.updated_at,
-
+      budgetPlanId: (apiData as any).budget_plan_id ?? id,
       generalInfo,
       strategy,
       duration,
@@ -238,7 +240,15 @@ export default async function Page({ params }: { params: PageParams }) {
       </main>
     );
   }
+  const budgetPlanId = p.budgetPlanId;
+  let canApprove = false;
 
+  try {
+    canApprove = await checkApprovalPermissionServer(budgetPlanId);
+  } catch (e) {
+    console.error("checkApprovalPermissionServer error:", e);
+    canApprove = false;
+  }
   const {
     generalInfo,
     strategy,
@@ -257,7 +267,14 @@ export default async function Page({ params }: { params: PageParams }) {
         <main className="lg:max-w-5/6 py-4 lg:px-0 px3 w-full">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <Link
+                href="/organizer/approve/"
+                className="rounded-md  bg-gray-200 hover:bg-gray-400 hover:text-white px-4 py-2 text-sm font-medium
+           text-slate-700  disabled:opacity-60"
+              >
+                กลับ
+              </Link>
+              <h1 className="text-2xl mt-5 font-bold text-gray-900">
                 ชื่อโครงการ : {generalInfo?.name || "ไม่ระบุชื่อโครงการ"}
               </h1>
 
@@ -272,13 +289,17 @@ export default async function Page({ params }: { params: PageParams }) {
                 </span>
               </div>
             </div>
-            <Link
-              href="/organizer/approve/"
-              className="rounded-md  bg-gray-200 hover:bg-gray-400 hover:text-white px-4 py-2 text-sm font-medium
-           text-slate-700  disabled:opacity-60"
-            >
-              กลับ
-            </Link>
+
+            {canApprove ? (
+              <Link
+                href={`/organizer/approve/${id}/approve`}
+                className="rounded-md flex justify-center items-center gap-4 bg-indigo-600 hover:bg-indigo-900 px-4 py-2 text-sm font-semibold text-white"
+              >
+                <FileClock className="h-5 w-5 text-white " />
+                อนุมัติโครงการ
+                <ArrowRight className="text-white h-5 w-5" />
+              </Link>
+            ) : null}
           </div>
           <section className="mb-8 rounded-md border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
@@ -450,7 +471,6 @@ export default async function Page({ params }: { params: PageParams }) {
             )}
           </Section>
 
-          {/* Activities */}
           <Section title="ขั้นตอนการดำเนินงานกิจกรรม">
             {!activities?.length ? (
               <EmptyRow>ยังไม่มีการบันทึกกิจกรรม</EmptyRow>

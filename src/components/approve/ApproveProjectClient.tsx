@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import RejectConfirmPopup from "../popup/RejectConfirmPopup";
 import ReturnProjectPopup from "../popup/ReturnProjectPopup";
+import { processApprovalAction } from "@/api/approval.client";
+import ConfirmSubmitPopup from "../popup/ConfirmPopup";
 
 type Props = {
   projectId: string;
@@ -19,14 +21,42 @@ export default function ApproveProjectClient({
   const [openReject, setOpenReject] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openReturn, setOpenReturn] = useState(false);
+  const [openApprove, setOpenApprove] = useState(false);
+
+  const handleApproveConfirm = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await processApprovalAction({
+        action: "approve",
+        budget_plan_id: projectId,
+        comments: "อนุมัติโครงการ",
+      });
+
+      setOpenApprove(false);
+      router.back();
+      router.refresh();
+    } catch (e: any) {
+      setError(e?.message ?? "ไม่สามารถอนุมัติโครงการได้");
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleReturnConfirm = async (reason?: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      await new Promise((r) => setTimeout(r, 1000));
+      await processApprovalAction({
+        action: "request_revision",
+        budget_plan_id: projectId,
+        comments: reason?.trim() || "ขอให้แก้ไขเพิ่มเติม",
+      });
+
       setOpenReturn(false);
       router.back();
+      router.refresh();
     } catch (e: any) {
       setError(e?.message ?? "ไม่สามารถส่งกลับโปรเจ็คได้");
     } finally {
@@ -39,9 +69,16 @@ export default function ApproveProjectClient({
     setError(null);
 
     try {
-      await new Promise((r) => setTimeout(r, 1000));
+      await processApprovalAction({
+        action: "reject",
+        budget_plan_id: projectId,
+        rejection_reason: reason?.trim() || "ไม่อนุมัติ",
+        comments: reason?.trim(),
+      });
+
       setOpenReject(false);
       router.back();
+      router.refresh();
     } catch (e: any) {
       setError(e?.message ?? "ไม่สามารถทำรายการได้");
     } finally {
@@ -86,7 +123,7 @@ export default function ApproveProjectClient({
         </button>
         <button
           type="button"
-          //   onClick={onApprove}
+          onClick={() => setOpenApprove(true)}
           disabled={loading}
           className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
         >
@@ -105,6 +142,17 @@ export default function ApproveProjectClient({
         loading={loading}
         onCancel={() => setOpenReject(false)}
         onConfirm={handleRejectConfirm}
+      />
+      <ConfirmSubmitPopup
+        open={openApprove}
+        loading={loading}
+        title="ยืนยันการอนุมัติโครงการ"
+        description={`คุณต้องการอนุมัติโครงการ "${projectName}" ใช่หรือไม่`}
+        warning="* เมื่ออนุมัติแล้ว จะไม่สามารถแก้ไขข้อมูลได้"
+        confirmLabel="ยืนยันอนุมัติ"
+        cancelLabel="ยกเลิก"
+        onCancel={() => setOpenApprove(false)}
+        onConfirm={handleApproveConfirm}
       />
     </div>
   );

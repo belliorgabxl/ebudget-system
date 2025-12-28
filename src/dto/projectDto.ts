@@ -147,9 +147,9 @@ export interface ProjectInformationResponse {
 
   objective_type: "objective" | "expectation" | string;
   objective_description: string;
-
+  budget_plan_status:string;
   department_name: string;
-
+  budget_plan_id: string;
   budget_source: "revenue" | "school" | "external" | "externalAgency" | string;
   budget_amount: number;
 

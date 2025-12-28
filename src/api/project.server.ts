@@ -1,3 +1,7 @@
+import {
+  PendingApprovalsEnvelope,
+  PendingApprovalsParams,
+} from "@/dto/approveDto";
 import type {
   ProjectInformationResponse,
   ProjectListItem,
@@ -81,4 +85,53 @@ export async function getProjectsServer(
   }
 
   return [];
+}
+
+export async function getPendingApprovalsServer(
+  sp: PendingApprovalsParams
+): Promise<PendingApprovalsEnvelope> {
+  const params = new URLSearchParams();
+
+  if (sp.q?.trim()) params.set("q", sp.q.trim());
+  if (sp.code?.trim()) params.set("code", sp.code.trim());
+  if (sp.plan_type?.trim()) params.set("plan_type", sp.plan_type.trim());
+
+  params.set("page", String(Number(sp.page ?? "1") || 1));
+  params.set("limit", String(Number(sp.limit ?? "10") || 10));
+
+  const qs = params.toString();
+  const r = await nestGet<PendingApprovalsEnvelope>(
+    `/projects/pending-approvals${qs ? `?${qs}` : ""}`
+  );
+
+  if (!r.success) {
+    console.error("[getPendingApprovalsServer] failed", { message: r.message });
+    return {
+      data: [],
+      total: 0,
+      pagination: {
+        page: 1,
+        limit: Number(sp.limit ?? "10") || 10,
+        total: 0,
+        total_pages: 1,
+        has_next: false,
+        has_prev: false,
+      },
+    };
+  }
+
+  return (
+    r.data ?? {
+      data: [],
+      total: 0,
+      pagination: {
+        page: 1,
+        limit: Number(sp.limit ?? "10") || 10,
+        total: 0,
+        total_pages: 1,
+        has_next: false,
+        has_prev: false,
+      },
+    }
+  );
 }

@@ -31,7 +31,7 @@ export default async function Page({ params }: { params: PageParams }) {
               href="/organizer/projects/my-project"
               className="text-indigo-600 hover:underline"
             >
-              ← กลับไปยัง My Project
+              กลับไปยัง My Project
             </Link>
           </div>
         </div>
@@ -80,7 +80,10 @@ export default async function Page({ params }: { params: PageParams }) {
             </div>
 
             <div className="mt-6 border-t border-gray-300 pt-5">
-              <SubmitApprovalClient projectId={projectId} projectName={name} />
+              <SubmitApprovalClient
+                budgetPlanId={project.budget_plan_id}
+                projectName={name}
+              />
             </div>
           </div>
         </main>
