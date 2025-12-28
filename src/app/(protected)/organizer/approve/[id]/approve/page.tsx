@@ -124,7 +124,7 @@ export default async function ProjectApprovePage({
           </div>
 
           <div className="border-t border-gray-300 pt-5">
-            <ApproveProjectClient projectId={projectId} projectName={name} />
+            <ApproveProjectClient projectId={p.budget_plan_id} projectName={name} />
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import RejectConfirmPopup from "../popup/RejectConfirmPopup";
 import ReturnProjectPopup from "../popup/ReturnProjectPopup";
 import { processApprovalAction } from "@/api/approval.client";
 import ConfirmSubmitPopup from "../popup/ConfirmPopup";
+import { toast } from "react-toastify";
 
 type Props = {
   projectId: string;
@@ -35,10 +36,12 @@ export default function ApproveProjectClient({
       });
 
       setOpenApprove(false);
-      router.back();
-      router.refresh();
+      toast.success("อนุมัติสำเร็จ")
+      router.push("/success-screen")
     } catch (e: any) {
       setError(e?.message ?? "ไม่สามารถอนุมัติโครงการได้");
+      toast.error("อนุมัติไม่สำเร็จ")
+      router.push("/failed-screen")
     } finally {
       setLoading(false);
     }
