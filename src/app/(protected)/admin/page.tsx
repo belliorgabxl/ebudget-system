@@ -5,9 +5,7 @@ import { FilterBar } from "@/components/dashboard/FilterBar"
 import { KpiCards } from "@/components/dashboard/KpiCards"
 import { ChartsSection } from "@/components/dashboard/ChartsSection"
 import { MiniTimeline } from "@/components/dashboard/MiniTimeline"
-import { ApprovalQueue } from "@/components/dashboard/ApprovalQueue"
-import { StrategyQaSection } from "@/components/dashboard/StrategyQaSection"
-import { ProjectsTable } from "@/components/dashboard/ProjectsTable"
+
 import { FooterToolbar } from "@/components/dashboard/FooterToolbar"
 import {
     MOCK_APPROVALS,

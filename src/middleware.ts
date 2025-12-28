@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { pickHomeByRole } from "@/lib/rbac";
 
-const PUBLIC_EXACT = new Set(["/", "/login", "/forgot-password", "/403"]);
+const PUBLIC_EXACT = new Set([
+  "/",
+  "/login",
+  "/forgot-password",
+  "/403",
+  "/auth/refresh",
+]);
 const PUBLIC_PREFIXES: string[] = [];
 
 const secret = process.env.JWT_SECRET;
@@ -23,7 +29,7 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get("auth_token")?.value ?? null;
 
   if (isPublicPath(pathname)) {
-    if (pathname !== "/403" && token) {
+    if (pathname !== "/403" && pathname !== "/auth/refresh" && token) {
       try {
         const { payload } = await jwtVerify(token, JWT_SECRET);
         const role = typeof payload.role === "string" ? payload.role : "";
@@ -46,28 +52,13 @@ export async function middleware(request: NextRequest) {
   try {
     ({ payload } = await jwtVerify(token, JWT_SECRET));
   } catch (err) {
-    try {
-      const refreshRes = await fetch(new URL("/api/auth/refresh", request.url).toString(), {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        credentials: "include",
-      });
-      if (refreshRes.ok) {
-        return NextResponse.next();
-      } else {
-        const res = NextResponse.redirect(new URL("/login", request.url));
-        res.cookies.delete("auth_token");
-        res.cookies.delete("api_token");
-        res.cookies.delete("refresh_token");
-        return res;
-      }
-    } catch {
-      const res = NextResponse.redirect(new URL("/login", request.url));
-      res.cookies.delete("auth_token");
-      res.cookies.delete("api_token");
-      res.cookies.delete("refresh_token");
-      return res;
-    }
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname + (search || ""));
+
+    const res = NextResponse.redirect(loginUrl);
+
+    res.cookies.delete("auth_token");
+    res.cookies.delete("api_token");
   }
 
   const role = payload.role;

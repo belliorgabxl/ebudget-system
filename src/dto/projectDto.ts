@@ -53,7 +53,7 @@ export type BudgetRow = {
 };
 
 export type FundingSources = {
-  source:string;
+  source: string;
   externalAgency: string;
 };
 
@@ -103,13 +103,14 @@ export type ActivitiesRow = {
   endDate: string;
   owner: string;
 };
-// kpi component part
+
+
 export type KPIParams = {
   output: string;
   outcome: string;
 };
 
-// expect part
+
 export type ExpectItem = {
   description: string;
   type: string;
@@ -127,38 +128,89 @@ export type ObjectiveParams = {
 
 export interface ProjectInformationResponse {
   project_name: string;
-  plane_type: string;
+  plan_type: string;
+  project_code: string;
+
   rationale: string;
   location: string;
+
   quantitative_goal: string;
   qualitative_goal: string;
+
   created_at: string;
   updated_at: string;
+
+  start_date: string;
+  end_date: string;
+
+  owner_user: string;
+
+  objective_type: "objective" | "expectation" | string;
+  objective_description: string;
+
   department_name: string;
-  budget_source: string;
+
+  budget_source: "revenue" | "school" | "external" | "externalAgency" | string;
   budget_amount: number;
-  budget_source_department: string;
-  budget_items: {
-    id: number;
-    budget_plan_id: string;
-    name: string;
-    amount: number;
-    remark: string;
-    created_at: string;
-    updated_at: string;
-  }[];
-  progress: {
-    id: number;
-    project_id: string;
-    start_date: string | null;
-    end_date: string | null;
-    sequence_number: number;
-    description: string;
-    responsible_name: string;
-    remarks: string;
-    updated_by: string | null;
-    updated_at: string;
-  }[];
+
+  budget_source_department?: string;
+
+  budget_items: BudgetItem[];
+
+  progress: ProjectProgress[];
+
+  project_kpis: ProjectKPI[];
+
+  project_evaluation: ProjectEvaluation[];
+
+  project_objectives_and_outcomes: ProjectObjectiveOrOutcome[];
+}
+
+export interface BudgetItem {
+  id: number;
+  budget_plan_id: string;
+  name: string;
+  amount: number;
+  remark: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectProgress {
+  id: number;
+  project_id: string;
+  start_date: string | null;
+  end_date: string | null;
+  sequence_number: number;
+  description: string;
+  responsible_name: string;
+  remarks: string;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+export interface ProjectKPI {
+  id: number;
+  indicator: string;
+  target_value: number | string | null;
+  description: string;
+}
+
+export interface ProjectEvaluation {
+  id: number;
+  evaluator_user_id: string;
+  created_at: string;
+  updated_at: string;
+  estimate_type: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface ProjectObjectiveOrOutcome {
+  id: number;
+  project_id: string;
+  type: "objective" | "expectation" | string;
+  description: string;
 }
 
 export type EditFormState = {
@@ -175,7 +227,6 @@ export type EditFormState = {
   approve: ApproveParams;
 };
 
-
 export type DateError =
   | "MISSING_START"
   | "MISSING_END"
@@ -184,4 +235,14 @@ export type DateError =
   | "START_AFTER_END"
   | "START_EQUALS_END";
 
- export type ValidationIssue = { field: string; message: string };
+export type ValidationIssue = { field: string; message: string };
+
+export type ProjectListItem = {
+  id: string;
+  name: string;
+  type?: string;
+  department?: string;
+  owner?: string;
+  status?: string;
+  updatedAt?: string;
+};

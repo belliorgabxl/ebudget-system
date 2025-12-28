@@ -1,0 +1,67 @@
+"use client";
+
+import { useState } from "react";
+
+type Props = {
+  open: boolean;
+  loading?: boolean;
+  onCancel: () => void;
+  onConfirm: (reason: string) => void;
+};
+
+export default function RejectConfirmPopup({
+  open,
+  loading = false,
+  onCancel,
+  onConfirm,
+}: Props) {
+  const [reason, setReason] = useState("");
+
+  if (!open) return null;
+
+  const canSubmit = reason.trim().length > 0 && !loading;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+
+      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-gray-900">
+          ยืนยันการไม่อนุมัติ
+        </h2>
+
+        <p className="mt-2 text-sm text-gray-600">
+          กรุณาระบุเหตุผลในการไม่อนุมัติโครงการ
+        </p>
+
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={4}
+          className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring"
+          placeholder="ระบุเหตุผล..."
+        />
+
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+          >
+            ยกเลิก
+          </button>
+
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={() => onConfirm(reason.trim())}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {loading ? "กำลังส่ง..." : "ยืนยันไม่อนุมัติ"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

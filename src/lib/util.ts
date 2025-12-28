@@ -60,3 +60,40 @@ export function pushIfEmpty(
 ) {
   if (!value || value.trim() === "") issues.push({ field, message });
 }
+
+export function toThaiDate(iso?: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+}
+
+export function mapStatusToIsActive(status?: string): string | undefined {
+  if (!status) return undefined;
+  switch (status) {
+    case "APPROVED":
+    case "PENDING_APPROVE":
+      return "true";
+    default:
+      return undefined;
+  }
+}
+
+export function buildPageHref(sp: any, nextPage: number) {
+  const qs = new URLSearchParams();
+
+
+  if (sp.q) qs.set("q", String(sp.q));
+  if (sp.code) qs.set("code", String(sp.code));
+  if (sp.plan_type) qs.set("plan_type", String(sp.plan_type));
+  if (sp.is_active) qs.set("is_active", String(sp.is_active));
+  if (sp.department_id) qs.set("department_id", String(sp.department_id));
+  if (sp.start_date) qs.set("start_date", String(sp.start_date));
+
+  qs.set("page", String(nextPage));
+  return `?${qs.toString()}`;
+}

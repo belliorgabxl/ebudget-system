@@ -11,6 +11,14 @@ export async function clientFetch<T>(
       ...init,
       headers: { Accept: "application/json", ...(init?.headers ?? {}) },
     });
+
+    if (res.status === 401) {
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      return { success: false, message: "Unauthenticated" } as any;
+    }
+    
     const json = await res.json().catch(() => null);
 
     if (!res.ok) {
@@ -21,7 +29,6 @@ export async function clientFetch<T>(
     return { success: false, message: e?.message ?? "Network error" };
   }
 }
-
 
 export async function clientFetchArray<T>(
   path: string,
@@ -37,7 +44,7 @@ export async function clientFetchArray<T>(
     if (!res.ok) {
       return { success: false, message: json?.message ?? `HTTP ${res.status}` };
     }
-    return { success: true, data: json};
+    return { success: true, data: json };
   } catch (e: any) {
     return { success: false, message: e?.message ?? "Network error" };
   }

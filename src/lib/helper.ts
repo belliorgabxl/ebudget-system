@@ -31,7 +31,7 @@ export function mapApiToForm(
 ): EditFormState {
   const generalInfo: GeneralInfoParams = {
     name: apiData.project_name,
-    type: apiData.plane_type || "",
+    type: apiData.plan_type || "",
     department: apiData.department_name || "",
     owner_user_id: "",
   } as any;

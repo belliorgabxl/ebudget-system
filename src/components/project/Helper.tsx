@@ -1,4 +1,5 @@
-import {  Project, TdProps } from "@/dto/projectDto";
+import { BudgetTableValue, Project, TdProps } from "@/dto/projectDto";
+import Image from "next/image";
 
 export function Section({
   title,
@@ -206,3 +207,78 @@ export function FieldBlock({
   );
 }
 
+export function dateOrDash(iso?: string) {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("th-TH", { dateStyle: "medium" });
+  } catch {
+    return "—";
+  }
+}
+
+export function numOrDash(n?: number) {
+  return typeof n === "number" && Number.isFinite(n) ? String(n) : "—";
+}
+
+export function moneyOrDash(amount: string) {
+  const n = parseFloat(amount);
+  return Number.isFinite(n)
+    ? n.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    : "—";
+}
+
+export function RichOrDash({ text }: { text?: string }) {
+  if (!text || !text.trim()) return <span>—</span>;
+  return <p className="text-sm text-gray-800 whitespace-pre-line">{text}</p>;
+}
+
+export function BudgetSources({
+  sources,
+}: {
+  sources: BudgetTableValue["sources"];
+}) {
+  if (!sources || !sources.source) return <span>—</span>;
+
+  let label = "";
+  switch (sources.source) {
+    case "school":
+      label = "งบสถานศึกษา";
+      break;
+    case "revenue":
+      label = "เงินรายได้";
+      break;
+    case "external":
+      label = sources.externalAgency?.trim()
+        ? `ภายนอก (${sources.externalAgency.trim()})`
+        : "ภายนอก";
+      break;
+    default:
+      label = sources.source;
+  }
+
+  return (
+    <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[11px]">
+      {label}
+    </span>
+  );
+}
+
+export function ProjectIcon() {
+  return (
+    <div className="flex items-center gap-3">
+      <Image
+        src={"/ebudget-icon.png"}
+        className="h-18 w-18"
+        height={200}
+        width={200}
+        alt="icon-ebudget"
+      />
+      <h1>Ebudget-System</h1>
+    </div>
+  );
+}

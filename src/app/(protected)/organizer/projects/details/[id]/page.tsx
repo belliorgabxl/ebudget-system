@@ -8,6 +8,12 @@ import {
   Field,
   Grid2,
   EmptyRow,
+  Td,
+  numOrDash,
+  dateOrDash,
+  RichOrDash,
+  BudgetSources,
+  moneyOrDash,
 } from "@/components/project/Helper";
 import type {
   ActivitiesRow,
@@ -24,6 +30,7 @@ import type {
 } from "@/dto/projectDto";
 import { cookies } from "next/headers";
 import { fetchProjectInformationServer } from "@/api/project.server";
+import { Th } from "@/components/approve/Helper";
 
 type Project = {
   id: string;
@@ -54,15 +61,14 @@ async function getProject(id: string): Promise<Project | null> {
       return null;
     }
 
-    const apiData: ProjectInformationResponse = await fetchProjectInformationServer(
-      id
-    );
+    const apiData: ProjectInformationResponse =
+      await fetchProjectInformationServer(id);
 
     const generalInfo: GeneralInfoParams = {
-      name: apiData.project_name,
-      type: apiData.plane_type || "",
+      name: apiData.project_name || "",
+      type: (apiData as any).plan_type || "",
       department: apiData.department_name || "",
-      owner_user_id: "",
+      owner_user_id: (apiData as any).owner_user || "",
     } as any;
 
     const goal: GoalParams = {
@@ -70,84 +76,120 @@ async function getProject(id: string): Promise<Project | null> {
       qualityGoal: apiData.qualitative_goal || "",
     };
 
-    let startDate = "";
-    let endDate = "";
+    const startDate = (apiData as any).start_date || "";
+    const endDate = (apiData as any).end_date || "";
 
-    if (apiData.progress && apiData.progress.length > 0) {
-      const startList = apiData.progress
-        .map((p) => p.start_date)
-        .filter((d): d is string => !!d);
-      const endList = apiData.progress
-        .map((p) => p.end_date)
-        .filter((d): d is string => !!d);
-
-      if (startList.length) {
-        startDate = startList.sort()[0]!;
-      }
-      if (endList.length) {
-        endDate = endList.sort()[endList.length - 1]!;
+    let durationMonths = 0;
+    if (startDate && endDate) {
+      const s = new Date(startDate);
+      const e = new Date(endDate);
+      if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime())) {
+        const m =
+          (e.getFullYear() - s.getFullYear()) * 12 +
+          (e.getMonth() - s.getMonth());
+        durationMonths = Math.max(0, m);
       }
     }
 
     const duration: DateDurationValue = {
       startDate,
       endDate,
-      durationMonths: 0,
+      durationMonths,
     };
+
     let budget: BudgetTableValue | null = null;
 
-    if (apiData.budget_items && apiData.budget_items.length > 0) {
-      const rows = apiData.budget_items.map((b, idx) => ({
-        id: idx + 1,
-        item: b.name || "",
-        amount: String(b.amount ?? 0),
-        note: b.remark || "",
-      }));
+    const budgetItems = apiData.budget_items ?? [];
+    const rows = budgetItems.map((b, idx) => ({
+      id: idx + 1,
+      item: b.name || "",
+      amount: String(b.amount ?? 0),
+      note: b.remark || "",
+    }));
 
+    const budgetTotal =
+      typeof apiData.budget_amount === "number"
+        ? apiData.budget_amount
+        : rows.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+
+    if (rows.length > 0 || typeof apiData.budget_amount === "number") {
       budget = {
         rows,
-        total:
-          typeof apiData.budget_amount === "number"
-            ? apiData.budget_amount
-            : rows.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0),
+        total: budgetTotal,
         sources: {
           source: apiData.budget_source || "",
-          externalAgency: apiData.budget_source_department || "",
+          externalAgency: (apiData as any).budget_source_department || "",
         },
-      };
+      } as any;
     }
 
     const activities: ActivitiesRow[] = (apiData.progress || []).map(
-      (p, idx) =>
-        ({
-          id: p.sequence_number || idx + 1,
-          activity: p.description || "",
-          startDate: p.start_date || "",
-          endDate: p.end_date || "",
-          owner: p.responsible_name || "",
-        } as ActivitiesRow)
-    );
+      (p, idx) => ({
+        id: p.sequence_number || idx + 1,
+        activity: p.description || "",
+        startDate: p.start_date || "",
+        endDate: p.end_date || "",
+        owner: p.responsible_name || "",
+      })
+    ) as any;
 
     const strategy: StrategyParams = {
       schoolPlan: "",
       ovEcPolicy: "",
       qaIndicator: "",
     };
+    const kpis = (apiData as any).project_kpis ?? [];
+    const kpiText = Array.isArray(kpis)
+      ? kpis
+          .map((k: any) => {
+            const ind = (k?.indicator ?? "").trim();
+            const desc = (k?.description ?? "").trim();
+            const target =
+              k?.target_value !== null && k?.target_value !== undefined
+                ? String(k.target_value).trim()
+                : "";
+            if (!ind && !desc) return "";
+            const t = target ? ` (เป้า: ${target})` : "";
+            return `• ${ind || desc}${t}${
+              desc && ind ? ` — ${desc}` : ""
+            }`.trim();
+          })
+          .filter(Boolean)
+          .join("\n")
+      : "";
 
     const kpi: KPIParams = {
-      output: "",
+      output: kpiText,
       outcome: "",
     };
 
+    const evals = (apiData as any).project_evaluation ?? [];
+    const latestEval =
+      Array.isArray(evals) && evals.length
+        ? [...evals].sort((a: any, b: any) =>
+            String(a?.updated_at ?? "").localeCompare(
+              String(b?.updated_at ?? "")
+            )
+          )[evals.length - 1]
+        : null;
+
     const estimate: EstimateParams = {
-      estimateType: "",
-      evaluator: "",
-      startDate: "",
-      endDate: "",
-    };
+      estimateType: latestEval?.estimate_type || "",
+      evaluator: latestEval?.evaluator_user_id || "",
+      startDate: latestEval?.start_date || "",
+      endDate: latestEval?.end_date || "",
+    } as any;
+
+    const oo = (apiData as any).project_objectives_and_outcomes ?? [];
+    const expectList = Array.isArray(oo)
+      ? oo
+          .filter((x: any) => x?.type === "expectation")
+          .map((x: any) => ({ description: String(x?.description ?? "") }))
+          .filter((x: any) => x.description.trim())
+      : [];
 
     const expect: ExpectParams = {
-      results: [],
+      results: expectList as any,
     };
 
     const approve: ApproveParams = {
@@ -182,6 +224,7 @@ async function getProject(id: string): Promise<Project | null> {
     return null;
   }
 }
+
 type PageParams = Promise<{ id: string }>;
 
 export default async function Page({ params }: { params: PageParams }) {
@@ -219,8 +262,6 @@ export default async function Page({ params }: { params: PageParams }) {
     approve,
     goal,
   } = p;
-  const mainResponsibleName =
-    activities.find((a) => a.owner && a.owner.trim())?.owner ?? "";
   return (
     <main className="lg:mx-10 lg:pl-16 px-4 py-8">
       <nav className="mb-4 text-xs text-gray-500">
@@ -378,8 +419,6 @@ export default async function Page({ params }: { params: PageParams }) {
           <span>—</span>
         )}
       </Section>
-
-      {/* Budget */}
       <Section title="งบประมาณ">
         {!budget ? (
           <EmptyRow>ยังไม่มีการบันทึกงบประมาณ</EmptyRow>
@@ -431,7 +470,6 @@ export default async function Page({ params }: { params: PageParams }) {
         )}
       </Section>
 
-      {/* Activities */}
       <Section title="ขั้นตอนการดำเนินงานกิจกรรม">
         {!activities?.length ? (
           <EmptyRow>ยังไม่มีการบันทึกกิจกรรม</EmptyRow>
@@ -467,7 +505,6 @@ export default async function Page({ params }: { params: PageParams }) {
         )}
       </Section>
 
-      {/* Approve */}
       <Section title="การอนุมัติและลงนาม">
         <Grid2>
           <Field label="ผู้เสนอ" value={approve?.proposerName || "—"} />
@@ -482,88 +519,5 @@ export default async function Page({ params }: { params: PageParams }) {
         </Grid2>
       </Section>
     </main>
-  );
-}
-
-function Th({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <th
-      className={`px-4 py-2 text-xs font-semibold text-gray-700 whitespace-nowrap ${className}`}
-    >
-      {children}
-    </th>
-  );
-}
-
-function Td({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <td className={className}>{children}</td>;
-}
-
-function dateOrDash(iso?: string) {
-  if (!iso) return "—";
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("th-TH", { dateStyle: "medium" });
-  } catch {
-    return "—";
-  }
-}
-
-function numOrDash(n?: number) {
-  return typeof n === "number" && Number.isFinite(n) ? String(n) : "—";
-}
-
-function moneyOrDash(amount: string) {
-  const n = parseFloat(amount);
-  return Number.isFinite(n)
-    ? n.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-    : "—";
-}
-
-function RichOrDash({ text }: { text?: string }) {
-  if (!text || !text.trim()) return <span>—</span>;
-  return <p className="text-sm text-gray-800 whitespace-pre-line">{text}</p>;
-}
-
-function BudgetSources({ sources }: { sources: BudgetTableValue["sources"] }) {
-  if (!sources || !sources.source) return <span>—</span>;
-
-  let label = "";
-  switch (sources.source) {
-    case "school":
-      label = "งบสถานศึกษา";
-      break;
-    case "revenue":
-      label = "เงินรายได้";
-      break;
-    case "external":
-      label = sources.externalAgency?.trim()
-        ? `ภายนอก (${sources.externalAgency.trim()})`
-        : "ภายนอก";
-      break;
-    default:
-      label = sources.source; // กันเคสอื่น ๆ ที่ backend ส่งมา
-  }
-
-  return (
-    <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[11px]">
-      {label}
-    </span>
   );
 }

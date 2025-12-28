@@ -1,4 +1,3 @@
-// lib/menu.ts
 import {
   LayoutDashboard,
   Building2,

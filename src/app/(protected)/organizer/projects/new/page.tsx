@@ -121,7 +121,6 @@ export default function CreateProjectPage() {
   });
 
   // location
-
   const [location, setLocation] = useState<string>("");
 
   const [objective, setObjective] = useState<ObjectiveParams>({
@@ -192,18 +191,7 @@ export default function CreateProjectPage() {
     setEstimate(v);
   }, []);
 
-  // approve part
-  // const [approve, setApprove] = useState<ApproveParams>({
-  //   proposerName: "",
-  //   proposerPosition: "",
-  //   proposeDate: "",
-  //   deptComment: "",
-  //   directorComment: "",
-  // });
-  // const handleApproveChange = useCallback((v: ApproveParams) => {
-  //   setApprove(v);
-  // }, []);
-
+  
   // goal part
   const [goal, setGoal] = useState<GoalParams>({
     quantityGoal: "",

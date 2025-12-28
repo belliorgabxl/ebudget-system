@@ -22,19 +22,26 @@ export async function POST(req: NextRequest) {
     const data: any = res?.data ?? {};
 
     const newExternalToken = data?.token || data?.access_token || data?.jwt;
-    const newRefreshToken = data?.refresh_token || refreshToken; // ถ้า backend หมุน refresh token คืนมา
+    const newRefreshToken = data?.refresh_token || refreshToken;
 
     const response = NextResponse.json({ success: true });
+
+    response.cookies.set("auth_token", newExternalToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      path: "/",
+      maxAge: 60 * 60,
+    });
+
     response.cookies.set("api_token", newExternalToken, {
       httpOnly: false,
       secure: isProd,
       sameSite: isProd ? "none" : "lax",
       path: "/",
-      // อาจจะ set same maxAge as access token
-      maxAge: 60 * 60, // 1 hour, ปรับตามจริง
+      maxAge: 60 * 60,
     });
 
-    // ถ้า backend ส่ง refresh_token ใหม่ ให้อัปเดต cookie ด้วย
     if (newRefreshToken) {
       response.cookies.set("refresh_token", newRefreshToken, {
         httpOnly: true,
@@ -45,7 +52,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-
     return response;
   } catch (err: any) {
     const redirectUrl = new URL("/login", req.url);
@@ -55,4 +61,28 @@ export async function POST(req: NextRequest) {
     resFail.cookies.set("refresh_token", "", { maxAge: 0, path: "/" });
     return resFail;
   }
+}
+
+export async function GET(req: NextRequest) {
+  const redirect = req.nextUrl.searchParams.get("redirect") || "/";
+
+  const apiRefreshUrl = new URL("/api/auth/refresh", req.url);
+
+  const r = await fetch(apiRefreshUrl.toString(), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "include",
+  });
+  if (!r.ok) {
+    const res = NextResponse.redirect(new URL("/login", req.url));
+    res.cookies.delete("auth_token");
+    res.cookies.delete("api_token");
+    res.cookies.delete("refresh_token");
+    return res;
+  }
+  const res = NextResponse.redirect(new URL(redirect, req.url));
+  const setCookie = r.headers.get("set-cookie");
+  if (setCookie) res.headers.append("set-cookie", setCookie);
+
+  return res;
 }
