@@ -48,7 +48,7 @@ export default function UserDashboardPage() {
     const fetchCounts = async () => {
       try {
         const data = await GetProjectsByOrgFromApi();
-        set_projects_data(data);
+        set_projects_data(data?.data ?? []);
       } catch (err) {}
     };
     fetchCounts();
