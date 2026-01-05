@@ -66,7 +66,7 @@ export const MENU: MenuItem[] = [
     href: "/organizer/approve",
     icon: FileCheck,
     label: "การอนุมัติ",
-    allow: ["hr", "planning", "director", "department_head"],
+    allow: ["director", "department_head", "planning", "hr"],
   },
   {
     id: "setup",

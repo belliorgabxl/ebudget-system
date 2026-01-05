@@ -38,7 +38,9 @@ export function pickHomeByRole(role?: string): string {
     case "department_user":
       return "/organizer/dashboard/user";
     case "planning":
+      return "/organizer/dashboard/user";
     case "department_head":
+      return "/organizer/dashboard/user";
     default:
       return "/login";
   }

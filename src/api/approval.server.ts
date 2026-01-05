@@ -18,6 +18,7 @@ export async function checkApprovalPermissionServer(budgetPlanId: string) {
     });
     throw new Error(r.message ?? "Failed to check permission");
   }
+  console.log(r)
   const canApprove = Boolean(r.data?.has_permission);
 
   return canApprove;

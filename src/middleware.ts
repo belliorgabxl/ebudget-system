@@ -73,7 +73,7 @@ export async function middleware(request: NextRequest) {
 
   if (
     pathStarts(pathname, "/organizer/dashboard/user") &&
-    role !== "department_user"
+    !["department_user", "planning", "department_head","director"].includes(role)
   ) {
     return forbid();
   }
@@ -87,12 +87,20 @@ export async function middleware(request: NextRequest) {
     return forbid();
   }
 
-  if (pathStarts(pathname, "/organizer/qa-coverage")) {
-    if (["department_user", "hr", "admin"].includes(role)) return forbid();
+  if (pathStarts(pathname, "/organizer/qa-coverage") && role !== "director") {
+    return forbid();
   }
 
   if (pathStarts(pathname, "/organizer/projects/my-project")) {
     if (["hr", "admin"].includes(role)) return forbid();
+  }
+
+  if (pathStarts(pathname, "/organizer/approve/")) {
+    if (["hr", "admin", "planning"].includes(role)) return forbid();
+  }
+
+  if (pathStarts(pathname, "/organizer/reports/")) {
+    if (["hr", "admin", "planning"].includes(role)) return forbid();
   }
 
   if (pathStarts(pathname, "/organizer/department")) {
