@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { pickHomeByRole } from "@/lib/rbac";
 
+function getLocalFromPath(pathname: string): string | null {
+  const seg = pathname.split("/")[1];
+  return seg || null;
+}
+
+function stripLocal(pathname: string, local: string | null): string {
+  if (!local) return pathname;
+  if (pathname === `/${local}`) return "/";
+  if (pathname.startsWith(`/${local}/`)) {
+    return pathname.slice(local.length + 1);
+  }
+  return pathname;
+}
+
+function withLocal(path: string, local: string | null): string {
+  if (!local) return path;
+  if (path === "/") return `/${local}`;
+  return `/${local}${path}`;
+}
+
 const PUBLIC_EXACT = new Set([
   "/",
   "/login",
@@ -9,6 +29,7 @@ const PUBLIC_EXACT = new Set([
   "/403",
   "/auth/refresh",
 ]);
+
 const PUBLIC_PREFIXES: string[] = [];
 
 const secret = process.env.JWT_SECRET;
@@ -17,7 +38,9 @@ const JWT_SECRET = new TextEncoder().encode(secret);
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_EXACT.has(pathname)) return true;
-  return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p + "/"));
+  return PUBLIC_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + "/")
+  );
 }
 
 function pathStarts(pathname: string, base: string) {
@@ -26,16 +49,20 @@ function pathStarts(pathname: string, base: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  const local = getLocalFromPath(pathname);
+  const logicalPath = stripLocal(pathname, local);
+
   const token = request.cookies.get("auth_token")?.value ?? null;
 
-  if (isPublicPath(pathname)) {
-    if (pathname !== "/403" && pathname !== "/auth/refresh" && token) {
+  if (isPublicPath(logicalPath)) {
+    if (logicalPath !== "/403" && logicalPath !== "/auth/refresh" && token) {
       try {
         const { payload } = await jwtVerify(token, JWT_SECRET);
         const role = typeof payload.role === "string" ? payload.role : "";
         if (role) {
-          const homeUrl = new URL(pickHomeByRole(role), request.url);
-          return NextResponse.redirect(homeUrl);
+          const home = withLocal(pickHomeByRole(role), local);
+          return NextResponse.redirect(new URL(home, request.url));
         }
       } catch {}
     }
@@ -43,73 +70,82 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!token) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname + (search || ""));
+    const loginUrl = new URL(withLocal("/login", local), request.url);
+    loginUrl.searchParams.set(
+      "redirect",
+      withLocal(logicalPath + (search || ""), local)
+    );
     return NextResponse.redirect(loginUrl);
   }
 
   let payload: any;
   try {
     ({ payload } = await jwtVerify(token, JWT_SECRET));
-  } catch (err) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname + (search || ""));
+  } catch {
+    const loginUrl = new URL(withLocal("/login", local), request.url);
+    loginUrl.searchParams.set(
+      "redirect",
+      withLocal(logicalPath + (search || ""), local)
+    );
 
     const res = NextResponse.redirect(loginUrl);
-
     res.cookies.delete("auth_token");
     res.cookies.delete("api_token");
+    res.cookies.delete("refresh_token");
+    return res;
   }
 
   const role = payload.role;
   if (!role) {
-    const res = NextResponse.redirect(new URL("/login", request.url));
+    const res = NextResponse.redirect(
+      new URL(withLocal("/login", local), request.url)
+    );
     res.cookies.delete("auth_token");
     res.cookies.delete("api_token");
+    res.cookies.delete("refresh_token");
     return res;
   }
 
-  const forbid = () => NextResponse.redirect(new URL("/403", request.url));
+  const forbid = () =>
+    NextResponse.redirect(new URL(withLocal("/403", local), request.url));
 
   if (
-    pathStarts(pathname, "/organizer/dashboard/user") &&
-    !["department_user", "planning", "department_head","director"].includes(role)
-  ) {
+    pathStarts(logicalPath, "/organizer/dashboard/user") &&
+    !["department_user", "planning", "department_head", "director"].includes(
+      role
+    )
+  )
     return forbid();
-  }
-  if (pathStarts(pathname, "/organizer/dashboard/hr") && role !== "hr") {
+
+  if (pathStarts(logicalPath, "/organizer/dashboard/hr") && role !== "hr")
     return forbid();
-  }
+
   if (
-    pathStarts(pathname, "/organizer/dashboard/director") &&
+    pathStarts(logicalPath, "/organizer/dashboard/director") &&
     role !== "director"
-  ) {
+  )
     return forbid();
-  }
 
-  if (pathStarts(pathname, "/organizer/qa-coverage") && role !== "director") {
+  if (pathStarts(logicalPath, "/organizer/qa-coverage") && role !== "director")
     return forbid();
-  }
 
-  if (pathStarts(pathname, "/organizer/projects/my-project")) {
+  if (pathStarts(logicalPath, "/organizer/projects/my-project")) {
     if (["hr", "admin"].includes(role)) return forbid();
   }
 
-  if (pathStarts(pathname, "/organizer/approve/")) {
+  if (pathStarts(logicalPath, "/organizer/approve/")) {
     if (["hr", "admin", "planning"].includes(role)) return forbid();
   }
 
-  if (pathStarts(pathname, "/organizer/reports/")) {
+  if (pathStarts(logicalPath, "/organizer/reports/")) {
     if (["hr", "admin", "planning"].includes(role)) return forbid();
   }
 
-  if (pathStarts(pathname, "/organizer/department")) {
+  if (pathStarts(logicalPath, "/organizer/department")) {
     if (!["hr", "admin"].includes(role)) return forbid();
   }
 
-  if (pathStarts(pathname, "/admin") && role !== "admin") {
-    return forbid();
-  }
+  if (pathStarts(logicalPath, "/admin") && role !== "admin") return forbid();
 
   const headers = new Headers(request.headers);
   if (payload.sub) headers.set("x-user-id", payload.sub);

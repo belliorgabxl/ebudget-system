@@ -1,30 +1,45 @@
 import { NextResponse } from "next/server";
-import { nestPost } from "@/lib/server-api";
+import { nestFetch } from "../_core/nest";
+import { ok, fail } from "../_core/response";
 import type {
   CreateProjectPayload,
   CreateProjectResponse,
 } from "@/dto/createProjectDto";
 
+// สมมติ Nest ตอบแบบเดิมของคุณ: { success: boolean; message?: string; data?: T }
+type NestEnvelope<T> = {
+  success: boolean;
+  message?: string;
+  data?: T;
+};
+
 export async function POST(req: Request) {
-  let payload: CreateProjectPayload | null = null;
+  let payload: CreateProjectPayload;
 
   try {
     payload = (await req.json()) as CreateProjectPayload;
   } catch {
-    return NextResponse.json(
-      { success: false, message: "Invalid JSON body" },
-      { status: 400 }
-    );
+    return NextResponse.json(fail("Invalid JSON body", "4000"));
   }
 
-  const r = await nestPost<CreateProjectResponse>("/projects/", payload);
-
-  if (!r.success) {
-    return NextResponse.json(
-      { success: false, message: r.message ?? "Create project failed" },
-      { status: 400 }
+  try {
+    const r = await nestFetch<NestEnvelope<CreateProjectResponse>>(
+      "/projects/",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
     );
-  }
 
-  return NextResponse.json({ success: true, data: r.data });
+    if (!r.ok || !r.data) {
+      return NextResponse.json(fail(r.text ?? "Create project failed"));
+    }
+
+    if (!r.data.success) {
+      return NextResponse.json(fail(r.data.message ?? "Create project failed"));
+    }
+    return NextResponse.json(ok(r.data.data ? [r.data.data] : []));
+  } catch (e: any) {
+    return NextResponse.json(fail(e?.message ?? "INTERNAL_ERROR"));
+  }
 }

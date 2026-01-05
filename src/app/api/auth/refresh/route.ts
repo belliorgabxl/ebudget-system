@@ -1,86 +1,123 @@
 import { NextRequest, NextResponse } from "next/server";
-import ApiClient from "@/lib/api-clients";
 
-export async function POST(req: NextRequest) {
-  const url = new URL(req.url);
+type RefreshResponse = {
+  token?: string;
+  access_token?: string;
+  jwt?: string;
+  refresh_token?: string;
+};
+
+function clearAuthCookies(res: NextResponse) {
+  res.cookies.set("auth_token", "", { maxAge: 0, path: "/" });
+  res.cookies.set("api_token", "", { maxAge: 0, path: "/" });
+  res.cookies.set("refresh_token", "", { maxAge: 0, path: "/" });
+}
+
+function setAuthCookies(res: NextResponse, args: { token: string; refreshToken?: string }) {
   const isProd = process.env.NODE_ENV === "production";
 
-  const refreshToken = req.cookies.get("refresh_token")?.value;
-  if (!refreshToken) {
-    const redirectUrl = new URL("/login", req.url);
-    return NextResponse.redirect(redirectUrl);
-  }
+  res.cookies.set("auth_token", args.token, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/",
+    maxAge: 60 * 60,
+  });
 
-  try {
-    const baseURL = process.env.API_BASE_URL || "";
-    const res = await ApiClient.post(
-      "/auth/refresh",
-      { refresh_token: refreshToken },
-      { baseURL, timeout: 10000 }
-    );
+  res.cookies.set("api_token", args.token, {
+    httpOnly: false,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/",
+    maxAge: 60 * 60,
+  });
 
-    const data: any = res?.data ?? {};
-
-    const newExternalToken = data?.token || data?.access_token || data?.jwt;
-    const newRefreshToken = data?.refresh_token || refreshToken;
-
-    const response = NextResponse.json({ success: true });
-
-    response.cookies.set("auth_token", newExternalToken, {
+  if (args.refreshToken) {
+    res.cookies.set("refresh_token", args.refreshToken, {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? "none" : "lax",
       path: "/",
-      maxAge: 60 * 60,
+      maxAge: 30 * 24 * 3600,
+    });
+  }
+}
+
+async function callRefreshEndpoint(refreshToken: string) {
+  const baseURL = process.env.API_BASE_URL || "";
+  if (!baseURL) throw new Error("Missing API_BASE_URL");
+
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 10_000);
+
+  try {
+    const r = await fetch(`${baseURL}/auth/refresh`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+      cache: "no-store",
+      signal: controller.signal,
     });
 
-    response.cookies.set("api_token", newExternalToken, {
-      httpOnly: false,
-      secure: isProd,
-      sameSite: isProd ? "none" : "lax",
-      path: "/",
-      maxAge: 60 * 60,
-    });
+    const data = (await r.json().catch(() => ({}))) as RefreshResponse;
 
-    if (newRefreshToken) {
-      response.cookies.set("refresh_token", newRefreshToken, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: isProd ? "none" : "lax",
-        path: "/",
-        maxAge: 30 * 24 * 3600,
-      });
+    if (!r.ok) {
+      return { ok: false as const, data };
     }
 
-    return response;
-  } catch (err: any) {
+    return { ok: true as const, data };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function handleRefresh(req: NextRequest) {
+  const refreshToken = req.cookies.get("refresh_token")?.value;
+  if (!refreshToken) {
+    const redirectUrl = new URL("/login", req.url);
+    const res = NextResponse.redirect(redirectUrl);
+    clearAuthCookies(res);
+    return res;
+  }
+
+  try {
+    const { ok, data } = await callRefreshEndpoint(refreshToken);
+
+    const newExternalToken = data?.token || data?.access_token || data?.jwt;
+    const newRefreshToken = data?.refresh_token || refreshToken;
+
+    if (!ok || !newExternalToken) {
+      const redirectUrl = new URL("/login", req.url);
+      const resFail = NextResponse.redirect(redirectUrl);
+      clearAuthCookies(resFail);
+      return resFail;
+    }
+
+    const res = NextResponse.json({ success: true });
+    setAuthCookies(res, { token: newExternalToken, refreshToken: newRefreshToken });
+    return res;
+  } catch {
     const redirectUrl = new URL("/login", req.url);
     const resFail = NextResponse.redirect(redirectUrl);
-    resFail.cookies.set("auth_token", "", { maxAge: 0, path: "/" });
-    resFail.cookies.set("api_token", "", { maxAge: 0, path: "/" });
-    resFail.cookies.set("refresh_token", "", { maxAge: 0, path: "/" });
+    clearAuthCookies(resFail);
     return resFail;
   }
+}
+
+export async function POST(req: NextRequest) {
+  return handleRefresh(req);
 }
 
 export async function GET(req: NextRequest) {
   const redirect = req.nextUrl.searchParams.get("redirect") || "/";
 
-  const apiRefreshUrl = new URL("/api/auth/refresh", req.url);
+  const r = await handleRefresh(req);
 
-  const r = await fetch(apiRefreshUrl.toString(), {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    credentials: "include",
-  });
-  if (!r.ok) {
-    const res = NextResponse.redirect(new URL("/login", req.url));
-    res.cookies.delete("auth_token");
-    res.cookies.delete("api_token");
-    res.cookies.delete("refresh_token");
-    return res;
-  }
+  const isRedirect = r.headers.get("location");
+  if (isRedirect) return r;
+
   const res = NextResponse.redirect(new URL(redirect, req.url));
+
   const setCookie = r.headers.get("set-cookie");
   if (setCookie) res.headers.append("set-cookie", setCookie);
 
