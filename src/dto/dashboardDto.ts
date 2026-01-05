@@ -24,17 +24,46 @@ export type GetProjectsByOrgRespond = {
   name: string;
   code?: string;
   department_id?: string;
+  department_name?: string;
   description?: string;
   location?: string;
   organization_id?: string;
   owner_user_id?: string;
-  plan_type?: 'regular_work' | string;
+  plan_type?: "regular_work" | string;
   qualitative_goal?: string;
   quantitative_goal?: string;
   rationale?: string;
   regular_work_template_id?: string;
-  start_date?: string | Date;
-  end_date?: string | Date;
+  start_date?: string;
+  end_date?: string;
   updated_by?: string;
 };
 
+export type Pagination = {
+  has_next: boolean;
+  has_prev: boolean;
+  limit: number;
+  page: number;
+  total: number;
+  total_pages: number;
+};
+
+export type ProjectsListResponse = {
+  data: GetProjectsByOrgRespond[];
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+  pagination: Pagination;
+};
+
+export type ProjectsQuery = {
+  page?: number | string;
+  limit?: number | string;
+  name?: string;
+  code?: string;
+  plan_type?: string;
+  is_active?: boolean | string; 
+  department_id?: string;
+  start_date?: string; 
+};

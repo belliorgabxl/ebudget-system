@@ -34,9 +34,25 @@ export async function GetQaIndicatorsFromApi(): Promise<GetQaIndicatorsRespond[]
   return r.success ? (r.data ?? []) : [];
 }
 
-export async function GetProjectsByOrgFromApi(): Promise<GetProjectsByOrgRespond[]> {
-  const r = await clientFetch<GetProjectsByOrgRespond[]>("/api/dashboard/projects", {
-    cache: "no-store",
-  });
-  return r.success ? (r.data ?? []) : [];
+import type { ProjectsListResponse, ProjectsQuery } from "@/dto/dashboardDto";
+
+export async function GetProjectsByOrgFromApi(
+  params: ProjectsQuery = {}
+): Promise<ProjectsListResponse | null> {
+  const qs = new URLSearchParams();
+
+  if (params.page !== undefined) qs.set("page", String(params.page));
+  if (params.limit !== undefined) qs.set("limit", String(params.limit));
+  if (params.name) qs.set("name", params.name);
+  if (params.code) qs.set("code", params.code);
+  if (params.plan_type) qs.set("plan_type", params.plan_type);
+  if (params.is_active !== undefined) qs.set("is_active", String(params.is_active));
+  if (params.department_id) qs.set("department_id", params.department_id);
+  if (params.start_date) qs.set("start_date", params.start_date);
+
+  const url = `/api/dashboard/projects${qs.toString() ? `?${qs.toString()}` : ""}`;
+
+  const r = await clientFetch<ProjectsListResponse>(url, { cache: "no-store" });
+
+  return r.success ? (r.data ?? null) : null;
 }
