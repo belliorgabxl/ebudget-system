@@ -4,6 +4,7 @@ import { nestGet } from "@/lib/server-api";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import ClientDepartmentList from "./ClientDepartmentList";
+import BackGroundLight from "@/components/background/bg-light";
 
 async function getDepartments(): Promise<Department[]> {
   const r = await nestGet<{ data: Department[] }>("/departments");
@@ -21,8 +22,10 @@ export default async function DepartmentPage() {
   const total = departments.length;
 
   return (
+    <BackGroundLight>
     <main className="mx-auto max-w-6xl px-4 py-6">
       <ClientDepartmentList />
     </main>
+    </BackGroundLight>
   );
 }

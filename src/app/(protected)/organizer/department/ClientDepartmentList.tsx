@@ -6,6 +6,7 @@ import { fetchDepartments } from "@/api/department";
 import { Department } from "@/dto/departmentDto";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import CreateDepartmentModal from "./new/CreateDepartmentModal";
 
 function DepartmentTableSkeleton({ rows = 6 }: { rows?: number }) {
   return (
@@ -13,9 +14,9 @@ function DepartmentTableSkeleton({ rows = 6 }: { rows?: number }) {
       <table className="min-w-full text-xs">
         <thead className="bg-gradient-to-r from-indigo-50/70 to-blue-50/70">
           <tr>
-            <th className="px-4 py-3 text-left font-semibold text-gray-700">ชื่อหน่วยงาน</th>
             <th className="px-4 py-3 text-left font-semibold text-gray-700">รหัส</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">จำนวนพนักงาน</th>
+            <th className="px-4 py-3 text-left font-semibold text-gray-700">ชื่อหน่วยงาน</th>
+            <th className="px-4 py-3 text- center font-semibold text-gray-700">จำนวนพนักงาน</th>
             <th className="px-4 py-3 text-center font-semibold text-gray-700">สถานะ</th>
             <th className="px-4 py-3 text-right font-semibold text-gray-700">จัดการ</th>
           </tr>
@@ -56,6 +57,8 @@ export default function ClientDepartmentList() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openCreate, setOpenCreate] = useState(false);
+
 
   /* ---------- load departments ---------- */
   useEffect(() => {
@@ -99,12 +102,12 @@ export default function ClientDepartmentList() {
           <p className="text-sm text-gray-600">รายการหน่วยงาน</p>
         </div>
 
-        <Link
-          href="/organizer/department/new"
+        <button
+          onClick={() => setOpenCreate(true)}
           className="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
         >
           + เพิ่มหน่วยงาน
-        </Link>
+        </button>
       </div>
 
       {/* Table / Skeleton */}
@@ -113,6 +116,16 @@ export default function ClientDepartmentList() {
       ) : (
         <DepartmentTable data={departments} />
       )}
+      <CreateDepartmentModal
+    open={openCreate}
+    onClose={() => setOpenCreate(false)}
+    onSuccess={() => {
+      // reload list หลังสร้างเสร็จ
+      fetchDepartments().then(setDepartments);
+    }}
+    
+  />
     </>
   );
+
 }

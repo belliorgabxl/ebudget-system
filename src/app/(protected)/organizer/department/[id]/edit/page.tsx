@@ -3,6 +3,7 @@ import { mockDepartments } from "@/resource/mock-data";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DepartmentEditForm } from "@/components/department/EditForm";
+import BackGroundLight from "@/components/background/bg-light";
 
 async function getDepartment(id: string): Promise<Department | null> {
   try {
@@ -30,6 +31,7 @@ export default async function DepartmentEditPage({
   if (!dep) notFound();
 
   return (
+    <BackGroundLight>
     <main className="mx-auto max-w-5xl px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -62,5 +64,6 @@ export default async function DepartmentEditPage({
 
       <DepartmentEditForm initial={dep} />
     </main>
+    </BackGroundLight>
   );
 }

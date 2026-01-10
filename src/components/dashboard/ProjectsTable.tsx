@@ -40,7 +40,7 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
   // map API project -> table row (memoized)
   const rows = useMemo(() => {
     if (!Array.isArray(projects)) return [];
-    
+
     return projects.map((p) => {
       const deptName =
         (p as any).department?.name ??
@@ -97,50 +97,71 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
         <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
           <table className="w-full border-collapse text-xs">
             <thead>
-              <tr className="bg-gray-50 text-center text-gray-900">
-                {[
-                  "รหัส",
-                  "ชื่อโครงการ",
-                  "หน่วยงาน",
-                  "ประเภท",
-                  "งบประมาณ",
-                  "ระยะเวลา",
-                  "จัดการ",
-                ].map((h, i) => (
-                  <th
-                    key={i}
-                    className={`px-3 py-2 font-semibold ${h === "งบประมาณ" ? "text-right" : ""}`}
-                  >
-                    {h}
-                  </th>
-                ))}
+              <tr className="bg-gray-50 text-gray-900">
+                <th className="w-[10%] px-3 py-2 text-center font-semibold">รหัส</th>
+                <th className="w-[25%] px-3 py-2 text-center font-semibold">ชื่อโครงการ</th>
+                <th className="w-[15%] px-3 py-2 text-center font-semibold">หน่วยงาน</th>
+                <th className="w-[15%] px-3 py-2 text-center font-semibold">งบประมาณ</th>
+                <th className="w-[15%] px-3 py-2 text-center font-semibold">ระยะเวลา</th>
+                <th className="w-[10%] px-3 py-2 text-center font-semibold">จัดการ</th>
               </tr>
             </thead>
 
             <tbody>
               {currentProjects.length > 0 ? (
                 currentProjects.map((p, i) => (
-                  <tr key={p.id ?? i} className="border-t border-gray-200 hover:bg-gray-50">
-                    <td className="px-3 py-2 font-medium text-gray-900">{p.code}</td>
-                    <td className="px-3 py-2 font-medium text-gray-900">{p.name}</td>
-                    <td className="px-3 py-2">
-                      <span className="inline-flex items-center rounded-md border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700">
+                  <tr
+                    key={p.id ?? i}
+                    className="border-t border-gray-200 hover:bg-gray-50"
+                  >
+                    {/* รหัส */}
+                    <td className="px-3 py-2 font-medium text-gray-900">
+                      {p.code}
+                    </td>
+
+                    {/* ชื่อโครงการ */}
+                    <td className="px-3 py-2 font-medium text-gray-900">
+                      {p.name}
+                    </td>
+
+                    {/* หน่วยงาน */}
+                    <td className="px-3 py-2 text-start">
+                      <span className="inline-flex items-start rounded-md border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700">
                         {p.dept}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-gray-600">{p.type}</td>
-                    <td className="px-3 py-2 text-left font-semibold text-gray-700">{formatMoney(p.budget)}</td>
-                    <td className="px-3 py-2 text-center text-gray-700">{p.period}</td>
 
+                   
+
+                    {/* งบประมาณ */}
+                    <td className="px-3 py-2 text-center font-semibold text-gray-700">
+                      {formatMoney(p.budget)}
+                    </td>
+
+                    {/* ระยะเวลา */}
+                    <td className="px-3 py-2 text-start text-gray-700">
+                      {p.period}
+                    </td>
+
+                    {/* จัดการ */}
                     <td className="px-3 py-2">
-                      <div className="flex items-center justify-center gap-1">
-                        <button className="h-8 w-8 rounded-md hover:bg-blue-600/10 hover:text-blue-700" title="ดู">
+                      <div className="flex items-start justify-center gap-1">
+                        <button
+                          className="h-8 w-8 rounded-md hover:bg-blue-600/10 hover:text-blue-700"
+                          title="ดู"
+                        >
                           <Eye className="mx-auto h-4 w-4" />
                         </button>
-                        <button className="h-8 w-8 rounded-md hover:bg-blue-600/10 hover:text-blue-700" title="แก้ไข">
+                        <button
+                          className="h-8 w-8 rounded-md hover:bg-blue-600/10 hover:text-blue-700"
+                          title="แก้ไข"
+                        >
                           <Edit className="mx-auto h-4 w-4" />
                         </button>
-                        <button className="h-8 w-8 rounded-md hover:bg-red-600/10 hover:text-red-700" title="ลบ">
+                        <button
+                          className="h-8 w-8 rounded-md hover:bg-red-600/10 hover:text-red-700"
+                          title="ลบ"
+                        >
                           <FileX className="mx-auto h-4 w-4" />
                         </button>
                       </div>
@@ -150,30 +171,12 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
               ) : (
                 <tr>
                   <td colSpan={7} className="px-3 py-10 text-center text-sm text-gray-500">
-                    <div className="space-y-2">
-                      <p className="text-base font-medium text-gray-700">ยังไม่มีข้อมูลโครงการ ณ ตอนนี้</p>
-                      <p className="text-xs text-gray-500">คุณสามารถเพิ่มโครงการใหม่หรือดูรายการทั้งหมดได้จากหน้าจัดการโครงการ</p>
-
-                      <div className="mt-3 flex items-center justify-center gap-2">
-                        <Link
-                          href="/projects/new"
-                          className="inline-flex items-center gap-2 rounded-md border border-indigo-600 bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-indigo-700"
-                        >
-                          สร้างโครงการใหม่
-                        </Link>
-
-                        <Link
-                          href="/organizer/projects/my-project"
-                          className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                        >
-                          ดูทั้งหมด
-                        </Link>
-                      </div>
-                    </div>
+                    ยังไม่มีข้อมูลโครงการ
                   </td>
                 </tr>
               )}
             </tbody>
+
           </table>
         </div>
         {/* Pagination / Footer */}
