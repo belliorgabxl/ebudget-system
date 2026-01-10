@@ -1,14 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import { BadgeCreateFormProject } from "../Helper";
-import { Department, GeneralInfoParams } from "@/dto/projectDto";
+import { Department, GeneralInfoCreateParams } from "@/dto/projectDto";
 import { fetchDepartments } from "@/api/department";
 import { User } from "@/dto/userDto";
 import { GetAllUsers } from "@/api/users";
 
 type Props = {
-  value?: GeneralInfoParams;
-  onChange: (params: GeneralInfoParams) => void;
+  value?: GeneralInfoCreateParams;
+  onChange: (params: GeneralInfoCreateParams) => void;
 };
 
 export default function GeneralInfoTable({ value, onChange }: Props) {

@@ -196,7 +196,7 @@ export default function Page() {
                               <Td className="text-center py-1.5">
                                 <div className="flex  flex-col items-center gap-1">
                                   <Link
-                                    href={`/organizer/projects/details/${p.id}`}
+                                    href={`/organizer/projects/${p.id}/details`}
                                     className="inline-flex items-center rounded-md border text-white
                                    bg-slate-400 border-gray-300 px-2 py-1 text-xs  hover:bg-gray-600"
                                   >

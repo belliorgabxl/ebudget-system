@@ -39,7 +39,7 @@ export function Field({
 
   return (
     <div className="flex flex-col">
-      <span className="text-xs font-medium text-gray-500 mb-1">{label}</span>
+      <span className="text-xs font-medium text-indigo-500 mb-1">{label}</span>
       <div className="rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-800 border border-gray-200">
         {content}
       </div>
@@ -157,6 +157,10 @@ export function BadgeTiny({
       <span className="line-clamp-1">{children}</span>
     </span>
   );
+}
+
+export function BadgeLabel({ title }: { title: string }) {
+  return <span className="text-base  text-indigo-500">{title}</span>;
 }
 
 export function BadgeCreateFormProject({ title }: { title: string }) {

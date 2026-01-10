@@ -9,7 +9,7 @@ import {
   DateDurationValue,
   EstimateParams,
   ExpectParams,
-  GeneralInfoParams,
+  GeneralInfoCreateParams,
   GoalParams,
   KPIParams,
   ObjectiveParams,
@@ -113,7 +113,7 @@ export default function CreateProjectPage() {
   const prev = () => setStep((s) => Math.max(s - 1, 0));
 
   // general info part
-  const [generalInfo, setGeneralInfo] = useState<GeneralInfoParams>({
+  const [generalInfo, setGeneralInfo] = useState<GeneralInfoCreateParams>({
     name: "",
     type: "",
     department_id: "",

@@ -6,7 +6,7 @@ import {
   EditFormState,
   EstimateParams,
   ExpectParams,
-  GeneralInfoParams,
+  GeneralInfoCreateParams,
   GoalParams,
   KPIParams,
   ObjectiveParams,
@@ -29,7 +29,7 @@ export function mapFormToPayload(form: EditFormState) {
 export function mapApiToForm(
   apiData: ProjectInformationResponse
 ): EditFormState {
-  const generalInfo: GeneralInfoParams = {
+  const generalInfo: GeneralInfoCreateParams = {
     name: apiData.project_name,
     type: apiData.plan_type || "",
     department: apiData.department_name || "",
@@ -148,7 +148,7 @@ export function mapApiToForm(
 export function validateStep(
   step: number,
   data: {
-    generalInfo: GeneralInfoParams;
+    generalInfo: GeneralInfoCreateParams;
     strategy: StrategyParams;
     retaional: string;
     objective: ObjectiveParams;

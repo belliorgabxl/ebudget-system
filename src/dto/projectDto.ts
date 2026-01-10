@@ -66,12 +66,12 @@ export type EstimateParams = {
 };
 
 // general info component part
-export type GeneralInfoParams = {
+export type GeneralInfoCreateParams = {
   name: string;
   type: string;
   department_id: string;
   owner_user_id: string;
-  description : string;
+  description: string;
 };
 
 // strategy component part
@@ -105,12 +105,10 @@ export type ActivitiesRow = {
   owner: string;
 };
 
-
 export type KPIParams = {
   output: string;
   outcome: string;
 };
-
 
 export type ExpectItem = {
   description: string;
@@ -131,7 +129,7 @@ export interface ProjectInformationResponse {
   project_name: string;
   plan_type: string;
   project_code: string;
-
+  project_description:string;
   rationale: string;
   location: string;
 
@@ -148,7 +146,7 @@ export interface ProjectInformationResponse {
 
   objective_type: "objective" | "expectation" | string;
   objective_description: string;
-  budget_plan_status:string;
+  budget_plan_status: string;
   department_name: string;
   budget_plan_id: string;
   budget_source: "revenue" | "school" | "external" | "externalAgency" | string;
@@ -214,9 +212,22 @@ export interface ProjectObjectiveOrOutcome {
   description: string;
 }
 
+export interface GeneralInfoForUpdateData {
+  name: string;
+  plan_type: string;
+  code:string;
+  description: string;
+  rationale:string;
+  location : string;
+  project_id : string;
+  quantitative_goal:string;
+  qualitative_goal :string;
+  start_date: string;
+  end_date :string;
+}
 export type EditFormState = {
   id: string;
-  generalInfo: GeneralInfoParams;
+  generalInfo: GeneralInfoCreateParams;
   goal: GoalParams;
   duration: DateDurationValue;
   strategy: StrategyParams;

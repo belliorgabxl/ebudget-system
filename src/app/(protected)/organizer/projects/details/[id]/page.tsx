@@ -22,7 +22,7 @@ import type {
   DateDurationValue,
   EstimateParams,
   ExpectParams,
-  GeneralInfoParams,
+  GeneralInfoCreateParams,
   GoalParams,
   KPIParams,
   ProjectInformationResponse,
@@ -39,7 +39,7 @@ type Project = {
   progress: number;
   updatedAt: string;
 
-  generalInfo: GeneralInfoParams;
+  generalInfo: GeneralInfoCreateParams;
   strategy: StrategyParams;
   duration: DateDurationValue;
   budget: BudgetTableValue | null;
@@ -64,7 +64,7 @@ async function getProject(id: string): Promise<Project | null> {
     const apiData: ProjectInformationResponse =
       await fetchProjectInformationServer(id);
 
-    const generalInfo: GeneralInfoParams = {
+    const generalInfo: GeneralInfoCreateParams = {
       name: apiData.project_name || "",
       type: (apiData as any).plan_type || "",
       department: apiData.department_name || "",
