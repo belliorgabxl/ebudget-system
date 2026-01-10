@@ -11,6 +11,7 @@ import type { GetUserRespond } from "@/dto/userDto";
 import AddUserModal from "./AddUserModal";
 import UserDetailsModal from "./UserDetailsModal";
 import { useToast } from "@/components/ToastProvider";
+import BackGroundLight from "@/components/background/bg-light";
 
 /* -----------------------------
  * Table contract (สำคัญมาก)
@@ -155,6 +156,7 @@ export default function ClientManageUser() {
    * render
    * ----------------------------- */
   return (
+    <BackGroundLight>
     <main className="mx-auto max-w-6xl px-4 py-6">
       <div className="p-6 space-y-6">
         <header className="flex items-center justify-between">
@@ -230,5 +232,6 @@ export default function ClientManageUser() {
         />
       </div>
     </main>
+    </BackGroundLight>
   );
 }

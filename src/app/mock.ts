@@ -265,4 +265,338 @@ export function isValidMockLogin(username: string, password: string): boolean {
 }
 export function getRoleByUsername(username: string): Role {
   return ROLE_MAP[username] ?? "user";
+}/* =================================
+ * MOCK DATA : ตัวอย่างชัดเจน 2563–2568
+ * ================================= */
+
+export const YEARS = ["2563", "2564", "2565", "2566", "2567", "2568"]
+
+/* -------------------------------
+ * 1. เงินที่ใช้ในโครงการ (รวม)
+ * ------------------------------- */
+export const MOCK_BUDGET_BY_YEAR = [
+  { year: "2563", budget: 150, actual: 135 }, // ใช้ต่ำกว่างบ
+  { year: "2564", budget: 170, actual: 160 },
+  { year: "2565", budget: 190, actual: 185 },
+  { year: "2566", budget: 210, actual: 220 }, // เริ่มเกินงบ
+  { year: "2567", budget: 230, actual: 245 },
+  { year: "2568", budget: 250, actual: 275 }, // เกินงบชัด
+]
+
+/* ------------------------------------------------
+ * 2. เงินที่ใช้ในโครงการต่อหน่วยงาน (ต่อปี)
+ * ------------------------------------------------ */
+export const MOCK_BUDGET_BY_DEPT_YEAR = [
+  // ===== 2563 =====
+  { year: "2563", department: "IT",           budget: 60,  actual: 55 },
+  { year: "2563", department: "HR",           budget: 40,  actual: 38 },
+  { year: "2563", department: "Finance",      budget: 50,  actual: 42 },
+  { year: "2563", department: "Procurement",  budget: 30,  actual: 28 },
+  { year: "2563", department: "Operations",   budget: 45,  actual: 43 },
+  { year: "2563", department: "Marketing",    budget: 35,  actual: 32 },
+
+  // ===== 2564 =====
+  { year: "2564", department: "IT",           budget: 70,  actual: 68 },
+  { year: "2564", department: "HR",           budget: 45,  actual: 44 },
+  { year: "2564", department: "Finance",      budget: 55,  actual: 48 },
+  { year: "2564", department: "Procurement",  budget: 35,  actual: 34 },
+  { year: "2564", department: "Operations",   budget: 50,  actual: 48 },
+  { year: "2564", department: "Marketing",    budget: 40,  actual: 38 },
+
+  // ===== 2565 =====
+  { year: "2565", department: "IT",           budget: 80,  actual: 82 },
+  { year: "2565", department: "HR",           budget: 50,  actual: 48 },
+  { year: "2565", department: "Finance",      budget: 60,  actual: 55 },
+  { year: "2565", department: "Procurement",  budget: 40,  actual: 38 },
+  { year: "2565", department: "Operations",   budget: 55,  actual: 57 },
+  { year: "2565", department: "Marketing",    budget: 45,  actual: 44 },
+
+  // ===== 2566 =====
+  { year: "2566", department: "IT",           budget: 90,  actual: 98 },
+  { year: "2566", department: "HR",           budget: 55,  actual: 54 },
+  { year: "2566", department: "Finance",      budget: 65,  actual: 68 },
+  { year: "2566", department: "Procurement",  budget: 45,  actual: 46 },
+  { year: "2566", department: "Operations",   budget: 60,  actual: 63 },
+  { year: "2566", department: "Marketing",    budget: 50,  actual: 52 },
+
+  // ===== 2567 =====
+  { year: "2567", department: "IT",           budget: 100, actual: 112 },
+  { year: "2567", department: "HR",           budget: 60,  actual: 58 },
+  { year: "2567", department: "Finance",      budget: 70,  actual: 75 },
+  { year: "2567", department: "Procurement",  budget: 50,  actual: 53 },
+  { year: "2567", department: "Operations",   budget: 65,  actual: 70 },
+  { year: "2567", department: "Marketing",    budget: 55,  actual: 60 },
+
+  // ===== 2568 =====
+  { year: "2568", department: "IT",           budget: 110, actual: 130 },
+  { year: "2568", department: "HR",           budget: 65,  actual: 62 },
+  { year: "2568", department: "Finance",      budget: 75,  actual: 83 },
+  { year: "2568", department: "Procurement",  budget: 55,  actual: 58 },
+  { year: "2568", department: "Operations",   budget: 70,  actual: 78 },
+  { year: "2568", department: "Marketing",    budget: 60,  actual: 68 },
+]
+
+/* ------------------------------------------------
+ * 3. เงินที่ใช้ในโครงการตามสถานะ (ต่อปี)
+ * ------------------------------------------------ */
+export const MOCK_BUDGET_BY_STATUS_YEAR = [
+  // ===== 2563 =====
+  { year: "2563", status: "อนุมัติ",    budget: 110 },
+  { year: "2563", status: "รออนุมัติ",  budget: 30 },
+  { year: "2563", status: "ไม่อนุมัติ", budget: 10 },
+  { year: "2563", status: "ปิดโครงการ", budget: 45 },
+
+  // ===== 2564 =====
+  { year: "2564", status: "อนุมัติ",    budget: 130 },
+  { year: "2564", status: "รออนุมัติ",  budget: 35 },
+  { year: "2564", status: "ไม่อนุมัติ", budget: 15 },
+  { year: "2564", status: "ปิดโครงการ", budget: 60 },
+
+  // ===== 2565 =====
+  { year: "2565", status: "อนุมัติ",    budget: 150 },
+  { year: "2565", status: "รออนุมัติ",  budget: 30 },
+  { year: "2565", status: "ไม่อนุมัติ", budget: 10 },
+  { year: "2565", status: "ปิดโครงการ", budget: 75 },
+
+  // ===== 2566 =====
+  { year: "2566", status: "อนุมัติ",    budget: 165 },
+  { year: "2566", status: "รออนุมัติ",  budget: 35 },
+  { year: "2566", status: "ไม่อนุมัติ", budget: 10 },
+  { year: "2566", status: "ปิดโครงการ", budget: 95 },
+
+  // ===== 2567 =====
+  { year: "2567", status: "อนุมัติ",    budget: 180 },
+  { year: "2567", status: "รออนุมัติ",  budget: 40 },
+  { year: "2567", status: "ไม่อนุมัติ", budget: 10 },
+  { year: "2567", status: "ปิดโครงการ", budget: 115 },
+
+  // ===== 2568 =====
+  { year: "2568", status: "อนุมัติ",    budget: 195 },
+  { year: "2568", status: "รออนุมัติ",  budget: 45 },
+  { year: "2568", status: "ไม่อนุมัติ", budget: 10 },
+  { year: "2568", status: "ปิดโครงการ", budget: 135 },
+]
+
+/* --------------------------------
+ * 4. จำนวนโครงการต่อหน่วยงาน (รวม)
+ * -------------------------------- */
+export const MOCK_PROJECT_COUNT_BY_DEPT_BY_YEAR = [
+  // ===== 2563 =====
+  { year: "2563", department: "IT",          count: 45 },
+  { year: "2563", department: "HR",          count: 30 },
+  { year: "2563", department: "Finance",     count: 40 },
+  { year: "2563", department: "Procurement", count: 22 },
+  { year: "2563", department: "Operations",  count: 35 },
+  { year: "2563", department: "Marketing",   count: 28 },
+
+  // ===== 2564 =====
+  { year: "2564", department: "IT",          count: 55 },
+  { year: "2564", department: "HR",          count: 32 },
+  { year: "2564", department: "Finance",     count: 45 },
+  { year: "2564", department: "Procurement", count: 25 },
+  { year: "2564", department: "Operations",  count: 38 },
+  { year: "2564", department: "Marketing",   count: 30 },
+
+  // ===== 2565 =====
+  { year: "2565", department: "IT",          count: 65 },
+  { year: "2565", department: "HR",          count: 35 },
+  { year: "2565", department: "Finance",     count: 50 },
+  { year: "2565", department: "Procurement", count: 28 },
+  { year: "2565", department: "Operations",  count: 42 },
+  { year: "2565", department: "Marketing",   count: 33 },
+
+  // ===== 2566 =====
+  { year: "2566", department: "IT",          count: 75 },
+  { year: "2566", department: "HR",          count: 38 },
+  { year: "2566", department: "Finance",     count: 55 },
+  { year: "2566", department: "Procurement", count: 32 },
+  { year: "2566", department: "Operations",  count: 48 },
+  { year: "2566", department: "Marketing",   count: 37 },
+
+  // ===== 2567 =====
+  { year: "2567", department: "IT",          count: 85 },
+  { year: "2567", department: "HR",          count: 40 },
+  { year: "2567", department: "Finance",     count: 60 },
+  { year: "2567", department: "Procurement", count: 36 },
+  { year: "2567", department: "Operations",  count: 52 },
+  { year: "2567", department: "Marketing",   count: 40 },
+
+  // ===== 2568 =====
+  { year: "2568", department: "IT",          count: 95 },
+  { year: "2568", department: "HR",          count: 45 },
+  { year: "2568", department: "Finance",     count: 70 },
+  { year: "2568", department: "Procurement", count: 40 },
+  { year: "2568", department: "Operations",  count: 58 },
+  { year: "2568", department: "Marketing",   count: 45 },
+]
+
+
+/* --------------------------------
+ * 5. จำนวนโครงการตามสถานะ (ต่อปี)
+ * -------------------------------- */
+export const MOCK_PROJECT_COUNT_BY_STATUS_BY_YEAR = [
+  { year: "2563", status: "อนุมัติ", value: 120 },
+  { year: "2563", status: "รออนุมัติ", value: 25 },
+  { year: "2563", status: "ไม่อนุมัติ", value: 10 },
+
+  { year: "2564", status: "อนุมัติ", value: 135 },
+  { year: "2564", status: "รออนุมัติ", value: 30 },
+  { year: "2564", status: "ไม่อนุมัติ", value: 12 },
+
+  { year: "2565", status: "อนุมัติ", value: 150 },
+  { year: "2565", status: "รออนุมัติ", value: 28 },
+  { year: "2565", status: "ไม่อนุมัติ", value: 12 },
+
+  { year: "2566", status: "อนุมัติ", value: 165 },
+  { year: "2566", status: "รออนุมัติ", value: 30 },
+  { year: "2566", status: "ไม่อนุมัติ", value: 15 },
+
+  { year: "2567", status: "อนุมัติ", value: 175 },
+  { year: "2567", status: "รออนุมัติ", value: 35 },
+  { year: "2567", status: "ไม่อนุมัติ", value: 18 },
+
+  { year: "2568", status: "อนุมัติ", value: 185 },
+  { year: "2568", status: "รออนุมัติ", value: 40 },
+  { year: "2568", status: "ไม่อนุมัติ", value: 20 },
+]
+
+export const MOCK_ALLTIME_BUDGET = [
+  { year: "2549", total: 40 },
+  { year: "2550", total: 85 },
+  { year: "2551", total: 135 },
+  { year: "2552", total: 190 },
+  { year: "2553", total: 250 },
+  { year: "2554", total: 320 },
+  { year: "2555", total: 395 },
+  { year: "2556", total: 475 },
+  { year: "2557", total: 560 },
+  { year: "2558", total: 650 },
+
+  { year: "2559", total: 745 },
+  { year: "2560", total: 845 },
+  { year: "2561", total: 950 },
+  { year: "2562", total: 1090 },
+
+  { year: "2563", total: 1225 },
+  { year: "2564", total: 1385 },
+  { year: "2565", total: 1570 },
+  { year: "2566", total: 1790 },
+  { year: "2567", total: 2035 },
+  { year: "2568", total: 2310 },
+]
+
+export const MOCK_ALLTIME_STATUS = [
+  {
+    status: "อนุมัติ",
+    value:
+      120 + 135 + 150 + 165 + 175 + 185, // = 930
+  },
+  {
+    status: "รออนุมัติ",
+    value:
+      25 + 30 + 28 + 30 + 35 + 40, // = 188
+  },
+  {
+    status: "ไม่อนุมัติ",
+    value:
+      10 + 12 + 12 + 15 + 18 + 20, // = 87
+  },
+]
+
+export const MOCK_ALLTIME_PROJECT_COUNT_BY_DEPT = [
+  { department: "IT",          count: 420 },
+  { department: "HR",          count: 220 },
+  { department: "Finance",     count: 320 },
+  { department: "Procurement", count: 183 },
+  { department: "Operations",  count: 270 },
+  { department: "Marketing",   count: 213 },
+]
+
+export const MOCK_ALLTIME_BUDGET_BY_DEPT = [
+  { department: "IT",          amount: 565 },
+  { department: "HR",          amount: 304 },
+  { department: "Finance",     amount: 371 },
+  { department: "Procurement", amount: 257 },
+  { department: "Operations",  amount: 359 },
+  { department: "Marketing",   amount: 294 },
+]
+
+export const MOCK_ALLTIME_BUDGET_BY_STATUS = [
+  {
+    status: "อนุมัติ",
+    amount: 930,   // งบที่ผ่านและใช้จริง
+  },
+  {
+    status: "รออนุมัติ",
+    amount: 188,   // งบที่ยังค้าง
+  },
+  {
+    status: "ไม่อนุมัติ",
+    amount: 87,    // งบที่ไม่ผ่าน
+  },
+  {
+    status: "ปิดโครงการ",
+    amount: 615,   // โครงการที่ปิดแล้ว (subset ของ approved)
+  },
+]
+
+export const MOCK_YEAR_KPI: Record<
+  string,
+  {
+    totalBudget: number
+    totalProjects: number
+    avgBudget: number
+    totalEmployees: number
+    totalDepartments: number
+  }
+> = {
+  "all" : {
+    totalBudget: 1000,
+    totalProjects: 1500,
+    avgBudget: 0.80,
+    totalEmployees: 2300,
+    totalDepartments: 30,
+  },
+  "2563": {
+    totalBudget: 150,
+    totalProjects: 180,
+    avgBudget: 0.83,
+    totalEmployees: 2300,
+    totalDepartments: 30,
+  },
+  "2564": {
+    totalBudget: 170,
+    totalProjects: 210,
+    avgBudget: 0.81,
+     totalEmployees: 2300,
+    totalDepartments: 30,
+  },
+  "2565": {
+    totalBudget: 190,
+    totalProjects: 245,
+    avgBudget: 0.78,
+    totalEmployees: 2300,
+    totalDepartments: 30,
+  },
+  "2566": {
+    totalBudget: 210,
+    totalProjects: 270,
+    avgBudget: 0.78,
+    totalEmployees: 2300,
+    totalDepartments: 30,
+  },
+  "2567": {
+    totalBudget: 230,
+    totalProjects: 295,
+    avgBudget: 0.78,
+     totalEmployees: 2300,
+    totalDepartments: 30,
+  },
+  "2568": {
+    totalBudget: 245.4,
+    totalProjects: 320,
+    avgBudget: 0.76,
+    totalEmployees: 2300,
+    totalDepartments: 30,
+  },
 }
