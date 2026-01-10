@@ -1,97 +1,156 @@
-// Admin Dashboard Page (HR layout copy)
-"use client";
-import React from "react";
-import Link from "next/link";
-import DepartmentTable from "@/components/dashboard/DepartmentTable";
-import UserTable from "@/components/dashboard/UserTable";
+"use client"
 
-const MOCK = {
-  year: "2568",
-  kpis: {
-    totalUsers: 256,
-    totalDepartments: 12,
-    activeProjects: 34,
-  },
-  departments: [
-    { code: "HR", name: "ฝ่ายบุคคล", leader: "สมชาย ใจดี", employees: 15, projects: 3, updatedAt: "01/11/2568" },
-    { code: "IT", name: "ฝ่ายไอที", leader: "วิชัย เทคโน", employees: 20, projects: 6, updatedAt: "05/11/2568" },
-  ],
-  users: [
-    { name: "Apinya S.", title: "Admin", department: "HR", status: "Active" },
-    { name: "Somchai J.", title: "Manager", department: "IT", status: "Active" },
-  ],
-};
+import { useEffect, useState } from "react"
+import { StrategyQaSection } from "@/components/dashboard/StrategyQaSection"
+import QuarterCalendar from "@/components/dashboard/QuarterCalendar"
+import { ProjectsTable } from "@/components/dashboard/ProjectsTable"
+import { ApprovalQueue } from "@/components/dashboard/ApprovalQueue"
+import {
+    MOCK_APPROVALS,
+} from "@/app/mock"
+// // <-- เปลี่ยน import: ใช้ GetQaIndicatorsByYearFromApi
+// import {
+//   GetStrategicPlansFromApi,
+//   GetCalendarEventsFromApi,
+//   GetProjectsByOrgFromApi,
+// } from "@/api/dashboard/route"
+// import { GetApprovalItems,GetProjectsByOrgRespond,GetCalenderEventRespond } from "@/dto/dashboardDto"
+// import { GetStrategicPlanRespond,GetQaIndicatorsRespond, GetQaIndicatorsByYearAllRespond } from "@/dto/qaDto"
+// import { GetQaIndicatorsByYearAllFromApi, GetQaIndicatorsByYearFromApi } from "@/api/qa/route"
 
-function AdminKpiCards({ kpis }: { kpis: any }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {/* Card: Total Users */}
-      <div className="p-4 bg-white rounded-lg shadow-sm">
-        <div className="text-xs text-gray-500">จำนวนผู้ใช้</div>
-        <div className="mt-2 text-2xl font-semibold text-indigo-600">{kpis.totalUsers}</div>
-        <div className="mt-1 text-sm text-gray-400">ผู้ใช้ทั้งหมดในระบบ</div>
-      </div>
 
-      {/* Card: Departments */}
-      <div className="p-4 bg-white rounded-lg shadow-sm">
-        <div className="text-xs text-gray-500">จำนวนองค์กร</div>
-        <div className="mt-2 text-2xl font-semibold text-green-600">{kpis.totalDepartments}</div>
-        <div className="mt-1 text-sm text-gray-400">แผนก/ฝ่ายในองค์กร</div>
-      </div>
+import { GetStrategicPlansFromApi,GetCalendarEventsFromApi, GetProjectsByOrgFromApi } from "@/api/dashboard"
+import { GetApprovalItems,GetProjectsByOrgRespond,GetCalenderEventRespond } from "@/dto/dashboardDto"
+import { GetStrategicPlanRespond,GetQaIndicatorsRespond,GetQaIndicatorsByYearAllRespond } from "@/dto/qaDto"
+import { GetQaIndicatorsByYearAllFromApi } from "@/api/qa/route"
 
-      {/* Card: Active Projects */}
-      {/* <div className="p-4 bg-white rounded-lg shadow-sm">
-        <div className="text-xs text-gray-500">โปรเจกต์ที่ดำเนินการ</div>
-        <div className="mt-2 text-2xl font-semibold text-orange-600">{kpis.activeProjects}</div>
-        <div className="mt-1 text-sm text-gray-400">โปรเจกต์ที่กำลังดำเนินงาน</div>
-      </div> */}
-    </div>
-  );
-}
+export default function UserDashboardPage() {
+    // คำนวณปีปัจจุบัน (ค.ศ.) และปีพ.ศ. ที่จะแสดง
+    const currentGregorianYear = new Date().getFullYear(); // ex: 2025
+    const currentBuddhistYear = String(currentGregorianYear + 543); // ex: 2568
 
-export default function AdminDashboardPage() {
-  return (
-    <div className="p-6 space-y-6 text-gray-800">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-          <div className="text-sm text-gray-500">ปีงบประมาณ {MOCK.year}</div>
+    const [filters, setFilters] = useState({
+        year: currentBuddhistYear, // แสดงเป็น พ.ศ.
+        department: "all",
+        projectType: "all",
+        status: "all",
+        qaIndicator: "all",
+        strategy: "all",
+    })
+    const [activeFilters, setActiveFilters] = useState<string[]>([])
+
+    const [calendar_events_data, set_calendar_events_data] = useState<GetCalenderEventRespond[]>([]);
+    const [approval_items, set_approval_items] = useState<GetApprovalItems[]>([]);
+    const [qa_indicators_data, set_qa_indicators_data] = useState<GetQaIndicatorsByYearAllRespond[]>([]);
+    const [strategic_plans_data, set_strategic_plans_data] = useState<GetStrategicPlanRespond[]>([]);
+    const [projects_data, set_projects_data] = useState<GetProjectsByOrgRespond[]>([]);
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+
+    const handleFilterChange = (key: string, value: string) => {
+        setFilters((prev) => ({ ...prev, [key]: value }))
+        if (value !== "all" && !activeFilters.includes(key)) {
+            setActiveFilters((prev) => [...prev, key])
+        } else if (value === "all") {
+            setActiveFilters((prev) => prev.filter((f) => f !== key))
+        }
+    }
+
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const data = await GetCalendarEventsFromApi();
+                console.log("calendar events data:", data);
+                set_calendar_events_data(data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchCounts();
+    }, []);
+
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const data = await GetStrategicPlansFromApi();
+                set_strategic_plans_data(data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchCounts();
+    }, []);
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const data = await GetProjectsByOrgFromApi();
+                set_projects_data(data?.data ?? []);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchCounts();
+    }, []);
+    // <-- New: ใช้ GetQaIndicatorsByYearFromApi โดยส่งปีเป็น ค.ศ.
+    useEffect(() => {
+        const fetchQaIndicators = async () => {
+            try {
+                // เรียก API ด้วยปีค.ศ. (ไม่ใช่พ.ศ.)
+                const data = await GetQaIndicatorsByYearAllFromApi(currentGregorianYear);
+                set_qa_indicators_data(data);
+            } catch (err) {
+                console.error("Failed to fetch QA indicators by year:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchQaIndicators();
+    }, []); // รันครั้งเดียวตอน mount (ใช้ปีปัจจุบัน)
+
+    const clearAllFilters = () => {
+        setFilters({
+            year: currentBuddhistYear, // reset เป็นปีปัจจุบัน (พ.ศ.)
+            department: "all",
+            projectType: "all",
+            status: "all",
+            qaIndicator: "all",
+            strategy: "all",
+        })
+        setActiveFilters([])
+    }
+
+    return (
+        <div className="min-h-screen w-full  text-gray-900">
+            <div className="sticky w-full px-0 mx-0 top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+                <div className=" lg:mx-10 mx-0 px-1 lg:px-4">
+                    <div className="flex h-14 items-center justify-between">
+                        <h1 className="text-lg font-semibold tracking-tight">Dashboard (director)</h1>
+                        <div className="text-xs text-gray-500">
+                            ปีงบประมาณ: <span className="font-medium text-gray-700">{filters.year}</span>
+                        </div>
+                    </div>
+                </div>
+                <main className=" lg:mx-10 w-full  space-y-6 px-0 lg:px-4 py-6">
+                    <ProjectsTable filters={filters} projects={projects_data} />
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                        <div className="lg:col-span-2">
+                            <ApprovalQueue filters={filters} approvals={MOCK_APPROVALS} />
+                        </div>
+                        <div>
+                            <StrategyQaSection
+                                strategies={strategic_plans_data}
+                                qaIndicators={qa_indicators_data}
+                                onFilterChange={handleFilterChange}
+                            />
+                        </div>
+                    </div>
+
+                    <QuarterCalendar events={calendar_events_data} />
+                </main>
+
+            </div>
         </div>
-      </header>
-
-      <AdminKpiCards kpis={MOCK.kpis} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-medium">องค์กร</h2>
-            <Link
-              href="/admin/manage-org"
-              className="inline-flex items-center rounded-lg border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
-              aria-label="ดูหน่วยงานทั้งหมด"
-            >
-              ทั้งหมด
-            </Link>
-          </div>
-
-          <DepartmentTable departments={MOCK.departments} />
-        </div>
-
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-medium">ผู้ใช้</h2>
-            <Link
-              href="/admin/manage-user"
-              className="inline-flex items-center rounded-lg border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
-              aria-label="ดูผู้ใช้ทั้งหมด"
-            >
-              ทั้งหมด
-            </Link>
-          </div>
-
-          <UserTable users={MOCK.users} />
-        </div>
-      </div>
-    </div>
-  );
+    )
 }

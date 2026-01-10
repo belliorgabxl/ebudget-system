@@ -3,6 +3,7 @@ import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
 import Sidebar from "@/components/Sidebar"  
 import TopBar from "@/components/TopBar"    
+import SciFiBackgroundNormal from "@/components/background/bg-normal"
 
 export const metadata: Metadata = { title: "E-Budget" }
 
@@ -42,7 +43,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const serverUser = await getServerUser()
 
   return (
-    <div className="min-h-dvh bg-white [--app-header-h:64px]">
+    <div className="min-h-dvh bg-white ">
       <div className="md:hidden">
         <TopBar serverUser={serverUser} />
       </div>
@@ -50,8 +51,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="hidden md:flex">
         <Sidebar serverUser={serverUser} />
       </div>
-
-      <main className="pt-[var(--app-header-h)] md:pl-16 px-4 py-6">
+      
+      <main className="pt-[var(--app-header-h)] ">
+        
         {children}
       </main>
     </div>
