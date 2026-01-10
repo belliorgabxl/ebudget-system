@@ -4,7 +4,7 @@ import type {
   CreateProjectResponse,
 } from "@/dto/createProjectDto";
 import { clientFetch } from "@/lib/client-api";
-import { ProjectListItem } from "@/dto/projectDto";
+import { GeneralInfoForUpdateData, ProjectListItem } from "@/dto/projectDto";
 
 export async function getCalendarEvents(): Promise<GetCalenderEventRespond[]> {
   const r = await clientFetch<GetCalenderEventRespond[]>(
@@ -72,3 +72,15 @@ export async function getProjects(params: {
   return r.data ?? [];
 }
 
+export async function updateProjectDetail(
+  project_detail: GeneralInfoForUpdateData
+): Promise<{ message: string }> {
+  const r = await clientFetch<{ message: string }>("/api/projects", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_detail }),
+  });
+
+  if (!r.success) throw new Error(r.message ?? "Update project failed");
+  return r.data;
+}

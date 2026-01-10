@@ -3,18 +3,10 @@
 import { useState } from "react";
 import { GeneralInfoSection } from "../sections/GeneralSection";
 import { Project } from "@/types/project";
-
-type EditKey =
-  | "basic"
-  | "goal"
-  | "duration"
-  | "strategy"
-  | "kpi"
-  | "estimate"
-  | "expect"
-  | "budget"
-  | "activities"
-  | "approve";
+import { toast } from "react-toastify";
+import { GeneralInfoForUpdateData } from "@/dto/projectDto";
+import { updateProjectDetail } from "@/api/project.client";
+import { EditKey } from "@/constants/project";
 
 export function ProjectDetailClient({
   initialProject,
@@ -32,11 +24,20 @@ export function ProjectDetailClient({
   const beginEdit = (k: EditKey) => setEditing(k);
   const cancelEdit = () => setEditing(null);
 
-  const saveBasic = async (draft: Project["generalInfo"]) => {
+  const saveGeneralInfo = async (draft: GeneralInfoForUpdateData) => {
     try {
-      setSavingKey("basic");
-      setProject((p) => ({ ...p, generalInfo: draft }));
+      setSavingKey("general");
+      await updateProjectDetail(draft);
+
+      setProject((p) => ({
+        ...p,
+        generalInfo: draft,
+      }));
+
+      toast.success("บันทึกข้อมูลทั่วไปสำเร็จ");
       setEditing(null);
+    } catch (e: any) {
+      toast.error(e?.message || "บันทึกไม่สำเร็จ");
     } finally {
       setSavingKey(null);
     }
@@ -46,12 +47,12 @@ export function ProjectDetailClient({
     <div className="space-y-6">
       <GeneralInfoSection
         project={project.generalInfo}
-        canEdit={editing === null || editing === "basic"}
-        isEditing={isEditing("basic")}
-        isSaving={isSaving("basic")}
-        onEdit={() => beginEdit("basic")}
+        canEdit={editing === null || editing === "general"}
+        isEditing={isEditing("general")}
+        isSaving={isSaving("general")}
+        onEdit={() => beginEdit("general")}
         onCancel={cancelEdit}
-        onSave={saveBasic}
+        onSave={saveGeneralInfo}
       />
 
       {/* <GoalSection
