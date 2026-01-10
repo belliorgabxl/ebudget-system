@@ -1,7 +1,14 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { ClipboardList, Building2, TrendingUp, BarChart3, FileText } from "lucide-react"
+import { useRouter } from "next/navigation";
+import {
+  ClipboardList,
+  Building2,
+  TrendingUp,
+  BarChart3,
+  FileText,
+} from "lucide-react";
+import BackGroundLight from "@/components/background/bg-light";
 
 const reportTypes = [
   {
@@ -39,51 +46,56 @@ const reportTypes = [
     icon: BarChart3,
     color: "bg-gray-100 text-gray-700",
   },
-]
+];
 
 export default function CreateReportPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   const handleSelect = (id: string) => {
-    router.push(`/user/reports/new/${id}`)
-  }
+    router.push(`/user/reports/new/${id}`);
+  };
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">สร้างรายงานใหม่</h1>
-        <p className="text-sm text-gray-600">
-          โปรดเลือกประเภทของรายงานที่ต้องการสร้าง
-        </p>
-      </div>
+    <BackGroundLight>
+      <main className="w-full grid place-items-center lg:px-18 md:px-10 sm:px-5 px-1 py-6">
+        <div className="lg:px-20 lg:pt-0 pt-10 px-2 w-full mb-4 ">
+          <h1 className="text-xl  font-semibold text-gray-900">
+            สร้างรายงานใหม่
+          </h1>
+          <p className="text-sm text-gray-600">
+            โปรดเลือกประเภทของรายงานที่ต้องการสร้าง
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {reportTypes.map((type) => {
-          const Icon = type.icon
-          return (
-            <button
-              key={type.id}
-              onClick={() => handleSelect(type.id)}
-              className="group relative w-full rounded-xl border border-gray-200 bg-white p-5 text-left shadow-sm hover:shadow-md transition-shadow hover:border-indigo-400"
-            >
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-lg ${type.color} mb-3`}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {reportTypes.map((type) => {
+            const Icon = type.icon;
+            return (
+              <button
+                key={type.id}
+                onClick={() => handleSelect(type.id)}
+                className="group relative w-full rounded-xl border border-gray-200 bg-white p-5 text-left shadow-sm hover:shadow-md transition-shadow hover:border-indigo-400"
               >
-                <Icon className="h-5 w-5" />
-              </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-indigo-700">
-                {type.name}
-              </h3>
-              <p className="text-xs text-gray-600 line-clamp-2">{type.desc}</p>
-            </button>
-          )
-        })}
-      </div>
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${type.color} mb-3`}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-indigo-700">
+                  {type.name}
+                </h3>
+                <p className="text-xs text-gray-600 line-clamp-2">
+                  {type.desc}
+                </p>
+              </button>
+            );
+          })}
+        </div>
 
-      <div className="mt-10 text-center text-xs text-gray-500">
-        คุณสามารถสร้างรายงานประเภทใหม่ได้ในภายหลังจากเมนู “ตั้งค่า”
-      </div>
-    </main>
-  )
+        <div className="mt-10 text-center text-xs text-gray-500">
+          คุณสามารถสร้างรายงานประเภทใหม่ได้ในภายหลังจากเมนู “ตั้งค่า”
+        </div>
+      </main>
+    </BackGroundLight>
+  );
 }
-

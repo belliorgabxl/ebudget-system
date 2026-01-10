@@ -16,6 +16,9 @@ export default function GeneralInfoTable({ value, onChange }: Props) {
   const [type, setType] = useState(value?.type ?? "");
   const [department_id, setDepartment] = useState(value?.department_id ?? "");
   const [owner_user_id, setOwner] = useState(value?.owner_user_id ?? "");
+  const [description, setDescription] = useState<string>(
+    value?.description ?? ""
+  );
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -52,8 +55,9 @@ export default function GeneralInfoTable({ value, onChange }: Props) {
       type,
       department_id: department_id,
       owner_user_id: owner_user_id,
+      description: description,
     });
-  }, [name, type, department_id, owner_user_id, onChange]);
+  }, [name, type, department_id, owner_user_id, description, onChange]);
 
   return (
     <div className="space-y-4">
@@ -123,6 +127,19 @@ export default function GeneralInfoTable({ value, onChange }: Props) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="lg:flex grid gap-3 items-center">
+          <label className="text-sm text-gray-700 min-w-[180px]">
+            อธิบายรายละเอียดของโครงการ
+          </label>
+          <textarea
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="px-4 py-1 border rounded-lg border-gray-300 w-full"
+            placeholder="ระบุชื่อโครงการ"
+          />
         </div>
       </div>
     </div>

@@ -61,7 +61,7 @@ export default function Page() {
     <BackGroundLight>
       <main className="w-full grid place-items-center lg:px-18 md:px-10 sm:px-5 px-1 py-6">
         <div className="lg:px-20 lg:pt-0 pt-10 px-2 w-full">
-          <div className="w-full mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="w-full mb-2 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-xl font-semibold text-gray-900">
                 โปรเจ็คทั้งหมด
@@ -85,9 +85,9 @@ export default function Page() {
               </Link>
             </div>
           </div>
-          <section className="relative mb-5">
+          <section className="relative mb-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="relative w-fit lg:px-10  overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600  to-sky-200 px-6 py-2 text-white shadow-md shadow-indigo-300/30">
+              <div className="relative w-full lg:px-5  overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600  to-sky-200 px-6 py-2 text-white shadow-md shadow-indigo-300/30">
                 <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/20 blur-2xl" />
                 <div className="absolute -left-8 bottom-0 h-36 w-36 rounded-full bg-white/10 blur-3xl" />
 
@@ -138,7 +138,7 @@ export default function Page() {
                         <tr>
                           <Th className="w-15 text-center">No.</Th>
                           <Th className="w-100">ชื่อโครงการ</Th>
-                          <Th className="w-20 whitespace-nowrap">
+                          <Th className="w-20 text-xs whitespace-nowrap">
                             รหัสโครงการ
                           </Th>
                           <Th className="w-50 whitespace-nowrap">หน่วยงาน</Th>
@@ -173,7 +173,7 @@ export default function Page() {
                                 </div>
                               </Td>
 
-                              <Td className="text-gray-700 text-start pl-3 py-1.5">
+                              <Td className="text-gray-700 text-xs text-start pl-3 py-1.5">
                                 {p.code || "—"}
                               </Td>
 
@@ -185,7 +185,7 @@ export default function Page() {
                                 {renderDateRange(p.start_date, p.end_date)}
                               </Td>
 
-                              <Td className="text-green-700 text-start py-1.5">
+                              <Td className="text-green-700 text-xs text-start py-1.5">
                                 {p.location ? p.location.slice(0, 30) : "—"}
                               </Td>
 

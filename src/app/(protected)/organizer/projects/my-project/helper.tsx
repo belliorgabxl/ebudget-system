@@ -8,7 +8,7 @@ export function Th({
 }) {
   return (
     <th
-      className={`px-3 py-2 lg:text-base  text-sm font-semibold text-center text-gray-700 ${className}`}
+      className={`px-3 py-2  text-sm font-semibold text-center text-gray-700 ${className}`}
     >
       {children}
     </th>

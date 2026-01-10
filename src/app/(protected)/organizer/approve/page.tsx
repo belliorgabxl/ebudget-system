@@ -24,7 +24,11 @@ export default async function Page({
   const pg = res.pagination;
 
   const page = pg?.page ?? Math.max(1, Number(sp.page ?? "1") || 1);
-
+  const truncateText = (text?: string, max = 100) => {
+    if (!text) return "—";
+    if (text.length <= max) return text;
+    return text.slice(0, max) + "...";
+  };
   return (
     <BackGroundLight>
       <div className="w-full flex py-5 justify-center">
@@ -88,7 +92,8 @@ export default async function Page({
 
               <button
                 type="submit"
-                className="lg:w-40 h-fit  w-full rounded-lg bg-blue-600 hover:bg-blue-800 px-4 
+                className="lg:w-40 h-fit  w-full rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-blue-800
+                hover:to-blue-800 hover:scale-[102%] px-4 
                 py-2 text-sm font-medium text-white hover:opacity-90"
               >
                 ค้นหา
@@ -123,9 +128,13 @@ export default async function Page({
                             <p className="font-semibold">รหัส:</p> {p.code}
                           </span>
                         ) : null}
+                        |
                         <span className="flex gap-3 items-center">
-                          <p className="font-semibold">รายละเอียด:</p>{" "}
-                          {p.description || "—"}
+                          <p className="font-semibold line-clamp-1">
+                            รายละเอียด:
+                          </p>{" "}
+                          <p className="lg:block hidden">{truncateText(p.description, 150)}</p>
+                          <p className="lg:hidden block">{truncateText(p.description, 45)}</p>
                         </span>
                       </div>
                       <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">

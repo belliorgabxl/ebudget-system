@@ -118,6 +118,7 @@ export default function CreateProjectPage() {
     type: "",
     department_id: "",
     owner_user_id: "",
+    description: "",
   });
 
   // location
@@ -191,7 +192,6 @@ export default function CreateProjectPage() {
     setEstimate(v);
   }, []);
 
-  
   // goal part
   const [goal, setGoal] = useState<GoalParams>({
     quantityGoal: "",
@@ -218,12 +218,11 @@ export default function CreateProjectPage() {
 
     return {
       name: generalInfo.name,
-      description: "",
       department_id: generalInfo.department_id,
       organization_id: String(authUser?.org_id) ?? "",
       owner_user_id: generalInfo.owner_user_id,
       plan_type: generalInfo.type,
-
+      description: generalInfo.description,
       start_date: dateDur.startDate,
       end_date: dateDur.endDate,
 

@@ -71,6 +71,7 @@ export type GeneralInfoParams = {
   type: string;
   department_id: string;
   owner_user_id: string;
+  description : string;
 };
 
 // strategy component part
