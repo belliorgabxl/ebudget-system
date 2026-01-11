@@ -4,7 +4,7 @@ import { fetchProjectInformationServer } from "@/api/project.server";
 import { Info } from "@/components/approve/InfoBox";
 import { ProjectIcon } from "@/components/project/Helper";
 import Link from "next/link";
-import { checkApprovalPermissionServer } from "@/api/approval.server";
+import { checkApprovalPermissionServer, CheckPermissionResponse } from "@/api/approval.server";
 
 type PageParams = Promise<{ id: string }>;
 
@@ -26,14 +26,14 @@ export default async function ProjectApprovePage({
 }) {
   const { id: projectId } = await params;
   const p = await fetchProjectInformationServer(projectId);
-  let canApprove = false;
+   let permission: CheckPermissionResponse | null = null;
   try {
-    canApprove = await checkApprovalPermissionServer(p.budget_plan_id);
+    permission = await checkApprovalPermissionServer(p.budget_plan_id);
   } catch (e) {
     console.error("checkApprovalPermissionServer error:", e);
-    canApprove = false;
+    permission = null;
   }
-
+ const canApprove = Boolean(permission?.has_permission);
   if (!canApprove) {
     return (
       <BackGroundLight>
