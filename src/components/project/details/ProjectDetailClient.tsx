@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { GeneralInfoForUpdateData } from "@/dto/projectDto";
 import { updateProjectDetail } from "@/api/project.client";
 import { EditKey } from "@/constants/project";
+import { BudgetSection } from "../sections/BudgetSection";
 
 export function ProjectDetailClient({
   initialProject,
@@ -54,7 +55,43 @@ export function ProjectDetailClient({
         onCancel={cancelEdit}
         onSave={saveGeneralInfo}
       />
+      <BudgetSection
+        projectId={project.id}
+        budget={project.budget}
+        canEdit={editing === null || editing === "budget"}
+        isEditing={isEditing("budget")}
+        isSaving={isSaving("budget")}
+        onEdit={() => beginEdit("budget")}
+        onCancel={cancelEdit}
+        onSave={async (draft, computedTotal) => {
+          try {
+            setSavingKey("budget");
+            setProject((p) => ({
+              ...p,
+              budget: {
+                rows: draft.budget_items.map((it, idx) => ({
+                  id: idx + 1,
+                  name: it.name,
+                  amount: it.amount,
+                  remark: it.remark,
+                })),
+                total: computedTotal,
+                sources: {
+                  source: draft.budget_source,
+                  externalAgency: draft.budget_source_department,
+                },
+              },
+            }));
 
+            toast.success("บันทึกงบประมาณสำเร็จ");
+            setEditing(null);
+          } catch (e: any) {
+            toast.error(e?.message || "บันทึกไม่สำเร็จ");
+          } finally {
+            setSavingKey(null);
+          }
+        }}
+      />
       {/* <GoalSection
         project={project}
         canEdit={editing === null || editing === "goal"}

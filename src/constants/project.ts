@@ -15,3 +15,11 @@ export type EditKey =
   | "budget"
   | "activities"
   | "approve";
+
+export type BudgetSourceType = "school" | "revenue" | "external";
+
+export const BUDGET_SOURCE_LABEL: Record<BudgetSourceType, string> = {
+  school: "งบสถานศึกษา",
+  revenue: "เงินรายได้",
+  external: "ภายนอก (ระบุหน่วยงาน)",
+};

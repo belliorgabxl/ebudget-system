@@ -5,6 +5,7 @@ import type {
 } from "@/dto/createProjectDto";
 import { clientFetch } from "@/lib/client-api";
 import { GeneralInfoForUpdateData, ProjectListItem } from "@/dto/projectDto";
+import { normalizeDateOnly } from "@/lib/helper";
 
 export async function getCalendarEvents(): Promise<GetCalenderEventRespond[]> {
   const r = await clientFetch<GetCalenderEventRespond[]>(
@@ -73,12 +74,19 @@ export async function getProjects(params: {
 }
 
 export async function updateProjectDetail(
-  project_detail: GeneralInfoForUpdateData
+  payload: GeneralInfoForUpdateData
 ): Promise<{ message: string }> {
+  const normalized: GeneralInfoForUpdateData = {
+    ...payload,
+    regular_work_template_id: "60001234-1234-1234-1234-123456789003",
+    start_date: normalizeDateOnly(payload.start_date),
+    end_date: normalizeDateOnly(payload.end_date),
+  };
+
   const r = await clientFetch<{ message: string }>("/api/projects", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_detail }),
+    body: JSON.stringify(normalized),
   });
 
   if (!r.success) throw new Error(r.message ?? "Update project failed");

@@ -41,15 +41,15 @@ export type DateDurationValue = {
 
 // budget component part
 export type BudgetTableValue = {
-  rows: BudgetRow[];
+  rows: BudgetItems[];
   total: number;
   sources: FundingSources;
 };
-export type BudgetRow = {
+export type BudgetItems = {
   id: number;
-  item: string;
+  name: string;
   amount: string;
-  note: string;
+  remark: string;
 };
 
 export type FundingSources = {
@@ -220,6 +220,7 @@ export interface GeneralInfoForUpdateData {
   rationale:string;
   location : string;
   project_id : string;
+  regular_work_template_id:string;
   quantitative_goal:string;
   qualitative_goal :string;
   start_date: string;

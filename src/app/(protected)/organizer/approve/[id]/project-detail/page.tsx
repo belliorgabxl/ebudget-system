@@ -447,11 +447,11 @@ export default async function Page({ params }: { params: PageParams }) {
                         budget.rows.map((r) => (
                           <tr key={r.id}>
                             <Td className="px-3 py-2 text-center">{r.id}</Td>
-                            <Td className="px-3 py-2">{r.item || "—"}</Td>
+                            <Td className="px-3 py-2">{r.name || "—"}</Td>
                             <Td className="px-3 py-2 text-right">
                               {moneyOrDash(r.amount)}
                             </Td>
-                            <Td className="px-3 py-2">{r.note || "—"}</Td>
+                            <Td className="px-3 py-2">{r.remark || "—"}</Td>
                           </tr>
                         ))
                       ) : (

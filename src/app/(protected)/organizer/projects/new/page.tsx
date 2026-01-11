@@ -239,9 +239,9 @@ export default function CreateProjectPage() {
             budget_amount: budget.total,
 
             budget_items: budget.rows.map((row) => ({
-              name: row.item,
+              name: row.name,
               amount: Number(row.amount),
-              remark: row.note ?? "",
+              remark: row.remark ?? "",
             })),
 
             budget_source: budget.sources.source,

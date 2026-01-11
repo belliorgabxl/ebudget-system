@@ -35,8 +35,14 @@ export function GeneralInfoSection({
   const [draft, setDraft] = useState<GeneralInfoForUpdateData>(original);
 
   useEffect(() => {
-    if (isEditing) setDraft(original);
-  }, [isEditing, original]);
+    if (!isEditing) return;
+
+    setDraft((prev) => ({
+      ...project,
+      project_id: project?.project_id ?? prev?.project_id ?? "",
+      regular_work_template_id: "",
+    }));
+  }, [isEditing, project]);
 
   const planTypeLabel = useMemo(() => {
     return PROJECT_TYPE_LABEL[draft?.plan_type] || "—";
@@ -65,6 +71,8 @@ export function GeneralInfoSection({
           />
           <Field label="รหัสโครงการ" value={original?.code || "—"} />
 
+          <Field label="สถานที่" value={original?.location || "—"} />
+
           <Field
             label="วันเริ่มโครงการ"
             value={dateOrDash(original?.start_date)}
@@ -73,8 +81,6 @@ export function GeneralInfoSection({
             label="วันสิ้นสุดโครงการ"
             value={dateOrDash(original?.end_date)}
           />
-
-          <Field label="สถานที่" value={original?.location || "—"} />
 
           <Field label="หลักการและเหตุผล">
             <p className="text-sm text-gray-800 whitespace-pre-line">
@@ -132,7 +138,7 @@ export function GeneralInfoSection({
             </label>
 
             <label className="space-y-1">
-               <BadgeLabel title="รหัสโครงการ" />
+              <BadgeLabel title="รหัสโครงการ" />
               <input
                 value={draft.code ?? ""}
                 onChange={(e) =>
@@ -142,8 +148,19 @@ export function GeneralInfoSection({
               />
             </label>
 
+            <label className="space-y-1 md:col-span-2">
+              <BadgeLabel title="สถานที่" />
+              <input
+                value={draft.location ?? ""}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, location: e.target.value }))
+                }
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              />
+            </label>
+
             <label className="space-y-1">
-            <BadgeLabel title="วันเริ่มโครงการ" />
+              <BadgeLabel title="วันเริ่มโครงการ" />
               <input
                 type="date"
                 value={(draft.start_date ?? "").slice(0, 10)}
@@ -161,17 +178,6 @@ export function GeneralInfoSection({
                 value={(draft.end_date ?? "").slice(0, 10)}
                 onChange={(e) =>
                   setDraft((d) => ({ ...d, end_date: e.target.value }))
-                }
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-              />
-            </label>
-
-            <label className="space-y-1 md:col-span-2">
-              <BadgeLabel title="สถานที่" />
-              <input
-                value={draft.location ?? ""}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, location: e.target.value }))
                 }
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               />

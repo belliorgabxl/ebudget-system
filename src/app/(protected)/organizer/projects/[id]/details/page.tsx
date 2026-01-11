@@ -18,6 +18,7 @@ import { fetchProjectInformationServer } from "@/api/project.server";
 import { Th } from "@/components/approve/Helper";
 import { ProjectDetailClient } from "@/components/project/details/ProjectDetailClient";
 import BackGroundLight from "@/components/background/bg-light";
+import { BudgetSectionDraft } from "@/dto/sectionupdate";
 
 type Project = {
   id: string;
@@ -96,9 +97,9 @@ async function getProject(id: string): Promise<Project | null> {
     const budgetItems = apiData.budget_items ?? [];
     const rows = budgetItems.map((b, idx) => ({
       id: idx + 1,
-      item: b.name || "",
+      name: b.name || "",
       amount: String(b.amount ?? 0),
-      note: b.remark || "",
+      remark: b.remark || "",
     }));
 
     const budgetTotal =
@@ -114,9 +115,8 @@ async function getProject(id: string): Promise<Project | null> {
           source: apiData.budget_source || "",
           externalAgency: (apiData as any).budget_source_department || "",
         },
-      } as any;
+      } satisfies BudgetTableValue;
     }
-
     const activities: ActivitiesRow[] = (apiData.progress || []).map(
       (p, idx) => ({
         id: p.sequence_number || idx + 1,

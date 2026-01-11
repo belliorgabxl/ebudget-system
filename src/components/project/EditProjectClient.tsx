@@ -78,9 +78,9 @@ export default function EditProjectClient({
       const nextRows = prev.budget?.rows ? [...prev.budget.rows] : [];
       nextRows.push({
         id: nextRows.length + 1,
-        item: "",
+        name: "",
         amount: "0",
-        note: "",
+        remark: "",
       });
       return {
         ...prev,
@@ -593,7 +593,7 @@ export default function EditProjectClient({
                           <input
                             type="text"
                             className="form-input"
-                            value={r.item}
+                            value={r.name}
                             onChange={(e) =>
                               handleBudgetRowChange(idx, "item", e.target.value)
                             }
@@ -617,7 +617,7 @@ export default function EditProjectClient({
                           <input
                             type="text"
                             className="form-input"
-                            value={r.note}
+                            value={r.remark}
                             onChange={(e) =>
                               handleBudgetRowChange(idx, "note", e.target.value)
                             }

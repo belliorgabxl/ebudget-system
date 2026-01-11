@@ -31,11 +31,12 @@ export async function POST(req: Request) {
 }
 
 
+
 export async function PATCH(req: Request) {
-  let payload: { project_detail: GeneralInfoForUpdateData } | null = null;
+  let payload: GeneralInfoForUpdateData | null = null;
 
   try {
-    payload = (await req.json()) as { project_detail: GeneralInfoForUpdateData };
+    payload = (await req.json()) as GeneralInfoForUpdateData;
   } catch {
     return NextResponse.json(
       { success: false, message: "Invalid JSON body" },
@@ -43,13 +44,12 @@ export async function PATCH(req: Request) {
     );
   }
 
-  if (!payload?.project_detail?.project_id) {
+  if (!payload?.project_id) {
     return NextResponse.json(
       { success: false, message: "project_id is required" },
       { status: 400 }
     );
   }
-
 
   const r = await nestFetch<{ message: string }>("/projects", {
     method: "PATCH",

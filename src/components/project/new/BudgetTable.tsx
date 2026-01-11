@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { BadgeCreateFormProject } from "../Helper";
-import { BudgetRow, BudgetTableValue, FundingSources } from "@/dto/projectDto";
+import { BudgetItems, BudgetTableValue, FundingSources } from "@/dto/projectDto";
 
 export function BudgetTable({
   value,
@@ -10,8 +10,8 @@ export function BudgetTable({
   value?: BudgetTableValue;
   onChange: (v: BudgetTableValue) => void;
 }) {
-  const [rows, setRows] = useState<BudgetRow[]>(
-    value?.rows ?? [{ id: 1, item: "", amount: "", note: "" }]
+  const [rows, setRows] = useState<BudgetItems[]>(
+    value?.rows ?? [{ id: 1, name: "", amount: "", remark: "" }]
   );
 
   const [sources, setSources] = useState<FundingSources>(
@@ -33,7 +33,7 @@ export function BudgetTable({
   const addRow = () => {
     setRows((prev) => [
       ...prev,
-      { id: prev.length + 1, item: "", amount: "", note: "" },
+      { id: prev.length + 1, name: "", amount: "", remark: "" },
     ]);
   };
 
@@ -44,7 +44,7 @@ export function BudgetTable({
     });
   };
 
-  const updateRow = (idx: number, field: keyof BudgetRow, value: string) => {
+  const updateRow = (idx: number, field: keyof BudgetItems, value: string) => {
     setRows((prev) => {
       const copy = [...prev];
       copy[idx] = { ...copy[idx], [field]: value };
@@ -170,8 +170,8 @@ export function BudgetTable({
                   <td className="border border-gray-300 px-4 py-2">
                     <input
                       type="text"
-                      value={row.item}
-                      onChange={(e) => updateRow(idx, "item", e.target.value)}
+                      value={row.name}
+                      onChange={(e) => updateRow(idx, "name", e.target.value)}
                       placeholder={`ระบุรายการ (ลำดับ ${row.id})`}
                       className="w-full focus:outline-none"
                     />
@@ -190,8 +190,8 @@ export function BudgetTable({
                   <td className="border border-gray-300 px-4 py-2">
                     <input
                       type="text"
-                      value={row.note}
-                      onChange={(e) => updateRow(idx, "note", e.target.value)}
+                      value={row.remark}
+                      onChange={(e) => updateRow(idx, "remark", e.target.value)}
                       placeholder="หมายเหตุ"
                       className="w-full focus:outline-none"
                     />

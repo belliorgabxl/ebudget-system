@@ -15,6 +15,7 @@ import {
   ValidationIssue,
 } from "@/dto/projectDto";
 import { pushIfEmpty, validateStartEndDate } from "./util";
+import { BudgetSourceType } from "@/constants/project";
 
 export function mapFormToPayload(form: EditFormState) {
   return {
@@ -71,9 +72,9 @@ export function mapApiToForm(
   if (apiData.budget_items && apiData.budget_items.length > 0) {
     const rows = apiData.budget_items.map((b, idx) => ({
       id: idx + 1,
-      item: b.name || "",
+      name: b.name || "",
       amount: String(b.amount ?? 0),
-      note: b.remark || "",
+      remark: b.remark || "",
     }));
 
     budget = {
@@ -290,7 +291,7 @@ export function validateStep(
         });
       }
       const badRow = data.budget.rows?.find(
-        (r) => !r.item?.trim() || Number(r.amount) <= 0
+        (r) => !r.name?.trim() || Number(r.amount) <= 0
       );
       if (badRow)
         issues.push({
@@ -370,3 +371,26 @@ export function validateStep(
 
   return issues;
 }
+
+export function normalizeDateOnly(input?: string | null): string {
+  if (!input) return "";
+  return String(input).slice(0, 10);
+}
+
+export const normalizeBudgetSourceLabel = (v?: string) => {
+  if (!v) return "—";
+  if (v.includes("external")) return "ภายนอก (ระบุหน่วยงาน)";
+  if (v.includes("revenue")) return "เงินรายได้";
+  if (v.includes("school")) return "งบสถานศึกษา";
+  return v;
+};
+
+export const toBudgetSourceType = (v?: string): BudgetSourceType => {
+  const s = String(v ?? "").trim().toLowerCase();
+
+  if (s === "revenue") return "revenue";
+  if (s === "school") return "school";
+  if (s === "external") return "external";
+
+  return "revenue";
+};
