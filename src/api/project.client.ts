@@ -4,8 +4,14 @@ import type {
   CreateProjectResponse,
 } from "@/dto/createProjectDto";
 import { clientFetch } from "@/lib/client-api";
-import { GeneralInfoForUpdateData, ProjectListItem } from "@/dto/projectDto";
+import {
+  GeneralInfoForUpdateData,
+  KpiMaster,
+  ProjectListItem,
+} from "@/dto/projectDto";
 import { normalizeDateOnly } from "@/lib/helper";
+import { UpdateBudgetPlanPayload } from "@/app/api/budget/update-by-project/route";
+import { ObjectiveOutcomePayload } from "@/dto/sectionupdate";
 
 export async function getCalendarEvents(): Promise<GetCalenderEventRespond[]> {
   const r = await clientFetch<GetCalenderEventRespond[]>(
@@ -90,5 +96,61 @@ export async function updateProjectDetail(
   });
 
   if (!r.success) throw new Error(r.message ?? "Update project failed");
+  return r.data;
+}
+
+export async function updateBudgetPlanByProject(
+  payload: UpdateBudgetPlanPayload
+): Promise<{ message: string }> {
+  const r = await clientFetch<{ message: string }>(
+    "/api/budget/update-by-project",
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!r.success) throw new Error(r.message ?? "Update budget plan failed");
+  return r.data;
+}
+
+export async function updateProjectKpis(payload: {
+  project_id: string;
+  kpi_ids: number[];
+}) {
+  const r = await clientFetch<{ message: string }>("/api/projects/kpis", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!r.success) throw new Error(r.message ?? "Update KPI failed");
+  return r.data;
+}
+
+export async function getKpiMasters(): Promise<KpiMaster[]> {
+  const r = await clientFetch<KpiMaster[]>("/api/kpis", {
+    method: "GET",
+  });
+
+  if (!r.success) throw new Error(r.message ?? "Load KPI failed");
+  return r.data;
+}
+
+export async function updateProjectObjectivesOutcomes(
+  payload: ObjectiveOutcomePayload
+): Promise<{ message: string }> {
+  const r = await clientFetch<{ message: string }>(
+    "/api/projects/objectives-outcomes",
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!r.success)
+    throw new Error(r.message ?? "Update objectives/outcomes failed");
   return r.data;
 }

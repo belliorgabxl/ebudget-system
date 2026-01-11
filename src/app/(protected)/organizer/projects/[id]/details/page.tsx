@@ -9,16 +9,15 @@ import type {
   ExpectParams,
   GeneralInfoForUpdateData,
   GoalParams,
-  KPIParams,
   ProjectInformationResponse,
+  ProjectKPI,
+  ProjectObjectiveOrOutcome,
   StrategyParams,
 } from "@/dto/projectDto";
 import { cookies } from "next/headers";
 import { fetchProjectInformationServer } from "@/api/project.server";
-import { Th } from "@/components/approve/Helper";
 import { ProjectDetailClient } from "@/components/project/details/ProjectDetailClient";
 import BackGroundLight from "@/components/background/bg-light";
-import { BudgetSectionDraft } from "@/dto/sectionupdate";
 
 type Project = {
   id: string;
@@ -26,15 +25,14 @@ type Project = {
   status: "draft" | "in_progress" | "on_hold" | "done";
   progress: number;
   updatedAt: string;
-
+  project_objectives_and_outcomes: ProjectObjectiveOrOutcome[];
   generalInfo: GeneralInfoForUpdateData;
   strategy: StrategyParams;
   duration: DateDurationValue;
   budget: BudgetTableValue | null;
   activities: ActivitiesRow[];
-  kpi: KPIParams;
+  kpi: ProjectKPI[];
   estimate: EstimateParams;
-  expect: ExpectParams;
   approve: ApproveParams;
   goal: GoalParams;
 };
@@ -132,7 +130,19 @@ async function getProject(id: string): Promise<Project | null> {
       ovEcPolicy: "",
       qaIndicator: "",
     };
-    const kpis = (apiData as any).project_kpis ?? [];
+
+    const kpis: ProjectKPI[] = Array.isArray(apiData.project_kpis)
+      ? apiData.project_kpis.map((k: any) => ({
+          id: Number(k.id),
+          indicator: String(k.indicator ?? ""),
+          target_value:
+            k.target_value !== null && k.target_value !== undefined
+              ? String(k.target_value)
+              : "",
+          description: String(k.description ?? ""),
+        }))
+      : [];
+
     const kpiText = Array.isArray(kpis)
       ? kpis
           .map((k: any) => {
@@ -152,11 +162,6 @@ async function getProject(id: string): Promise<Project | null> {
           .join("\n")
       : "";
 
-    const kpi: KPIParams = {
-      output: kpiText,
-      outcome: "",
-    };
-
     const evals = (apiData as any).project_evaluation ?? [];
     const latestEval =
       Array.isArray(evals) && evals.length
@@ -174,18 +179,15 @@ async function getProject(id: string): Promise<Project | null> {
       endDate: latestEval?.end_date || "",
     } as any;
 
-    const oo = (apiData as any).project_objectives_and_outcomes ?? [];
-    const expectList = Array.isArray(oo)
-      ? oo
-          .filter((x: any) => x?.type === "expectation")
-          .map((x: any) => ({ description: String(x?.description ?? "") }))
-          .filter((x: any) => x.description.trim())
-      : [];
-
-    const expect: ExpectParams = {
-      results: expectList as any,
-    };
-
+    const project_objectives_and_outcomes: ProjectObjectiveOrOutcome[] =
+      Array.isArray((apiData as any).project_objectives_and_outcomes)
+        ? (apiData as any).project_objectives_and_outcomes.map((x: any) => ({
+            id: Number(x?.id ?? 0),
+            project_id: String(x?.project_id ?? id),
+            type: (x?.type as "objective" | "expectation") ?? "objective",
+            description: String(x?.description ?? ""),
+          }))
+        : [];
     const approve: ApproveParams = {
       proposerName: "",
       proposerPosition: "",
@@ -205,9 +207,9 @@ async function getProject(id: string): Promise<Project | null> {
       duration,
       budget,
       activities,
-      kpi,
+      kpi: kpis,
       estimate,
-      expect,
+      project_objectives_and_outcomes: project_objectives_and_outcomes,
       approve,
       goal,
     };

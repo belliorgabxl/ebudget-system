@@ -268,8 +268,26 @@ export default function CreateProjectPage() {
       project_kpis:
         kpi.output || kpi.outcome
           ? [
-              ...(kpi.output ? [{ description: kpi.output }] : []),
-              ...(kpi.outcome ? [{ description: kpi.outcome }] : []),
+              ...(kpi.output
+                ? [
+                    {
+                      id: 0,
+                      indicator: "Output",
+                      target_value: "",
+                      description: kpi.output,
+                    },
+                  ]
+                : []),
+              ...(kpi.outcome
+                ? [
+                    {
+                      id: 0,
+                      indicator: "Outcome",
+                      target_value: "",
+                      description: kpi.outcome,
+                    },
+                  ]
+                : []),
             ]
           : undefined,
 

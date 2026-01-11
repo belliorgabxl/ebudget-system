@@ -394,3 +394,9 @@ export const toBudgetSourceType = (v?: string): BudgetSourceType => {
 
   return "revenue";
 };
+
+
+export const toNumber = (v: string) => {
+  const n = parseFloat(String(v ?? "").replace(/,/g, ""));
+  return Number.isFinite(n) ? n : 0;
+};

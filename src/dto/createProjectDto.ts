@@ -1,4 +1,4 @@
-
+import { ProjectKPI } from "./projectDto";
 
 export interface BudgetItem {
   amount: number;
@@ -23,10 +23,6 @@ export interface Budgets {
   submitted_at?: string;
   updated_at?: string;
   updated_by?: string;
-}
-
-export interface ProjectKpi {
-  description: string;
 }
 
 export interface ProjectObjectiveOutcome {
@@ -63,7 +59,7 @@ export interface CreateProjectPayload {
   organization_id: string;
   owner_user_id: string;
   plan_type: string; 
-  project_kpis?: ProjectKpi[];
+  project_kpis?: ProjectKPI[];
   project_objective_and_outcomes?: ProjectObjectiveOutcome[];
   project_progress?: ProjectProgress[];
   project_qa_indicators?: ProjectQaIndicator[];

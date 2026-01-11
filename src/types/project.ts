@@ -3,12 +3,12 @@ import type {
   DateDurationValue,
   BudgetTableValue,
   ActivitiesRow,
-  KPIParams,
   EstimateParams,
-  ExpectParams,
   ApproveParams,
   GoalParams,
   GeneralInfoForUpdateData,
+  ProjectKPI,
+  ProjectObjectiveOrOutcome,
 } from "@/dto/projectDto";
 
 export type Project = {
@@ -22,9 +22,9 @@ export type Project = {
   duration: DateDurationValue;
   budget: BudgetTableValue | null;
   activities: ActivitiesRow[];
-  kpi: KPIParams;
+  kpi: ProjectKPI[];
   estimate: EstimateParams;
-  expect: ExpectParams;
   approve: ApproveParams;
+  project_objectives_and_outcomes: ProjectObjectiveOrOutcome[];
   goal: GoalParams;
 };

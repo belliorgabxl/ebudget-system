@@ -110,10 +110,13 @@ export type KPIParams = {
   outcome: string;
 };
 
+
 export type ExpectItem = {
   description: string;
   type: string;
 };
+
+
 export type ExpectParams = {
   results: ExpectItem[];
 };
@@ -258,4 +261,14 @@ export type ProjectListItem = {
   owner?: string;
   status?: string;
   updatedAt?: string;
+};
+
+export type KpiMaster = {
+  id: number;
+  name: string;
+  type: "output" | "outcome";
+};
+
+export type KpiSectionDraft = {
+  kpi_ids: number[];
 };
