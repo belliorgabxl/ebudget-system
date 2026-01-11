@@ -23,3 +23,9 @@ export const BUDGET_SOURCE_LABEL: Record<BudgetSourceType, string> = {
   revenue: "เงินรายได้",
   external: "ภายนอก (ระบุหน่วยงาน)",
 };
+
+export const ROLE_LABEL: Record<number, string> = {
+  1: "หัวหน้าแผนก",
+  2: "ฝ่ายวางแผน",
+  3: "ผู้อำนวยการ",
+};

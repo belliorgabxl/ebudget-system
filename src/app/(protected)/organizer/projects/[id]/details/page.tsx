@@ -18,6 +18,8 @@ import { cookies } from "next/headers";
 import { fetchProjectInformationServer } from "@/api/project.server";
 import { ProjectDetailClient } from "@/components/project/details/ProjectDetailClient";
 import BackGroundLight from "@/components/background/bg-light";
+import { SquareArrowUp } from "lucide-react";
+import ApprovalStatusButton from "@/components/project/approval/ApprovalStatusButton";
 
 type Project = {
   id: string;
@@ -278,6 +280,7 @@ export default async function Page({ params }: { params: PageParams }) {
               </span>
             </div>
           </div>
+          <ApprovalStatusButton projectId={p.id} status={p.budgetPlanStatus} />
         </div>
         <ProjectDetailClient initialProject={p} />
       </main>

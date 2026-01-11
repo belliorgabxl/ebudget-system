@@ -301,7 +301,7 @@ export default async function Page({ params }: { params: PageParams }) {
             href={`/organizer/projects/approval/${p.id}`}
             className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
           >
-            ส่งอนุมัติ
+            ยื่นอนุมัติโครงการ
           </Link>
         </div>
       </div>

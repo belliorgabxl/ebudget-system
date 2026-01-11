@@ -31,8 +31,12 @@ import { cookies } from "next/headers";
 import { fetchProjectInformationServer } from "@/api/project.server";
 import BackGroundLight from "@/components/background/bg-light";
 import { Td, Th } from "@/components/approve/Helper";
-import { checkApprovalPermissionServer } from "@/api/approval.server";
+import {
+  checkApprovalPermissionServer,
+  CheckPermissionResponse,
+} from "@/api/approval.server";
 import { ArrowRight, FileClock } from "lucide-react";
+import { ROLE_LABEL } from "@/constants/project";
 
 type Project = {
   id: string;
@@ -241,14 +245,16 @@ export default async function Page({ params }: { params: PageParams }) {
     );
   }
   const budgetPlanId = p.budgetPlanId;
-  let canApprove = false;
-
+  let permission: CheckPermissionResponse | null = null;
   try {
-    canApprove = await checkApprovalPermissionServer(budgetPlanId);
+    permission = await checkApprovalPermissionServer(budgetPlanId);
   } catch (e) {
     console.error("checkApprovalPermissionServer error:", e);
-    canApprove = false;
+    permission = null;
   }
+  const canApprove = Boolean(permission?.has_permission);
+  const currentRole = permission?.currentRole ?? 0;
+  const currentLevel = permission?.current_level ?? 0;
   const {
     generalInfo,
     strategy,
@@ -290,16 +296,32 @@ export default async function Page({ params }: { params: PageParams }) {
               </div>
             </div>
 
-            {canApprove ? (
-              <Link
-                href={`/organizer/approve/${id}/approve`}
-                className="rounded-md flex justify-center items-center gap-4 bg-indigo-600 hover:bg-indigo-900 px-4 py-2 text-sm font-semibold text-white"
-              >
-                <FileClock className="h-5 w-5 text-white " />
-                อนุมัติโครงการ
-                <ArrowRight className="text-white h-5 w-5" />
-              </Link>
-            ) : null}
+            {permission?.has_permission && (
+              <div className="flex flex-col gap-1">
+                <Link
+                  href={`/organizer/approve/${id}/approve`}
+                  className="rounded-md flex justify-center items-center gap-4
+                    bg-indigo-600 hover:bg-indigo-900
+                    px-4 py-2 text-sm font-semibold text-white"
+                >
+                  <FileClock className="h-5 w-5 text-white" />
+                  อนุมัติโครงการ
+                  <ArrowRight className="h-5 w-5 text-white" />
+                </Link>
+
+                <p className="text-xs text-gray-500 text-center">
+                  คุณกำลังอนุมัติในฐานะ{" "}
+                  <span className="font-medium text-gray-700">
+                    {ROLE_LABEL[permission.currentRole] ?? "—"}
+                  </span>
+                </p>
+              </div>
+            )}
+            {permission && !permission.has_permission && (
+              <div className="rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-500">
+                ขณะนี้ยังไม่ถึงลำดับการอนุมัติของคุณ
+              </div>
+            )}
           </div>
           <section className="mb-8 rounded-md border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
