@@ -484,3 +484,20 @@ export function normThaiKey(s?: string) {
     .replace(/[\s\u200B-\u200D\uFEFF]+/g, "") 
     .trim();
 }
+
+export function mapPlanTypeToThai(type?: string) {
+  switch (type) {
+    case "regular_work":
+      return "งานประจำ";
+    case "special_project":
+      return "โครงการพิเศษเฉพาะทาง"
+    case "strategic_plan":
+      return "แผนยุทธศาสตร์";
+    case "investment":
+      return "โครงการลงทุน";
+    case "development":
+      return "โครงการพัฒนา";
+    default:
+      return "—";
+  }
+}
