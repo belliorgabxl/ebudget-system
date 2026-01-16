@@ -99,8 +99,6 @@ export function mapStatusToIsActive(status?: string): string | undefined {
 
 export function buildPageHref(sp: any, nextPage: number) {
   const qs = new URLSearchParams();
-
-
   if (sp.q) qs.set("q", String(sp.q));
   if (sp.code) qs.set("code", String(sp.code));
   if (sp.plan_type) qs.set("plan_type", String(sp.plan_type));
@@ -139,4 +137,17 @@ export function formatCompactNumber(value: number): string {
   
   // Less than 1000
   return `${sign}${absValue.toFixed(0)}`;
+}
+
+
+export async function loadImageAsBase64(src: string): Promise<string> {
+  const res = await fetch(src);
+  const blob = await res.blob();
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }

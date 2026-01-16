@@ -16,6 +16,7 @@ import {
 } from "@/dto/projectDto";
 import { pushIfEmpty, validateStartEndDate } from "./util";
 import { BudgetSourceType } from "@/constants/project";
+import jsPDF from "jspdf";
 
 export function mapFormToPayload(form: EditFormState) {
   return {
@@ -192,27 +193,6 @@ export function validateStep(
     );
   }
 
-//   if (step === 1) {
-//     pushIfEmpty(
-//       issues,
-//       "strategy.schoolPlan",
-//       data.strategy.schoolPlan,
-//       "กรุณากรอก/เลือก แผนโรงเรียน (School Plan)"
-//     );
-//     pushIfEmpty(
-//       issues,
-//       "strategy.ovEcPolicy",
-//       data.strategy.ovEcPolicy,
-//       "กรุณากรอก/เลือก นโยบาย สอศ. (OVEC Policy)"
-//     );
-//     pushIfEmpty(
-//       issues,
-//       "strategy.qaIndicator",
-//       data.strategy.qaIndicator,
-//       "กรุณากรอก/เลือก ตัวชี้วัด QA"
-//     );
-//   }
-
   if (step === 2) {
     pushIfEmpty(
       issues,
@@ -386,7 +366,9 @@ export const normalizeBudgetSourceLabel = (v?: string) => {
 };
 
 export const toBudgetSourceType = (v?: string): BudgetSourceType => {
-  const s = String(v ?? "").trim().toLowerCase();
+  const s = String(v ?? "")
+    .trim()
+    .toLowerCase();
 
   if (s === "revenue") return "revenue";
   if (s === "school") return "school";
@@ -395,14 +377,15 @@ export const toBudgetSourceType = (v?: string): BudgetSourceType => {
   return "revenue";
 };
 
-
 export const toNumber = (v: string) => {
   const n = parseFloat(String(v ?? "").replace(/,/g, ""));
   return Number.isFinite(n) ? n : 0;
 };
 
-
-export function renderDateRange(start?: string | Date, end?: string | Date): string {
+export function renderDateRange(
+  start?: string | Date,
+  end?: string | Date
+): string {
   const fmt = (d?: string | Date) => {
     if (!d) return "";
     const iso = typeof d === "string" ? d : d.toString();
@@ -418,4 +401,103 @@ export function renderDateRange(start?: string | Date, end?: string | Date): str
   if (s && !e) return s;
   if (!s && e) return e;
   return `${s} - ${e}`;
+}
+
+export function wrapText(doc: jsPDF, text: string, maxWidth: number) {
+  return doc.splitTextToSize(text, maxWidth) as string[];
+}
+
+export function lineHeight(doc: jsPDF) {
+  return doc.getFontSize() * 0.45;
+}
+
+export function drawLabelValueWrapped(opts: {
+  doc: jsPDF;
+  x: number;
+  y: number;
+  label: string;
+  value: string;
+  labelWidth: number;
+  maxWidth: number;
+}) {
+  const { doc, x, y, label, value, labelWidth, maxWidth } = opts;
+
+  doc.setFont("THSarabun", "bold");
+  doc.text(label, x, y);
+
+  doc.setFont("THSarabun", "normal");
+  const valueX = x + labelWidth;
+  const valueMax = maxWidth - labelWidth;
+
+  const lines = wrapText(doc, value || "—", valueMax);
+  doc.text(lines, valueX, y);
+
+  const h = lines.length * lineHeight(doc);
+  return { height: h, linesCount: lines.length };
+}
+
+export function diffDaysInclusive(startIso?: string, endIso?: string) {
+  if (!startIso || !endIso) return null;
+  const s = new Date(startIso);
+  const e = new Date(endIso);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
+  const days =
+    Math.floor((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  return days > 0 ? days : null;
+}
+
+export function formatBaht(amount: number) {
+  return amount.toLocaleString("th-TH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+export function drawTick(doc: jsPDF, x: number, y: number) {
+
+  const x1 = x + 0.8;
+  const y1 = y + 2.2;
+  const x2 = x + 1.8;
+  const y2 = y + 3.2;
+  const x3 = x + 3.4;
+  const y3 = y + 0.9;
+
+  doc.setLineWidth(0.6);
+  doc.line(x1, y1, x2, y2);
+  doc.line(x2, y2, x3, y3);
+  doc.setLineWidth(0.2); 
+}
+
+export function drawCheckbox(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  label: string,
+  checked: boolean
+) {
+  doc.rect(x, y, 4, 4);
+  if (checked) drawTick(doc, x, y);
+  doc.text(label, x + 6, y + 3);
+}
+export function normThaiKey(s?: string) {
+  return (s ?? "")
+    .replace(/[\s\u200B-\u200D\uFEFF]+/g, "") 
+    .trim();
+}
+
+export function mapPlanTypeToThai(type?: string) {
+  switch (type) {
+    case "regular_work":
+      return "งานประจำ";
+    case "special_project":
+      return "โครงการพิเศษเฉพาะทาง"
+    case "strategic_plan":
+      return "แผนยุทธศาสตร์";
+    case "investment":
+      return "โครงการลงทุน";
+    case "development":
+      return "โครงการพัฒนา";
+    default:
+      return "—";
+  }
 }
