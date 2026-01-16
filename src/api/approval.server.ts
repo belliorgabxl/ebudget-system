@@ -9,10 +9,8 @@ export type CheckPermissionResponse = {
 type RawCheckPermissionResponse = Partial<{
   currentRole: number;
   current_role: number;
-
   current_level: number;
   currentLevel: number;
-
   has_permission: boolean;
   hasPermission: boolean;
 }>;

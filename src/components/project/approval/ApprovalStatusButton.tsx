@@ -16,7 +16,7 @@ export default function ApprovalStatusButton({
   const router = useRouter();
 
   const onNavigationToProcess = (projectId: string) => {
-    router.push("/organizer/approve/process/" + projectId);
+    router.push(`/organizer/approve/${projectId}/process/`);
   };
 
   if (status === "draft") {

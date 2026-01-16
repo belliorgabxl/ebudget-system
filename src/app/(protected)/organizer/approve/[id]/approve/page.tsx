@@ -27,8 +27,10 @@ export default async function ProjectApprovePage({
   const { id: projectId } = await params;
   const p = await fetchProjectInformationServer(projectId);
   let canApprove = false;
+
   try {
-    canApprove = await checkApprovalPermissionServer(p.budget_plan_id);
+    const perm = await checkApprovalPermissionServer(p.budget_plan_id);
+    canApprove = perm.has_permission;
   } catch (e) {
     console.error("checkApprovalPermissionServer error:", e);
     canApprove = false;
@@ -124,7 +126,10 @@ export default async function ProjectApprovePage({
           </div>
 
           <div className="border-t border-gray-300 pt-5">
-            <ApproveProjectClient projectId={p.budget_plan_id} projectName={name} />
+            <ApproveProjectClient
+              projectId={p.budget_plan_id}
+              projectName={name}
+            />
           </div>
         </div>
       </div>

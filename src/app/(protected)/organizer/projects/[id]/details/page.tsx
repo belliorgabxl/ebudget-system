@@ -18,7 +18,6 @@ import { cookies } from "next/headers";
 import { fetchProjectInformationServer } from "@/api/project.server";
 import { ProjectDetailClient } from "@/components/project/details/ProjectDetailClient";
 import BackGroundLight from "@/components/background/bg-light";
-import { SquareArrowUp } from "lucide-react";
 import ApprovalStatusButton from "@/components/project/approval/ApprovalStatusButton";
 
 type Project = {

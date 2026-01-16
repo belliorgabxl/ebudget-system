@@ -81,7 +81,7 @@ export default function Page() {
                 <div className="p-0.5 border-2 border-white rounded-full">
                   <Plus className="h-4 w-4 text-white " />
                 </div>
-                เพิ่มโปรเจ็คใหม่
+                สร้างโครงการ
               </Link>
             </div>
           </div>
