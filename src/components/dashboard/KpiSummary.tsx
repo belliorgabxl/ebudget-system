@@ -1,6 +1,7 @@
 "use client"
 
 import { TrendingUp, Folder, DollarSign } from "lucide-react"
+import { formatCompactNumber } from "@/lib/util"
 
 interface KpiSummaryProps {
   totalBudget: number
@@ -32,7 +33,7 @@ export function KpiSummary({
         </div>
 
         <div className="mt-4 text-3xl font-bold">
-          ฿{totalBudget}M
+          ฿{formatCompactNumber(totalBudget)}
         </div>
       </div>
 
@@ -61,9 +62,9 @@ export function KpiSummary({
           </span>
         </div>
 
-        <div className="mt-4 text-3xl font-bold">
-          ฿{avgBudget}M
-        </div>
+     <div className="mt-4 text-3xl font-bold">
+      ฿{formatCompactNumber(avgBudget ?? 0)}
+</div>
       </div>
     </div>
   )

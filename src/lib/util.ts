@@ -20,6 +20,20 @@ export function parseTTL(ttl: string): number {
   }
 }
 
+export function yearFilterItems(): string[] {
+
+  const currentYear = new Date().getFullYear();
+  const buddhistYear = currentYear + 543; 
+  const years: string[] = [];
+  years.push("all");
+  
+  for (let i = 0; i < 6; i++) {
+    years.push(String(buddhistYear - i));
+  }
+  
+  return years;
+}
+
 export const generateSixDigitCode = () => {
   return Math.floor(Math.random() * 1000000)
     .toString()
@@ -96,4 +110,33 @@ export function buildPageHref(sp: any, nextPage: number) {
 
   qs.set("page", String(nextPage));
   return `?${qs.toString()}`;
+}
+/**
+ * Format number to compact notation with Thai suffixes
+ * @param value - Number to format
+ * @returns Formatted string (e.g., "1.2M", "500K", "45.3B")
+ */
+export function formatCompactNumber(value: number): string {
+  if (value === 0) return "0";
+  
+  const absValue = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+  
+  // Billion (พันล้าน)
+  if (absValue >= 1_000_000_000) {
+    return `${sign}${(absValue / 1_000_000_000).toFixed(1)}B`;
+  }
+  
+  // Million (ล้าน)
+  if (absValue >= 1_000_000) {
+    return `${sign}${(absValue / 1_000_000).toFixed(1)}M`;
+  }
+  
+  // Thousand (พัน)
+  if (absValue >= 1_000) {
+    return `${sign}${(absValue / 1_000).toFixed(1)}K`;
+  }
+  
+  // Less than 1000
+  return `${sign}${absValue.toFixed(0)}`;
 }

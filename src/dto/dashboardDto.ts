@@ -67,3 +67,48 @@ export type ProjectsQuery = {
   department_id?: string;
   start_date?: string; 
 };
+
+// Dashboard KPI Types
+export type DashboardKPI = {
+  year: string;
+  totalBudget: number;
+  totalProjects: number;
+  avgBudget: number;
+  totalEmployees: number;
+  totalDepartments: number;
+};
+
+export type BudgetByYear = {
+  year: string;
+  budget: number;
+};
+
+export type BudgetByDepartment = {
+  department: string;
+  budget: number;
+  actual: number;
+};
+
+export type BudgetByStatus = {
+  status: string;
+  budget: number;
+};
+
+export type ProjectCountByDepartment = {
+  department: string;
+  count: number;
+};
+
+export type ProjectCountByStatus = {
+  status: string;
+  value: number;
+};
+
+export type ApprovalQueueItem = {
+  id: string;
+  projectName: string;
+  department: string;
+  budget: number;
+  status: string;
+  submittedAt: string;
+};

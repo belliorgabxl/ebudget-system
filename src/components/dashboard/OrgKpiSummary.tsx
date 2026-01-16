@@ -1,10 +1,11 @@
 import { DollarSign, Folder, TrendingUp, AlertTriangle, User2Icon, UserRound, UserCogIcon, Users } from "lucide-react"
 import { DepartmentEditForm } from "../department/EditForm"
+import { formatCompactNumber } from "@/lib/util"
 
 interface OrgKpiSummaryProps {
   totalBudget: number
   totalProjects: number
-  avgBudget: number       
+  avgBudget: number
   totalEmployees: number
   totalDepartments: number
 }
@@ -19,11 +20,11 @@ export function OrgKpiSummary({
 }: OrgKpiSummaryProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6">
-      
+
       <KpiCard
         icon={<DollarSign className="h-5 w-5" />}
         label="งบประมาณรวม"
-        value={`฿${totalBudget}M`}
+        value={`฿${formatCompactNumber(totalBudget)}`}
         color="blue"
       />
 
@@ -37,7 +38,7 @@ export function OrgKpiSummary({
       <KpiCard
         icon={<TrendingUp className="h-5 w-5" />}
         label="งบเฉลี่ย / โครงการ"
-        value={`฿${avgBudget}M`}
+        value={`฿${formatCompactNumber(avgBudget ?? 0)}`}
         color="emerald"
       />
 
@@ -68,7 +69,7 @@ function KpiCard({
   icon: React.ReactNode
   label: string
   value: React.ReactNode
-  color: "blue" | "emerald" | "violet" | "red"| "yellow"
+  color: "blue" | "emerald" | "violet" | "red" | "yellow"
 }) {
   const colorMap = {
     blue: "bg-blue-100 text-blue-600",

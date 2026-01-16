@@ -17,14 +17,24 @@ interface ProjectCountByStatusChartProps {
 
 // สีตาม semantic ของสถานะ
 const STATUS_COLORS: Record<string, string> = {
-  อนุมัติ: "#10b981",     // green
-  รออนุมัติ: "#f59e0b",  // amber
-  ไม่อนุมัติ: "#ef4444", // red
+  "ร่าง": "#94a3b8",      // slate
+  "แก้ไข": "#f59e0b",     // amber
+  "รออนุมัติ": "#3b82f6", // blue
+  "อนุมัติแล้ว": "#10b981", // green
 }
+
+const STATUS_ORDER = ["ร่าง", "แก้ไข", "รออนุมัติ", "อนุมัติแล้ว"]
 
 export function ProjectCountByStatusChart({
   data,
 }: ProjectCountByStatusChartProps) {
+  // Sort data by status order
+  const sortedData = [...data].sort((a, b) => {
+    const indexA = STATUS_ORDER.indexOf(a.status)
+    const indexB = STATUS_ORDER.indexOf(b.status)
+    return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
+  })
+
   return (
     <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow p-6">
 
@@ -43,7 +53,7 @@ export function ProjectCountByStatusChart({
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
-              data={data}
+              data={sortedData}
               dataKey="value"
               nameKey="status"
               outerRadius={100}
@@ -52,7 +62,7 @@ export function ProjectCountByStatusChart({
               label={({ value }) => `${value} โครงการ`}
               labelLine={false}
             >
-              {data.map((item, index) => (
+              {sortedData.map((item, index) => (
                 <Cell
                   key={item.status}
                   fill={STATUS_COLORS[item.status] ?? "#9ca3af"}
@@ -66,19 +76,18 @@ export function ProjectCountByStatusChart({
 
         {/* ===== Custom Legend ===== */}
         <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
-          {data.map((item) => (
+          {STATUS_ORDER.filter(status => sortedData.some(d => d.status === status)).map((status) => (
             <div
-              key={item.status}
+              key={status}
               className="flex items-center gap-2"
             >
               <span
                 className="h-3 w-3 rounded-sm"
                 style={{
-                  backgroundColor:
-                    STATUS_COLORS[item.status] ?? "#9ca3af",
+                  backgroundColor: STATUS_COLORS[status] ?? "#9ca3af",
                 }}
               />
-              <span>{item.status}</span>
+              <span>{status}</span>
             </div>
           ))}
         </div>

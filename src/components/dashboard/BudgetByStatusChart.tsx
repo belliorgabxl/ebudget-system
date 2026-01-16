@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts"
+import { formatCompactNumber } from "@/lib/util"
 
 interface BudgetByStatusChartProps {
   data: {
@@ -19,13 +20,22 @@ interface BudgetByStatusChartProps {
 }
 
 const COLORS: Record<string, string> = {
-  อนุมัติ: "#10b981",  
-  รออนุมัติ: "#f59e0b",  
-  ไม่อนุมัติ: "#ef4444",
-  ปิดโครงการ: "#6b7280",
+  "ร่าง": "#94a3b8",
+  "แก้ไข": "#f59e0b",
+  "รออนุมัติ": "#3b82f6",
+  "อนุมัติแล้ว": "#10b981",
 }
 
+const STATUS_ORDER = ["ร่าง", "แก้ไข", "รออนุมัติ", "อนุมัติแล้ว"]
+
 export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
+  // Sort data by status order
+  const sortedData = [...data].sort((a, b) => {
+    const indexA = STATUS_ORDER.indexOf(a.status)
+    const indexB = STATUS_ORDER.indexOf(b.status)
+    return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
+  })
+
   return (
      <div className="rounded-xl bg-white shadow-sm p-6">
       <h3 className="mb-1 text-base font-semibold">
@@ -37,7 +47,7 @@ export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
 
       <ResponsiveContainer width="100%" height={320}>
         <BarChart
-          data={data}
+          data={sortedData}
           barSize={44}
           barCategoryGap="40%"
         >
@@ -59,10 +69,11 @@ export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
             tick={{ fontSize: 12 }}
             axisLine={false}
             tickLine={false}
+            tickFormatter={(value) => formatCompactNumber(value)}
           />
 
           <Tooltip
-            formatter={(v: number) => [`฿${v}M`, "งบประมาณ"]}
+            formatter={(v: number) => [`฿${formatCompactNumber(v)}`, "งบประมาณ"]}
             cursor={{ fill: "rgba(0,0,0,0.03)" }}
             contentStyle={{
               borderRadius: 8,
@@ -76,7 +87,7 @@ export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
             dataKey="budget"
             radius={[8, 8, 0, 0]}
           >
-            {data.map((d, i) => (
+            {sortedData.map((d, i) => (
               <Cell
                 key={i}
                 fill={COLORS[d.status] ?? "#9ca3af"}
@@ -85,19 +96,19 @@ export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-
       {/* Legend แบบเรียบ */}
       <div className="mt-4 flex justify-center gap-6 text-sm">
-        {Object.entries(COLORS).map(([label, color]) => (
-          <div key={label} className="flex items-center gap-2">
+        {STATUS_ORDER.map((status) => (
+          <div key={status} className="flex items-center gap-2">
             <span
               className="h-3 w-3 rounded-sm"
-              style={{ backgroundColor: color }}
+              style={{ backgroundColor: COLORS[status] }}
             />
-            <span>{label}</span>
+            <span>{status}</span>
           </div>
         ))}
       </div>
-    </div>
+      </div>
+    
   )
 }

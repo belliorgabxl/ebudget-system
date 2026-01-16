@@ -9,6 +9,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts"
+import { formatCompactNumber } from "@/lib/util"
 
 interface BudgetByDeptChartProps {
   data: {
@@ -18,19 +19,7 @@ interface BudgetByDeptChartProps {
   }[]
 }
 
-function roundUpTo25(value: number) {
-  return Math.ceil(value / 25) * 25
-}
-
 export function BudgetByDeptChart({ data }: BudgetByDeptChartProps) {
-  const maxBudget = Math.max(...data.map(d => d.budget))
-  const maxY = roundUpTo25(maxBudget)
-  const step = 25
-
-  const ticks = Array.from(
-    { length: maxY / step + 1 },
-    (_, i) => i * step
-  )
 
   return (
     <div className="rounded-xl bg-white shadow-sm p-6">
@@ -49,12 +38,9 @@ export function BudgetByDeptChart({ data }: BudgetByDeptChartProps) {
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="department" />
-          <YAxis
-            domain={[0, maxY]}
-            ticks={ticks}
-          />
+          <YAxis tickFormatter={(value) => formatCompactNumber(value)} />
           <Tooltip
-            formatter={(v: number) => [`฿${v}M`, "งบประมาณ"]}
+            formatter={(v: number) => [`฿${formatCompactNumber(v)}`, "งบประมาณ"]}
             labelFormatter={(label) => `หน่วยงาน: ${label}`}
           />
 

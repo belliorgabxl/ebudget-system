@@ -31,6 +31,24 @@ const COLORS = [
 export function ProjectCountByDeptChart({
   data,
 }: ProjectCountByDeptChartProps) {
+  // If more than 6 departments, keep top 6 and group the rest as "อื่นๆ"
+  const processedData = data.length > 6
+    ? (() => {
+        // Sort by count descending
+        const sorted = [...data].sort((a, b) => b.count - a.count)
+        // Take top 6
+        const top6 = sorted.slice(0, 6)
+        // Sum the rest (from 7th onwards)
+        const others = sorted.slice(6)
+        const othersCount = others.reduce((sum, item) => sum + item.count, 0)
+        
+        // Return top 6 + "อื่นๆ" if there are others
+        return othersCount > 0 
+          ? [...top6, { department: "อื่นๆ", count: othersCount }]
+          : top6
+      })()
+    : data
+
   return (
     <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow p-6">
 
@@ -49,7 +67,7 @@ export function ProjectCountByDeptChart({
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
-              data={data}
+              data={processedData}
               dataKey="count"
               nameKey="department"
               outerRadius={100}
@@ -58,7 +76,7 @@ export function ProjectCountByDeptChart({
               label={({ value }) => `${value} โครงการ`}
               labelLine={false}
             >
-              {data.map((_, i) => (
+              {processedData.map((_, i) => (
                 <Cell
                   key={i}
                   fill={COLORS[i % COLORS.length]}
@@ -72,7 +90,7 @@ export function ProjectCountByDeptChart({
 
         {/* ===== Custom Legend (ถูกต้อง) ===== */}
         <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
-          {data.map((item, i) => (
+          {processedData.map((item, i) => (
             <div
               key={item.department}
               className="flex items-center gap-2"
@@ -95,21 +113,22 @@ export function ProjectCountByDeptChart({
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
-    const { name, value, color } = payload[0]
+    const { name, value } = payload[0]
+    const fill = payload[0].payload.fill
 
     return (
       <div
-        className="rounded-md bg-white px-3 py-2 text-xs shadow"
+        className="rounded-md bg-white px-3 py-2 text-xs shadow border"
         style={{
-          backgroundColor: color,  
+          borderColor: fill,  
         }}
       >
         <span
           className="mr-1 inline-block h-2 w-2 rounded-full"
-          style={{ backgroundColor: color }}  
+          style={{ backgroundColor: fill }}  
         />
         หน่วยงาน <b>{name}</b> มีโครงการ:{" "}
-        <b style={{ color }}>{value}</b> โครงการ
+        <b>{value}</b> โครงการ
       </div>
     )
   }

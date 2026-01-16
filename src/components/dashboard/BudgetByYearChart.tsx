@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts"
+import { formatCompactNumber } from "@/lib/util"
 
 interface BudgetByYearChartProps {
   data: {
@@ -77,8 +78,8 @@ export function BudgetByYearChart({ data }: BudgetByYearChartProps) {
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="year" />
-            <YAxis />
-            <Tooltip formatter={(v: number) => [`฿${v}M`, ""]} />
+            <YAxis tickFormatter={(value) => formatCompactNumber(value)} />
+            <Tooltip formatter={(v: number) => [`฿${formatCompactNumber(v)}`, ""]} />
 
             <Bar
               dataKey="budget"
