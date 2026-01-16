@@ -1,43 +1,48 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { Eye, Edit, FileX, ChevronLeft, ChevronRight } from "lucide-react"
-import Link from "next/link"
-import type { GetProjectsByOrgRespond } from "@/dto/dashboardDto"
+import { useState, useMemo } from "react";
+import { Eye, Edit, FileX, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import type { GetProjectsByOrgRespond } from "@/dto/dashboardDto";
 
 interface ProjectsTableProps {
-  filters?: Record<string, string>
-  projects: GetProjectsByOrgRespond[]
+  filters?: Record<string, string>;
+  projects: GetProjectsByOrgRespond[];
 }
 
 export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  // format money helper
   const formatMoney = (v?: number | string) => {
-    if (v == null || v === "") return "-"
-    const n = typeof v === "string" ? Number(v) : v
-    if (Number.isNaN(n)) return String(v)
-    return n.toLocaleString("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 })
-  }
+    if (v == null || v === "") return "-";
+    const n = typeof v === "string" ? Number(v) : v;
+    if (Number.isNaN(n)) return String(v);
+    return n.toLocaleString("th-TH", {
+      style: "currency",
+      currency: "THB",
+      maximumFractionDigits: 0,
+    });
+  };
 
-  // date helpers
   const formatDate = (iso?: string | null) => {
-    if (!iso) return ""
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return iso
-    return d.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })
-  }
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   const formatPeriod = (start?: string | null, end?: string | null) => {
-    const s = formatDate(start ?? undefined)
-    const e = formatDate(end ?? undefined)
-    if (s && e) return `${s} — ${e}`
-    return s || e || "-"
-  }
+    const s = formatDate(start ?? undefined);
+    const e = formatDate(end ?? undefined);
+    if (s && e) return `${s} — ${e}`;
+    return s || e || "-";
+  };
 
-  // map API project -> table row (memoized)
   const rows = useMemo(() => {
     if (!Array.isArray(projects)) return [];
 
@@ -46,17 +51,20 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
         (p as any).department?.name ??
         (p as any).department_name ??
         (p as any).department_id ??
-        "-"
+        "-";
 
-      const type = p.plan_type ?? "-"
+      const type = p.plan_type ?? "-";
 
-      // budget: sum of budget_plans[].budget_amount if present
-      const budgetPlans = (p as any).budget_plans
+      const budgetPlans = (p as any).budget_plans;
       const budgetTotal = Array.isArray(budgetPlans)
-        ? budgetPlans.reduce((acc: number, bp: any) => acc + (Number(bp?.budget_amount ?? 0) || 0), 0)
-        : 0
+        ? budgetPlans.reduce(
+            (acc: number, bp: any) =>
+              acc + (Number(bp?.budget_amount ?? 0) || 0),
+            0
+          )
+        : 0;
 
-      const period = formatPeriod(p.start_date as any, p.end_date as any)
+      const period = formatPeriod(p.start_date as any, p.end_date as any);
 
       return {
         id: p.id,
@@ -66,20 +74,22 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
         type,
         budget: budgetTotal,
         period,
-      }
-    })
-  }, [projects])
+      };
+    });
+  }, [projects]);
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / itemsPerPage))
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const currentProjects = rows.slice(startIndex, endIndex)
+  const totalPages = Math.max(1, Math.ceil(rows.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProjects = rows.slice(startIndex, endIndex);
 
   return (
     <div className="rounded-lg border  border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">รายการโครงการทั้งหมด</h3>
+          <h3 className="text-sm font-semibold text-gray-900">
+            รายการโครงการทั้งหมด
+          </h3>
           <p className="mt-1 text-xs text-gray-500">จัดการและติดตามโครงการ</p>
         </div>
 
@@ -87,7 +97,10 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
           <span className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
             {rows.length} โครงการ
           </span>
-          <Link href="/organizer/projects/my-project" className="text-xs text-gray-600 hover:text-indigo-700 hover:underline">
+          <Link
+            href="/organizer/projects/my-project"
+            className="text-xs text-gray-600 hover:text-indigo-700 hover:underline"
+          >
             ทั้งหมด
           </Link>
         </div>
@@ -98,12 +111,24 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="bg-gray-50 text-gray-900">
-                <th className="w-[10%] px-3 py-2 text-center font-semibold">รหัส</th>
-                <th className="w-[25%] px-3 py-2 text-center font-semibold">ชื่อโครงการ</th>
-                <th className="w-[15%] px-3 py-2 text-center font-semibold">หน่วยงาน</th>
-                <th className="w-[15%] px-3 py-2 text-center font-semibold">งบประมาณ</th>
-                <th className="w-[15%] px-3 py-2 text-center font-semibold">ระยะเวลา</th>
-                <th className="w-[10%] px-3 py-2 text-center font-semibold">จัดการ</th>
+                <th className="w-[10%] px-3 py-2 text-center font-semibold">
+                  รหัส
+                </th>
+                <th className="w-[25%] px-3 py-2 text-center font-semibold">
+                  ชื่อโครงการ
+                </th>
+                <th className="w-[15%] px-3 py-2 text-center font-semibold">
+                  หน่วยงาน
+                </th>
+                <th className="w-[15%] px-3 py-2 text-center font-semibold">
+                  งบประมาณ
+                </th>
+                <th className="w-[15%] px-3 py-2 text-center font-semibold">
+                  ระยะเวลา
+                </th>
+                <th className="w-[10%] px-3 py-2 text-center font-semibold">
+                  จัดการ
+                </th>
               </tr>
             </thead>
 
@@ -114,36 +139,28 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
                     key={p.id ?? i}
                     className="border-t border-gray-200 hover:bg-gray-50"
                   >
-                    {/* รหัส */}
                     <td className="px-3 py-2 font-medium text-gray-900">
                       {p.code}
                     </td>
 
-                    {/* ชื่อโครงการ */}
                     <td className="px-3 py-2 font-medium text-gray-900">
                       {p.name}
                     </td>
 
-                    {/* หน่วยงาน */}
                     <td className="px-3 py-2 text-start">
                       <span className="inline-flex items-start rounded-md border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700">
                         {p.dept}
                       </span>
                     </td>
 
-                   
-
-                    {/* งบประมาณ */}
                     <td className="px-3 py-2 text-center font-semibold text-gray-700">
                       {formatMoney(p.budget)}
                     </td>
 
-                    {/* ระยะเวลา */}
                     <td className="px-3 py-2 text-start text-gray-700">
                       {p.period}
                     </td>
 
-                    {/* จัดการ */}
                     <td className="px-3 py-2">
                       <div className="flex items-start justify-center gap-1">
                         <button
@@ -170,19 +187,21 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-3 py-10 text-center text-sm text-gray-500">
+                  <td
+                    colSpan={7}
+                    className="px-3 py-10 text-center text-sm text-gray-500"
+                  >
                     ยังไม่มีข้อมูลโครงการ
                   </td>
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
-        {/* Pagination / Footer */}
         <div className="mt-6 flex items-center justify-between">
           <p className="text-xs font-medium text-gray-600">
-            แสดง {rows.length === 0 ? 0 : startIndex + 1}-{Math.min(endIndex, rows.length)} จาก {rows.length} รายการ
+            แสดง {rows.length === 0 ? 0 : startIndex + 1}-
+            {Math.min(endIndex, rows.length)} จาก {rows.length} รายการ
           </p>
 
           <div className="flex items-center gap-2">
@@ -211,5 +230,5 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

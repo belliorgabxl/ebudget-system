@@ -338,7 +338,7 @@ export default function CreateProjectPage() {
       const res = await createProject(payload);
       console.log(payload);
       setSuccess(res.message ?? "สร้างโครงการสำเร็จแล้ว");
-      toast.success("สร้างโปรเจ็คสำเร็จ");
+      toast.success("สร้างโครงการสำเร็จ");
       setTimeout(() => {
         router.push("/success-screen");
       }, 500);
@@ -354,10 +354,10 @@ export default function CreateProjectPage() {
   return (
     <main className="lg:mx-auto lg:max-w-7xl w-full px-2 lg:px-6 py-0">
       <h1 className="text-2xl font-semibold text-gray-900 mb-1">
-        สร้างโปรเจ็คใหม่
+        สร้างโครงการใหม่
       </h1>
       <p className="text-sm text-gray-600 mb-6">
-        กรอกข้อมูลทั้งหมดเพื่อสร้างโปรเจ็ค
+        กรอกข้อมูลทั้งหมดเพื่อสร้างโครงการ
       </p>
       <div className="flex items-start gap-2 mb-6">
         {steps.map((label, index) => (

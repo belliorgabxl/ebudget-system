@@ -108,19 +108,19 @@ export default async function PendingProjectList({ projects, pg }: Props) {
 
                 <div className="grid grid-rows-2 z-10 h-full gap-2 place-items-end">
                   <ProcessButton project_id={p.id} />
-                  {canApprove ? (
+                  {!canApprove ? (
                     <span
                       className="h-fit rounded-lg border border-green-400 bg-green-50 px-3
-                     py-2 text-sm font-medium text-green-700 cursor-text"
+                     py-2 text-xs font-medium text-green-700 cursor-text"
                     >
-                      รอคุณอนุมัติ
+                      พร้อมให้คุณอนุมัติ
                     </span>
                   ) : (
                     <span
-                      className="h-fit rounded-lg border border-gray-400 bg-gray-50 px-3
-                     py-2 text-sm font-medium text-gray-700 cursor-text"
+                      className="h-fit rounded-lg border border-sky-400 bg-sky-50 px-3
+                     py-2 text-xs font-medium text-sky-700 cursor-text"
                     >
-                      รอคนอื่นอนุมัติ
+                      อยู่ในขั้นตอนอนุมัติ...
                     </span>
                   )}
                 </div>

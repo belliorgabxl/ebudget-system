@@ -220,7 +220,7 @@ export default function EditProjectClient({
     <main className="lg:mx-10 lg:pl-16 px-4 py-8">
       <nav className="mb-4 text-xs text-gray-500">
         <Link href="/organizer/projects/my-project" className="hover:underline">
-          โปรเจ็กต์ของคุณ
+          โครงการของคุณ
         </Link>
         <span className="mx-1">/</span>
         <span className="text-gray-700">แก้ไขโครงการ</span>

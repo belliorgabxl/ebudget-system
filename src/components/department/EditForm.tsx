@@ -197,7 +197,7 @@ export function DepartmentEditForm({ initial }: { initial: Department }) {
         </Field>
 
         <Field
-          label="จำนวนโปรเจ็กต์ (ตัวเลข)"
+          label="จำนวนโครงการ (ตัวเลข)"
           invalid={!projectsValid && form.projectsCount !== ""}
         >
           <input

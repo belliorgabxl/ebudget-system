@@ -4,14 +4,18 @@ import Link from "next/link";
 import { SquareArrowUp, CheckCircle, Clock, XCircle } from "lucide-react";
 import { ClipboardClockIcon } from "@/components/icons/ClipboardClockIcon";
 import { useRouter } from "next/navigation";
+import { ProcessStep, ProcessTooltip } from "../details/ProgressDetail";
+
 interface ApprovalStatusButtonProps {
   projectId: string;
   status: string;
+  processSteps?: ProcessStep[];
 }
 
 export default function ApprovalStatusButton({
   projectId,
   status,
+  processSteps,
 }: ApprovalStatusButtonProps) {
   const router = useRouter();
 
@@ -61,6 +65,15 @@ export default function ApprovalStatusButton({
           >
             กดเพื่อดูสถานะการอนุมัติ
           </div>
+          {processSteps?.length ? (
+            <div className="mt-16 pointer-events-none absolute -top-9 -left-20
+             -translate-x-1/2
+                whitespace-nowrap  px-3 py-1.5 text-xs text-white
+                opacity-0 transition-opacity duration-200
+                group-hover:opacity-100">
+              <ProcessTooltip steps={processSteps} />
+            </div>
+          ) : null}
         </div>
       </div>
     );
@@ -94,6 +107,15 @@ export default function ApprovalStatusButton({
           >
             กดเพื่อดูสถานะการอนุมัติ
           </div>
+           {processSteps?.length ? (
+            <div className="mt-16 pointer-events-none absolute -top-9 -left-20
+             -translate-x-1/2
+                whitespace-nowrap  px-3 py-1.5 text-xs text-white
+                opacity-0 transition-opacity duration-200
+                group-hover:opacity-100">
+              <ProcessTooltip steps={processSteps} />
+            </div>
+          ) : null}
         </div>
       </div>
     );
