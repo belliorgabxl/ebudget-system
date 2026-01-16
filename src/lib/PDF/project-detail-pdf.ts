@@ -11,6 +11,7 @@ import {
   drawCheckbox,
   drawTick,
   formatBaht,
+  mapPlanTypeToThai,
   normThaiKey,
 } from "../helper";
 
@@ -50,7 +51,7 @@ export async function ProjectDetailPDF(p: ProjectInformationResponse) {
 
   doc.setFont("THSarabun", "bold");
   doc.setFontSize(20);
-  doc.text("เอกสารข้อมูลโครงการ", pageWidth / 2, 10, { align: "center" });
+  doc.text("เอกสารข้อมูลโครงการ", pageWidth / 2, 12, { align: "center" });
 
   doc.setFontSize(14);
   doc.line(5, 24, 205, 24);
@@ -66,7 +67,7 @@ export async function ProjectDetailPDF(p: ProjectInformationResponse) {
   doc.setFont("THSarabun", "bold");
   doc.text("ประเภทโครงการ :", 10, 39);
   doc.setFont("THSarabun", "normal");
-  doc.text(p.plan_type ?? "—", 35, 39);
+  doc.text(mapPlanTypeToThai(p.plan_type), 35, 39);
 
   doc.setFont("THSarabun", "bold");
   doc.text("ระยะเวลา", 70, 39);
@@ -137,14 +138,14 @@ export async function ProjectDetailPDF(p: ProjectInformationResponse) {
     styles: {
       font: "THSarabun",
       fontStyle: "normal",
-      fontSize: 14,
+      fontSize: 12,
       lineWidth: 0.2,
       lineColor: [0, 0, 0],
     },
     headStyles: {
       font: "THSarabun",
       fontStyle: "bold",
-      fontSize: 16,
+      fontSize: 14,
       fillColor: [240, 240, 240],
       textColor: [0, 0, 0],
       halign: "center",
@@ -173,14 +174,14 @@ export async function ProjectDetailPDF(p: ProjectInformationResponse) {
     styles: {
       font: "THSarabun",
       fontStyle: "normal",
-      fontSize: 14,
+      fontSize: 12,
       lineWidth: 0.2,
       lineColor: [0, 0, 0],
     },
     headStyles: {
       font: "THSarabun",
       fontStyle: "bold",
-      fontSize: 16,
+      fontSize: 14,
       fillColor: [240, 240, 240],
       textColor: [0, 0, 0],
       halign: "center",

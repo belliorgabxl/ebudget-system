@@ -46,7 +46,7 @@ export function ExportPDFDocument({ id }: DownloadProps) {
     >
       <Download className="w-4 h-4 text-gray-800" />
       <p className="line-clamp-1">
-        {loading ? "กำลังสร้าง..." : "ดาวน์โหลดเอกสาร"}
+        {loading ? "กำลังดาวน์โหลด..." : "ดาวน์โหลดเอกสาร"}
       </p>
     </button>
   );
