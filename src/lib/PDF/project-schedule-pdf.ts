@@ -525,3 +525,4 @@ export function downloadExamplePdf() {
   doc.text(projectMock.project.owner_user, 40, nextOwenerY+5);
   doc.save("example_ebudget.pdf");
 }
+
