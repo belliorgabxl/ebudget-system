@@ -46,7 +46,7 @@ export async function ProjectDetailPDF(p: ProjectInformationResponse) {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // ===== Page 1 =====
-  doc.addImage(logoBase64, "PNG", 8, 6, 18, 18);
+  doc.addImage(logoBase64, "PNG", 3, 2, 20, 20);
 
   doc.setFont("THSarabun", "bold");
   doc.setFontSize(20);
