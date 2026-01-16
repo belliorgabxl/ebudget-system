@@ -34,11 +34,11 @@ export default function ReturnProjectPopup({
 
       <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <h2 className="text-lg font-semibold text-gray-900">
-          ส่งกลับโปรเจ็ค
+          ส่งกลับโครงการ
         </h2>
 
         <p className="mt-2 text-sm text-gray-600">
-          โปรเจ็คจะถูกส่งกลับให้ผู้เสนอแก้ไขก่อนส่งใหม่
+          โครงการจะถูกส่งกลับให้ผู้เสนอแก้ไขก่อนส่งใหม่
         </p>
 
         <textarea

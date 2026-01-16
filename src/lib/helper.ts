@@ -400,3 +400,22 @@ export const toNumber = (v: string) => {
   const n = parseFloat(String(v ?? "").replace(/,/g, ""));
   return Number.isFinite(n) ? n : 0;
 };
+
+
+export function renderDateRange(start?: string | Date, end?: string | Date): string {
+  const fmt = (d?: string | Date) => {
+    if (!d) return "";
+    const iso = typeof d === "string" ? d : d.toString();
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("th-TH", { dateStyle: "medium" });
+  };
+
+  const s = fmt(start);
+  const e = fmt(end);
+
+  if (!s && !e) return "—";
+  if (s && !e) return s;
+  if (!s && e) return e;
+  return `${s} - ${e}`;
+}

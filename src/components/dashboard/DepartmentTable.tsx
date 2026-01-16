@@ -8,7 +8,7 @@ function DepartmentTable({ departments }: { departments: any[] }) {
             <th className="p-3">ชื่อหน่วยงาน</th>
             <th className="p-3">หัวหน้าหน่วยงาน</th>
             <th className="p-3">พนักงาน</th>
-            <th className="p-3">โปรเจ็กต์</th>
+            <th className="p-3">โครงการ</th>
           </tr>
         </thead>
         <tbody>

@@ -4,14 +4,16 @@ import Image from "next/image";
 export function Section({
   title,
   children,
+  icon
 }: {
   title: string;
   children: React.ReactNode;
+  icon? : React.ReactNode;
 }) {
   return (
     <section className="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="border-b border-gray-100 px-4 py-3">
-        <h2 className="text-base font-semibold text-blue-700">{title}</h2>
+        <h2 className="text-base flex items-center font-semibold gap-2 text-blue-700">{title} {icon || ""}</h2>
       </div>
       <div className="px-4 py-5">{children}</div>
     </section>

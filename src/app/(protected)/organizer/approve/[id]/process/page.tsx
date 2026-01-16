@@ -44,7 +44,8 @@ export default function ApprovalProcessPage() {
           แสดงลำดับและประวัติการอนุมัติโครงการ
         </p>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-8 bg-white rounded-lg px-2 lg:px-4 py-4 
+        lg:py-8 shadow-lg space-y-6">
           {approvalSteps.map((step, index) => {
             const isLast = index === approvalSteps.length - 1;
 

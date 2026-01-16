@@ -21,10 +21,10 @@ export default async function Page({ params }: { params: PageParams }) {
       <main className="mx-auto max-w-3xl p-6">
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
           <h1 className="text-xl font-semibold text-gray-900">
-            ไม่พบโปรเจ็กต์
+            ไม่พบโครงการ
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            โปรเจ็กต์อาจถูกลบหรือคุณไม่มีสิทธิ์เข้าถึง
+            โครงการอาจถูกลบหรือคุณไม่มีสิทธิ์เข้าถึง
           </p>
           <div className="mt-5">
             <Link
@@ -56,7 +56,7 @@ export default async function Page({ params }: { params: PageParams }) {
           <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="text-xl font-semibold">ส่งยื่นเสนอโปรเจ็ค</h1>
+                <h1 className="text-xl font-semibold">ส่งยื่นเสนอโครงการ</h1>
                 <p className="mt-1 text-sm text-slate-600">
                   ตรวจสอบรายละเอียดหลัก ๆ แล้วกดส่งอนุมัติได้เลย
                 </p>

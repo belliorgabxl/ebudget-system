@@ -35,7 +35,7 @@ import {
   checkApprovalPermissionServer,
   CheckPermissionResponse,
 } from "@/api/approval.server";
-import { ArrowRight, FileClock } from "lucide-react";
+import { ArrowRight, Calendar, Coins, FileClock } from "lucide-react";
 import { ROLE_LABEL } from "@/constants/project";
 
 type Project = {
@@ -229,9 +229,9 @@ export default async function Page({ params }: { params: PageParams }) {
   if (!p) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-10 space-y-8">
-        <h1 className="text-xl font-semibold text-gray-900">ไม่พบโปรเจ็กต์</h1>
+        <h1 className="text-xl font-semibold text-gray-900">ไม่พบโครงการ</h1>
         <p className="text-sm text-gray-600 mt-2">
-          โปรเจ็กต์อาจถูกลบหรือคุณไม่มีสิทธิ์เข้าถึง
+          โครงการอาจถูกลบหรือคุณไม่มีสิทธิ์เข้าถึง
         </p>
         <div className="mt-6">
           <Link
@@ -442,7 +442,7 @@ export default async function Page({ params }: { params: PageParams }) {
             )}
           </Section>
 
-          <Section title="งบประมาณ">
+          <Section title="งบประมาณ" icon={<Coins className="h-5 w-5 "/>}>
             {!budget ? (
               <EmptyRow>ยังไม่มีการบันทึกงบประมาณ</EmptyRow>
             ) : (
@@ -493,7 +493,7 @@ export default async function Page({ params }: { params: PageParams }) {
             )}
           </Section>
 
-          <Section title="ขั้นตอนการดำเนินงานกิจกรรม">
+          <Section title="ขั้นตอนการดำเนินงานกิจกรรม" icon={<Calendar className="h-5 w-5"/>}>
             {!activities?.length ? (
               <EmptyRow>ยังไม่มีการบันทึกกิจกรรม</EmptyRow>
             ) : (

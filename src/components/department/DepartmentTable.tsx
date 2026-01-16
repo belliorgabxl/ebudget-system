@@ -168,7 +168,7 @@ export function DepartmentTable({
           <TH className="w-2/12" align="center">รหัส</TH>
           <TH className="w-3/12">ชื่อหน่วยงาน</TH>
           <TH className="w-2/12" align="center">จำนวนพนักงาน</TH>
-          <TH className="w-2/12" align="center">จำนวนโปรเจ็กต์</TH>
+          <TH className="w-2/12" align="center">จำนวนโครงการ</TH>
           <TH className="w-1/12" align="center">สถานะใช้งาน</TH>
           <TH className="w-1/12" align="center">จัดการ</TH>
         </THead>

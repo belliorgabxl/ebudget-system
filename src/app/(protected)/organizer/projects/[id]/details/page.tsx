@@ -18,7 +18,6 @@ import { cookies } from "next/headers";
 import { fetchProjectInformationServer } from "@/api/project.server";
 import { ProjectDetailClient } from "@/components/project/details/ProjectDetailClient";
 import BackGroundLight from "@/components/background/bg-light";
-import { SquareArrowUp } from "lucide-react";
 import ApprovalStatusButton from "@/components/project/approval/ApprovalStatusButton";
 
 type Project = {
@@ -232,16 +231,16 @@ export default async function Page({ params }: { params: PageParams }) {
   if (!p) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-10 space-y-8">
-        <h1 className="text-xl font-semibold text-gray-900">ไม่พบโปรเจ็กต์</h1>
+        <h1 className="text-xl font-semibold text-gray-900">ไม่พบโครงการ</h1>
         <p className="text-sm text-gray-600 mt-2">
-          โปรเจ็กต์อาจถูกลบหรือคุณไม่มีสิทธิ์เข้าถึง
+          โครงการอาจถูกลบหรือคุณไม่มีสิทธิ์เข้าถึง
         </p>
         <div className="mt-6">
           <Link
             href="/organizer/projects/my-project"
             className="text-indigo-600 hover:underline"
           >
-            กลับไปยังหน้าโปรเจ็คทั้งหมด
+            กลับไปยังหน้าโครงการทั้งหมด
           </Link>
         </div>
       </main>
@@ -256,7 +255,7 @@ export default async function Page({ params }: { params: PageParams }) {
             href="/organizer/projects/my-project"
             className="hover:underline"
           >
-            โปรเจ็กต์ของคุณ
+            โครงการของคุณ
           </Link>
           <span className="mx-1">/</span>
           <span className="text-gray-700">
@@ -280,7 +279,29 @@ export default async function Page({ params }: { params: PageParams }) {
               </span>
             </div>
           </div>
-          <ApprovalStatusButton projectId={p.id} status={p.budgetPlanStatus} />
+          <ApprovalStatusButton
+            projectId={p.id}
+            status={p.budgetPlanStatus}
+            processSteps={[
+              {
+                title: "หัวหน้าแผนก",
+                status: "approved",
+                by: "สมชาย ใจดี",
+                at: "10 ม.ค. 2569 14:32",
+              },
+              {
+                title: "ฝ่ายวางแผน",
+                status: "approved",
+                by: "นางสาวศิริพร",
+                at: "11 ม.ค. 2569 09:10",
+              },
+              {
+                title: "ผู้อำนวยการ",
+                status: "pending",
+                note: "ยังไม่ได้ดำเนินการ",
+              },
+            ]}
+          />
         </div>
         <ProjectDetailClient initialProject={p} />
       </main>

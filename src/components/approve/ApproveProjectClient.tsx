@@ -61,7 +61,7 @@ export default function ApproveProjectClient({
       router.back();
       router.refresh();
     } catch (e: any) {
-      setError(e?.message ?? "ไม่สามารถส่งกลับโปรเจ็คได้");
+      setError(e?.message ?? "ไม่สามารถส่งกลับโครงการได้");
     } finally {
       setLoading(false);
     }
@@ -122,7 +122,7 @@ export default function ApproveProjectClient({
           disabled={loading}
           className="rounded-lg border border-yellow-500 bg-yellow-100 px-4 py-2 text-sm font-medium text-yellow-500 hover:bg-yellow-500 hover:text-white disabled:opacity-60"
         >
-          ส่งกลับโปรเจ็ค
+          ส่งกลับโครงการ
         </button>
         <button
           type="button"

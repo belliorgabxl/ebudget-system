@@ -304,7 +304,7 @@ export default function ClientDepartmentDetail({ id }: Props) {
         {/* stats */}
         <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard label="จำนวนพนักงาน" value={dep.user_count ?? 0} />
-          <StatCard label="จำนวนโปรเจ็กต์" value={dep.project_count ?? 0} />
+          <StatCard label="จำนวนโครงการ" value={dep.project_count ?? 0} />
           <StatCard label="สถานะ" value={dep.is_active ? "ใช้งาน" : "ไม่ใช้งาน"} />
         </section>
 
