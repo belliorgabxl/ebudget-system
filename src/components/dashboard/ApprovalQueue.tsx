@@ -1,31 +1,18 @@
 "use client"
 
+import { ApprovalItem } from "@/app/mock"
 import { Eye, Clock } from "lucide-react"
 import { useMemo, useState } from "react"
 
 interface ApprovalQueueProps {
-  approvals: Array<{
-    project: string
-    dept: string
-    amount: string
-    owner: string
-    stage: string
-    lastUpdate: string
-    priority: "high" | "medium" | "low"
-  }>
+  approvals: ApprovalItem[]
 }
 
 export function ApprovalQueue({ approvals }: ApprovalQueueProps) {
-  /* ===============================
-   * local filter (priority only)
-   * =============================== */
+
   const [priority, setPriority] = useState<"all" | "high" | "medium" | "low">(
     "all"
   )
-
-  /* ===============================
-   * filter logic
-   * =============================== */
   const filteredApprovals = useMemo(() => {
     return approvals.filter((item) => {
       if (priority !== "all" && item.priority !== priority) return false
@@ -78,7 +65,7 @@ export function ApprovalQueue({ approvals }: ApprovalQueueProps) {
         {visibleApprovals.map((item, index) => (
           <div
             key={index}
-            className="relative flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
+            className="relative flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:bg-gray-50"
           >
             {/* priority bar */}
             <div
@@ -125,7 +112,7 @@ export function ApprovalQueue({ approvals }: ApprovalQueueProps) {
                 </div>
               </div>
 
-              <button className="inline-flex items-center gap-2 rounded-md bg-gray-700 px-3 py-2 text-xs text-white shadow-sm hover:bg-gray-800">
+              <button className="inline-flex items-center gap-2 rounded-md bg-gray-700 px-3 py-2 text-xs text-white hover:bg-gray-800">
                 <Eye className="h-4 w-4" />
                 ตรวจสอบ
               </button>

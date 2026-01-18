@@ -136,7 +136,7 @@ export default function UserDashboardPage() {
                     <ProjectsTable filters={filters} projects={projects_data} />
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                         <div className="lg:col-span-2">
-                            <ApprovalQueue filters={filters} approvals={MOCK_APPROVALS} />
+                            <ApprovalQueue approvals={MOCK_APPROVALS} />
                         </div>
                         <div>
                             <StrategyQaSection
