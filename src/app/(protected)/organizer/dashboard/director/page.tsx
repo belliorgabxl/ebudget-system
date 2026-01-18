@@ -53,7 +53,7 @@ import { ProjectsTable } from "@/components/dashboard/ProjectsTable"
 /* ===============================
  * Types
  * =============================== */
-type YearFilter = ReturnType<typeof yearFilterItems>[number]
+type YearFilter = ReturnType<typeof yearFilterItems>[number]["value"]
 
 /* ===============================
  * Helpers
@@ -100,6 +100,7 @@ export default function DashboardDirectorPage() {
         status: "all",
         qaIndicator: "all",
         strategy: "all",
+        priority: "all",
     })
 
     const [calendar_events_data, set_calendar_events_data] =
@@ -315,14 +316,16 @@ export default function DashboardDirectorPage() {
                             value={year}
                             onChange={(e) => {
                                 setYear(e.target.value as YearFilter)
-                                setAnimationKey(prev => prev + 1)
+                                setAnimationKey((prev) => prev + 1)
                             }}
                             className="rounded-xl border px-3 py-1 text-xs"
-                        >
+                            >
                             {yearFilterItems().map((item) => (
-                                <option key={item} value={item}>{item}</option>
+                                <option key={item.value} value={item.value}>
+                                {item.label}
+                                </option>
                             ))}
-                        </select>
+                            </select>
                         </div>
                     </div>
                 </header>
@@ -360,8 +363,7 @@ export default function DashboardDirectorPage() {
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
                         <ApprovalQueue
-                            filters={filters}
-                            approvals={MOCK_APPROVALS}
+                        approvals={MOCK_APPROVALS}
                         />
 
                         <StrategyQaSection

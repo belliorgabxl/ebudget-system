@@ -20,19 +20,23 @@ export function parseTTL(ttl: string): number {
   }
 }
 
-export function yearFilterItems(): string[] {
 
-  const currentYear = new Date().getFullYear();
-  const buddhistYear = currentYear + 543; 
-  const years: string[] = [];
-  years.push("all");
-  
+export function yearFilterItems(): { label: string; value: string }[] {
+  const currentYear = new Date().getFullYear()
+  const buddhistYear = currentYear + 543
+
+  const years: { label: string; value: string }[] = []
+
+  years.push({ label: "ทั้งหมด", value: "all" })
+
   for (let i = 0; i < 6; i++) {
-    years.push(String(buddhistYear - i));
+    const year = String(buddhistYear - i)
+    years.push({ label: year, value: year })
   }
-  
-  return years;
+
+  return years
 }
+
 
 export const generateSixDigitCode = () => {
   return Math.floor(Math.random() * 1000000)
