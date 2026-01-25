@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useRef } from "react";
-import type { Organization } from "@/resource/mock-organization";
+import type { OrganizationResponse } from "@/dto/organizationDto";
 
 interface EditOrganizationModalProps {
-  org: Organization;
-  onSave: (org: Organization) => void;
+  org: OrganizationResponse;
+  onSave: (org: OrganizationResponse) => void;
   onClose: () => void;
 }
 
@@ -13,7 +13,7 @@ export default function EditOrganizationModal({
   onSave,
   onClose,
 }: EditOrganizationModalProps) {
-  const [editing, setEditing] = React.useState<Organization>(org);
+  const [editing, setEditing] = React.useState<OrganizationResponse>(org);
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -65,7 +65,7 @@ export default function EditOrganizationModal({
 
         {/* Body */}
         <div className="px-6 py-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 ชื่อองค์กร
@@ -84,140 +84,19 @@ export default function EditOrganizationModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                รหัส
+                ประเภท
               </label>
               <input
-                value={editing?.code || ""}
+                value={editing?.type || ""}
                 onChange={(e) =>
                   setEditing(
                     editing
-                      ? { ...editing, code: e.target.value }
+                      ? { ...editing, type: e.target.value }
                       : org
                   )
                 }
                 className="w-full rounded-lg border border-gray-300 px-3 py-2"
               />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                รายละเอียด
-              </label>
-              <textarea
-                value={editing?.description || ""}
-                onChange={(e) =>
-                  setEditing(
-                    editing
-                      ? { ...editing, description: e.target.value }
-                      : org
-                  )
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                งบประมาณ
-              </label>
-              <input
-                type="number"
-                value={editing?.totalBudget || 0}
-                onChange={(e) =>
-                  setEditing(
-                    editing
-                      ? {
-                          ...editing,
-                          totalBudget: Number(e.target.value),
-                        }
-                      : org
-                  )
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                หน่วยงาน
-              </label>
-              <input
-                type="number"
-                value={editing?.totalDepartments || 0}
-                onChange={(e) =>
-                  setEditing(
-                    editing
-                      ? {
-                          ...editing,
-                          totalDepartments: Number(e.target.value),
-                        }
-                      : org
-                  )
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                พนักงาน
-              </label>
-              <input
-                type="number"
-                value={editing?.totalEmployees || 0}
-                onChange={(e) =>
-                  setEditing(
-                    editing
-                      ? {
-                          ...editing,
-                          totalEmployees: Number(e.target.value),
-                        }
-                      : org
-                  )
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                โครงการ
-              </label>
-              <input
-                type="number"
-                value={editing?.totalProjects || 0}
-                onChange={(e) =>
-                  setEditing(
-                    editing
-                      ? {
-                          ...editing,
-                          totalProjects: Number(e.target.value),
-                        }
-                      : org
-                  )
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                สถานะ
-              </label>
-              <select
-                value={editing?.status || "active"}
-                onChange={(e) =>
-                  setEditing(
-                    editing
-                      ? {
-                          ...editing,
-                          status: (e.target.value === "active"
-                            ? "active"
-                            : "inactive") as "active" | "inactive",
-                        }
-                      : org
-                  )
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              >
-                <option value="active">ใช้งาน</option>
-                <option value="inactive">ไม่ใช้งาน</option>
-              </select>
             </div>
           </div>
         </div>

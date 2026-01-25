@@ -5,12 +5,12 @@ import { useParams } from "next/navigation";
 import BackGroundLight from "@/components/background/bg-light";
 import { ArrowLeft, Users, Building, Shield, Mail, Briefcase, Calendar, Edit2, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { MOCK_ORGANIZATIONS } from "@/resource/mock-organization";
+import type { OrganizationResponse } from "@/dto/organizationDto";
+import { GetOrganizationByIdFromApi } from "@/api/organization.client";
 import EditOrganizationModal from "@/components/manage-org/EditOrganizationModal";
 import AddRoleModal from "@/components/manage-org/AddRoleModal";
 import EditRoleModal from "@/components/manage-org/EditRoleModal";
 import { MOCK_EMPLOYEES, MOCK_DEPARTMENTS, MOCK_ROLES } from "@/resource/mock-org-detail";
-import type { Organization } from "@/resource/mock-organization";
 import type { Employee, Department, Role } from "@/resource/mock-org-detail";
 import { formatCompactNumber } from "@/lib/util";
 
@@ -18,7 +18,7 @@ export default function OrgDetailPage() {
   const params = useParams();
   const orgId = params?.id as string;
   
-  const [org, setOrg] = useState<Organization | null>(null);
+  const [org, setOrg] = useState<OrganizationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"employees" | "departments" | "roles">("employees");
   const [isEditingOpen, setIsEditingOpen] = useState(false);
@@ -27,12 +27,21 @@ export default function OrgDetailPage() {
   const [roles, setRoles] = useState<Role[]>([]);
 
   useEffect(() => {
-    // Simulate API call
-    const organization = MOCK_ORGANIZATIONS.find((o) => o.id === orgId);
-    setOrg(organization || null);
-    setRoles(MOCK_ROLES);
-    setLoading(false);
+    loadOrganization();
   }, [orgId]);
+
+  const loadOrganization = async () => {
+    setLoading(true);
+    try {
+      const data = await GetOrganizationByIdFromApi(orgId);
+      setOrg(data);
+      setRoles(MOCK_ROLES);
+    } catch (err) {
+      console.error("Failed to load organization:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditRole = (role: Role) => {
     setEditingRole(role);
@@ -94,17 +103,21 @@ export default function OrgDetailPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">{org.name}</h1>
-                  <p className="mt-1 text-sm text-gray-500">{org.description}</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {org.type && <span>ประเภท: {org.type}</span>}
+                    {org.type && " • "}
+                    <span className="font-mono text-xs">ID: {org.id}</span>
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span
                     className={`inline-block rounded-full px-4 py-2 text-sm font-medium ${
-                      org.status === "active"
+                      org.is_active
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {org.status === "active" ? "ใช้งาน" : "ไม่ใช้งาน"}
+                    {org.is_active ? "ใช้งาน" : "ไม่ใช้งาน"}
                   </span>
                   <button
                     onClick={(e) => {
@@ -113,25 +126,25 @@ export default function OrgDetailPage() {
                         prev
                           ? {
                               ...prev,
-                              status: prev.status === "active" ? "inactive" : "active",
-                              updatedAt: new Date().toISOString(),
+                              is_active: !prev.is_active,
+                              updated_at: new Date().toISOString(),
                             }
                           : prev
                       );
                     }}
-                    aria-pressed={org.status === "active"}
-                    title={org.status === "active" ? "ระงับการใช้งาน" : "เปิดใช้งาน"}
+                    aria-pressed={org.is_active}
+                    title={org.is_active ? "ระงับการใช้งาน" : "เปิดใช้งาน"}
                     className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors focus:outline-none ${
-                      org.status === "active" ? "bg-green-600" : "bg-gray-300"
+                      org.is_active ? "bg-green-600" : "bg-gray-300"
                     }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                        org.status === "active" ? "translate-x-6" : "translate-x-1"
+                        org.is_active ? "translate-x-6" : "translate-x-1"
                       }`}
                     />
                     <span className="sr-only">
-                      {org.status === "active" ? "เปิดใช้งาน" : "ระงับการใช้งาน"}
+                      {org.is_active ? "เปิดใช้งาน" : "ระงับการใช้งาน"}
                     </span>
                   </button>
                   <button
@@ -146,27 +159,29 @@ export default function OrgDetailPage() {
             </div>
 
             {/* Stats */}
-            <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <StatCard
-                label="รหัส"
-                value={org.code}
+                label="วันที่สร้าง"
+                value={new Date(org.created_at).toLocaleDateString("th-TH", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+                icon={<Calendar className="h-5 w-5" />}
+              />
+              <StatCard
+                label="อัปเดตล่าสุด"
+                value={new Date(org.updated_at).toLocaleDateString("th-TH", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+                icon={<Calendar className="h-5 w-5" />}
+              />
+              <StatCard
+                label="สถานะ"
+                value={org.is_active ? "เปิดใช้งาน" : "ปิดใช้งาน"}
                 icon={<Building className="h-5 w-5" />}
-              />
-         
-              <StatCard
-                label="หน่วยงาน"
-                value={org.totalDepartments}
-                icon={<Building className="h-5 w-5" />}
-              />
-              <StatCard
-                label="พนักงาน"
-                value={org.totalEmployees}
-                icon={<Users className="h-5 w-5" />}
-              />
-              <StatCard
-                label="โครงการ"
-                value={org.totalProjects}
-                icon={<Briefcase className="h-5 w-5" />}
               />
             </div>
 

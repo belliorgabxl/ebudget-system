@@ -1,0 +1,325 @@
+═══════════════════════════════════════════════════════════════════
+                    API DOCUMENTATION: ORGANIZATIONS
+═══════════════════════════════════════════════════════════════════
+
+BASE URL: /organizations
+AUTHENTICATION: Bearer Token (Required for all endpoints)
+
+═══════════════════════════════════════════════════════════════════
+1. GET /organizations
+═══════════════════════════════════════════════════════════════════
+
+ชื่อ API: Get Organizations (รายการองค์กรทั้งหมด)
+
+INPUT:
+------
+ไม่จำเป็น (Optional):
+  - page (query, integer) 
+    • หมายเลขหน้า 
+    • ค่าเริ่มต้น: 1
+    
+  - limit (query, integer) 
+    • จำนวนรายการต่อหน้า 
+    • ค่าเริ่มต้น: 10
+    • สูงสุด: 100
+    
+  - name (query, string) 
+    • กรองตามชื่อองค์กร
+    
+  - type (query, string) 
+    • กรองตามประเภทองค์กร
+    
+  - is_active (query, boolean) 
+    • กรองตามสถานะใช้งาน
+
+ตัวอย่าง Request:
+GET /organizations?page=1&limit=10&name=กรม&is_active=true
+
+OUTPUT:
+-------
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "string",
+      "type": "string",
+      "is_active": true,
+      "created_at": "timestamp",
+      "updated_at": "timestamp",
+      "created_by": "uuid",
+      "updated_by": "uuid"
+    }
+  ],
+  "total": 0,
+  "page": 1,
+  "limit": 10,
+  "total_pages": 0
+}
+
+RESPONSES:
+----------
+✓ 200 OK - สำเร็จ พร้อมรายการองค์กร
+✗ 400 Bad Request - ข้อมูล query parameters ไม่ถูกต้อง
+✗ 500 Internal Server Error - เกิดข้อผิดพลาดภายในระบบ
+
+
+═══════════════════════════════════════════════════════════════════
+2. POST /organizations
+═══════════════════════════════════════════════════════════════════
+
+ชื่อ API: Create Organization (สร้างองค์กรใหม่)
+
+INPUT:
+------
+จำเป็น (Required):
+  - name (string, body)
+    • ชื่อองค์กร
+    • ความยาว: 1-255 ตัวอักษร
+    • ต้องระบุ
+
+ไม่จำเป็น (Optional):
+  - type (string, body)
+    • ประเภทองค์กร
+    • ความยาวสูงสุด: 50 ตัวอักษร
+
+ตัวอย่าง Request Body:
+{
+  "name": "กรมบัญชีกลาง",
+  "type": "government"
+}
+
+OUTPUT:
+-------
+HTTP Status: 201 Created
+(ไม่มี response body)
+
+RESPONSES:
+----------
+✓ 201 Created - สร้างองค์กรสำเร็จ
+✗ 400 Bad Request - ข้อมูลไม่ถูกต้อง หรือ name ไม่ได้ระบุ
+✗ 500 Internal Server Error - ไม่สามารถสร้างองค์กรได้
+
+ERROR MESSAGES:
+---------------
+- "Invalid request body" - รูปแบบ JSON ไม่ถูกต้อง
+- "Failed to create organization" - เกิดข้อผิดพลาดในการสร้าง
+
+
+═══════════════════════════════════════════════════════════════════
+3. GET /organizations/{id}
+═══════════════════════════════════════════════════════════════════
+
+ชื่อ API: Get Organization (ดูรายละเอียดองค์กร)
+
+INPUT:
+------
+จำเป็น (Required):
+  - id (path parameter, UUID)
+    • รหัสองค์กร
+    • รูปแบบ UUID
+    • ต้องระบุ
+
+ตัวอย่าง Request:
+GET /organizations/550e8400-e29b-41d4-a716-446655440000
+
+OUTPUT:
+-------
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "กรมบัญชีกลาง",
+  "type": "government",
+  "is_active": true,
+  "created_at": "2026-01-20T10:30:00Z",
+  "updated_at": "2026-01-25T14:20:00Z",
+  "created_by": "123e4567-e89b-12d3-a456-426614174000",
+  "updated_by": "123e4567-e89b-12d3-a456-426614174000"
+}
+
+RESPONSES:
+----------
+✓ 200 OK - พบข้อมูลองค์กร
+✗ 400 Bad Request - ID ไม่ถูกต้องหรือไม่ได้ระบุ
+✗ 404 Not Found - ไม่พบองค์กรที่ระบุ
+
+ERROR MESSAGES:
+---------------
+- "Missing organization ID" - ไม่ได้ระบุ ID
+- "Invalid organization ID format" - รูปแบบ UUID ไม่ถูกต้อง
+- "Organization not found" - ไม่พบองค์กร
+
+
+═══════════════════════════════════════════════════════════════════
+4. PUT /organizations/{id}
+═══════════════════════════════════════════════════════════════════
+
+ชื่อ API: Update Organization (อัปเดตข้อมูลองค์กร)
+
+STATUS: 🚧 Not Implemented (ยังไม่ได้พัฒนา)
+
+INPUT:
+------
+จำเป็น (Required):
+  - id (path parameter, UUID)
+    • รหัสองค์กร
+    • รูปแบบ UUID
+    
+  - name (string, body)
+    • ชื่อองค์กรใหม่
+    • ความยาว: 1-255 ตัวอักษร
+
+ไม่จำเป็น (Optional):
+  - type (string, body)
+    • ประเภทองค์กร
+    • ความยาวสูงสุด: 50 ตัวอักษร
+
+ตัวอย่าง Request:
+PUT /organizations/550e8400-e29b-41d4-a716-446655440000
+
+Request Body:
+{
+  "name": "กรมบัญชีกลาง (ปรับปรุง)",
+  "type": "government"
+}
+
+OUTPUT (เมื่อพัฒนาเสร็จ):
+-------
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "กรมบัญชีกลาง (ปรับปรุง)",
+  "type": "government",
+  "is_active": true,
+  "created_at": "2026-01-20T10:30:00Z",
+  "updated_at": "2026-01-25T15:45:00Z",
+  "created_by": "123e4567-e89b-12d3-a456-426614174000",
+  "updated_by": "123e4567-e89b-12d3-a456-426614174000"
+}
+
+RESPONSES:
+----------
+✓ 200 OK - อัปเดตสำเร็จ (เมื่อพัฒนาเสร็จ)
+✗ 400 Bad Request - ID หรือข้อมูลไม่ถูกต้อง
+✗ 404 Not Found - ไม่พบองค์กรที่ระบุ
+✗ 500 Internal Server Error - เกิดข้อผิดพลาดในการอัปเดต
+✗ 501 Not Implemented - ฟังก์ชันยังไม่ได้พัฒนา (ปัจจุบัน)
+
+ERROR MESSAGES:
+---------------
+- "Missing organization ID" - ไม่ได้ระบุ ID
+- "Invalid organization ID format" - รูปแบบ UUID ไม่ถูกต้อง
+- "Invalid request body" - รูปแบบ JSON ไม่ถูกต้อง
+- "Update organization is not yet implemented" - ยังไม่ได้พัฒนา
+
+
+═══════════════════════════════════════════════════════════════════
+5. DELETE /organizations/{id}
+═══════════════════════════════════════════════════════════════════
+
+ชื่อ API: Delete Organization (ลบองค์กร)
+
+STATUS: 🚧 Not Implemented (ยังไม่ได้พัฒนา)
+
+INPUT:
+------
+จำเป็น (Required):
+  - id (path parameter, UUID)
+    • รหัสองค์กร
+    • รูปแบบ UUID
+
+ตัวอย่าง Request:
+DELETE /organizations/550e8400-e29b-41d4-a716-446655440000
+
+OUTPUT:
+-------
+HTTP Status: 204 No Content
+(ไม่มี response body)
+
+RESPONSES:
+----------
+✓ 204 No Content - ลบองค์กรสำเร็จ (เมื่อพัฒนาเสร็จ)
+✗ 400 Bad Request - ID ไม่ถูกต้องหรือไม่ได้ระบุ
+✗ 404 Not Found - ไม่พบองค์กรที่ระบุ
+✗ 500 Internal Server Error - เกิดข้อผิดพลาดในการลบ
+✗ 501 Not Implemented - ฟังก์ชันยังไม่ได้พัฒนา (ปัจจุบัน)
+
+ERROR MESSAGES:
+---------------
+- "Missing organization ID" - ไม่ได้ระบุ ID
+- "Invalid organization ID format" - รูปแบบ UUID ไม่ถูกต้อง
+- "Delete organization is not yet implemented" - ยังไม่ได้พัฒนา
+
+
+═══════════════════════════════════════════════════════════════════
+                        DATA MODELS
+═══════════════════════════════════════════════════════════════════
+
+OrganizationResponse:
+---------------------
+{
+  "id": "UUID - รหัสองค์กร",
+  "name": "string - ชื่อองค์กร",
+  "type": "string - ประเภทองค์กร",
+  "is_active": "boolean - สถานะใช้งาน",
+  "created_at": "timestamp - วันที่สร้าง",
+  "updated_at": "timestamp - วันที่แก้ไขล่าสุด",
+  "created_by": "UUID - ผู้สร้าง (nullable)",
+  "updated_by": "UUID - ผู้แก้ไขล่าสุด (nullable)"
+}
+
+OrganizationRequest:
+--------------------
+{
+  "name": "string (required, 1-255 chars) - ชื่อองค์กร",
+  "type": "string (optional, max 50 chars) - ประเภทองค์กร"
+}
+
+OrganizationListResponse:
+-------------------------
+{
+  "data": "array of OrganizationResponse - รายการองค์กร",
+  "total": "integer - จำนวนทั้งหมด",
+  "page": "integer - หน้าปัจจุบัน",
+  "limit": "integer - จำนวนต่อหน้า",
+  "total_pages": "integer - จำนวนหน้าทั้งหมด"
+}
+
+ErrorResponse:
+--------------
+{
+  "message": "string - ข้อความแสดงข้อผิดพลาด"
+}
+
+
+═══════════════════════════════════════════════════════════════════
+                        หมายเหตุสำคัญ
+═══════════════════════════════════════════════════════════════════
+
+✓ การยืนยันตัวตน (Authentication):
+  - ทุก API endpoint ต้องใช้ Bearer Token
+  - ส่งผ่าน Header: Authorization: Bearer <token>
+
+✓ รูปแบบข้อมูล:
+  - ID ทั้งหมดเป็นรูปแบบ UUID
+  - Timestamp เป็นรูปแบบ ISO 8601
+  - Request/Response เป็น JSON
+
+✓ การแบ่งหน้า (Pagination):
+  - page: เริ่มต้นที่ 1
+  - limit: ค่าเริ่มต้น 10, สูงสุด 100
+
+✓ สถานะการพัฒนา:
+  - GET /organizations - ✅ พัฒนาเสร็จ (แต่ service ยังไม่เสร็จ)
+  - POST /organizations - ✅ พัฒนาเสร็จ
+  - GET /organizations/{id} - ✅ พัฒนาเสร็จ
+  - PUT /organizations/{id} - 🚧 ยังไม่ได้พัฒนา
+  - DELETE /organizations/{id} - 🚧 ยังไม่ได้พัฒนา
+
+✓ ข้อควรระวัง:
+  - GetOrganizations ยังคืนค่า empty list เสมอเนื่องจาก service ยังไม่มี GetAll method
+  - Update และ Delete endpoint จะคืนค่า 501 Not Implemented
+
+
+═══════════════════════════════════════════════════════════════════
+สร้างเอกสารวันที่: 25 มกราคม 2026
+ตำแหน่งไฟล์: backend/internal/handler/organization_handlers.go
+ตำแหน่ง DTO: backend/internal/dto/organization_dto.go
+═══════════════════════════════════════════════════════════════════

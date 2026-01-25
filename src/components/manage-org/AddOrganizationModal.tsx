@@ -1,9 +1,8 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import type { Organization } from "@/resource/mock-organization";
 
 interface AddOrganizationModalProps {
-  onAdd: (org: Partial<Organization>) => void;
+  onAdd: (org: { name: string; type?: string }) => void;
   onClose: () => void;
 }
 
@@ -13,13 +12,7 @@ export default function AddOrganizationModal({
 }: AddOrganizationModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    code: "",
-    description: "",
-    totalBudget: 0,
-    totalDepartments: 0,
-    totalEmployees: 0,
-    totalProjects: 0,
-    status: "active" as "active" | "inactive",
+    type: "",
   });
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -73,7 +66,7 @@ export default function AddOrganizationModal({
 
         {/* Body */}
         <div className="px-6 py-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 ชื่อองค์กร <span className="text-red-500">*</span>
@@ -89,120 +82,22 @@ export default function AddOrganizationModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                รหัส <span className="text-red-500">*</span>
+                ประเภท
               </label>
               <input
-                value={formData.code}
+                value={formData.type}
                 onChange={(e) =>
-                  setFormData({ ...formData, code: e.target.value })
+                  setFormData({ ...formData, type: e.target.value })
                 }
-                placeholder="เช่น ABC"
+                placeholder="เช่น เอกชน, รัฐบาล"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2"
               />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                รายละเอียด
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="รายละเอียดเกี่ยวกับองค์กร"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                งบประมาณ
-              </label>
-              <input
-                type="number"
-                value={formData.totalBudget}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    totalBudget: Number(e.target.value),
-                  })
-                }
-                placeholder="0"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                หน่วยงาน
-              </label>
-              <input
-                type="number"
-                value={formData.totalDepartments}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    totalDepartments: Number(e.target.value),
-                  })
-                }
-                placeholder="0"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                พนักงาน
-              </label>
-              <input
-                type="number"
-                value={formData.totalEmployees}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    totalEmployees: Number(e.target.value),
-                  })
-                }
-                placeholder="0"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                โครงการ
-              </label>
-              <input
-                type="number"
-                value={formData.totalProjects}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    totalProjects: Number(e.target.value),
-                  })
-                }
-                placeholder="0"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                สถานะ
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    status: (e.target.value === "active"
-                      ? "active"
-                      : "inactive") as "active" | "inactive",
-                  })
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              >
-                <option value="active">ใช้งาน</option>
-                <option value="inactive">ไม่ใช้งาน</option>
-              </select>
             </div>
           </div>
+
+          <p className="text-xs text-gray-500">
+            <span className="text-red-500">*</span> ฟีลด์ที่จำเป็น
+          </p>
         </div>
 
         {/* Footer */}
@@ -215,11 +110,16 @@ export default function AddOrganizationModal({
           </button>
           <button
             onClick={() => {
-              if (formData.name && formData.code) {
-                onAdd(formData);
+              if (!formData.name.trim()) {
+                alert("กรุณาระบุชื่อองค์กร");
+                return;
               }
+              onAdd({
+                name: formData.name.trim(),
+                type: formData.type.trim() || undefined,
+              });
             }}
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
           >
             เพิ่ม
           </button>
