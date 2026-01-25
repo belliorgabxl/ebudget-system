@@ -1,153 +1,262 @@
-// Admin Manage Organization Page (layout aligned to organizer users page)
+// Admin Manage Organization Page
 "use client";
 import React, { useEffect, useState } from "react";
-// we will render a table inline so we can include edit/delete actions
+import BackGroundLight from "@/components/background/bg-light";
+import { Plus, Trash2, Building, Eye } from "lucide-react";
+import Link from "next/link";
+import { formatCompactNumber } from "@/lib/util";
+import { MOCK_ORGANIZATIONS } from "@/resource/mock-organization";
+import type { Organization } from "@/resource/mock-organization";
+import AddOrganizationModal from "@/components/manage-org/AddOrganizationModal";
 
-// mock org header
-const ORG = { id: "ORG-001", name: "Example Org" };
-
-const INITIAL_DEPARTMENTS: any[] = [
-  { code: "HR", name: "ฝ่ายบุคคล", leader: "สมชาย ใจดี", employees: 15, projects: 3, updatedAt: "01/11/2568" },
-  { code: "IT", name: "ฝ่ายไอที", leader: "วิชัย เทคโน", employees: 20, projects: 6, updatedAt: "05/11/2568" },
-];
-
-function uid(prefix = "D") {
+function uid(prefix = "ORG") {
   return `${prefix}-${Math.floor(Math.random() * 10000)}`;
 }
 
 export default function AdminManageOrgPage() {
-  const [departments, setDepartments] = useState(INITIAL_DEPARTMENTS);
-  const [loading, setLoading] = useState(false);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<any | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [filter, setFilter] = useState("all");
 
-  // placeholder: in future, load from API
+  // Load mock data
   useEffect(() => {
-    // noop for now — kept to mirror organizer/users structure
+    setLoading(true);
+    try {
+      setOrganizations(MOCK_ORGANIZATIONS);
+    } catch (err) {
+      setError("Failed to load organizations");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleAdd = (d: any) => {
-    const newDept = { id: uid("DEP"), ...d, updatedAt: new Date().toISOString().slice(0, 10) };
-    setDepartments((prev) => [newDept, ...prev]);
-    setAddOpen(false);
+  const handleAdd = (org: Partial<Organization>) => {
+    const newOrg: Organization = {
+      id: uid(),
+      name: org.name || "",
+      code: org.code || "",
+      description: org.description || "",
+      totalBudget: org.totalBudget || 0,
+      totalDepartments: org.totalDepartments || 0,
+      totalEmployees: org.totalEmployees || 0,
+      totalProjects: org.totalProjects || 0,
+      status: org.status || "active",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setOrganizations((prev) => [newOrg, ...prev]);
+    setIsAddOpen(false);
   };
 
-  const handleSaveEdit = () => {
-    if (!editing) return;
-    setDepartments((prev) => prev.map((x) => (x.code === editing.code ? { ...editing } : x)));
-    setEditing(null);
+  // Edit functionality moved to detail page
+
+  const handleDelete = (id: string) => {
+    if (confirm("คุณต้องการลบองค์กรนี้ใช่หรือไม่?")) {
+      setOrganizations((prev) => prev.filter((org) => org.id !== id));
+    }
   };
 
-  const filtered = departments; // could add filter UI later
+  const filtered =
+    filter === "all"
+      ? organizations
+      : organizations.filter((org) => org.status === filter);
 
   return (
-    <div className="p-6 space-y-6 text-gray-800">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">จัดการองค์กร</h1>
-          <div className="text-sm text-gray-500">องค์กร: {ORG.name}</div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button onClick={() => setAddOpen(true)} className="px-3 py-2 bg-indigo-600 text-white rounded text-sm shadow-sm">เพิ่มหน่วยงาน</button>
-        </div>
-      </header>
-
-      {loading ? (
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center text-gray-600">กำลังโหลดรายชื่อหน่วยงาน...</div>
-      ) : error ? (
-        <div className="bg-white p-6 rounded-lg shadow-sm text-center text-red-600">เกิดข้อผิดพลาด: {error}</div>
-      ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gradient-to-r from-indigo-50/70 to-blue-50/70 text-center">
-              <tr>
-                <th className="p-3">รหัส</th>
-                <th className="p-3">ชื่อหน่วยงาน</th>
-                <th className="p-3">หัวหน้าหน่วยงาน</th>
-                <th className="p-3">พนักงาน</th>
-                <th className="p-3">โครงการ</th>
-                <th className="p-3">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((d) => (
-                <tr key={d.code} className=" hover:bg-gray-50 text-center">
-                  <td className="p-3 font-medium">{d.code}</td>
-                  <td className="p-3">{d.name}</td>
-                  <td className="p-3">{d.leader}</td>
-                  <td className="p-3">{d.employees}</td>
-                  <td className="p-3">{d.projects ?? "-"}</td>
-                  <td className="p-3">
-                    <div className="inline-flex items-center gap-2">
-                      <button onClick={() => setEditing(d)} className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded">แก้ไข</button>
-                      <button onClick={() => setDepartments((prev) => prev.filter((x) => x.code !== d.code))} className="px-2 py-1 bg-red-100 text-red-700 rounded">ลบ</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* edit drawer */}
-      {editing && (
-        <div className="fixed inset-0 flex items-end md:items-center justify-center p-4">
-          <div className="w-full md:w-1/2 bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-3">แก้ไขหน่วยงาน</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="border p-2 rounded text-sm" />
-              <input value={editing.leader} onChange={(e) => setEditing({ ...editing, leader: e.target.value })} className="border p-2 rounded text-sm" />
-              <input value={editing.employees} onChange={(e) => setEditing({ ...editing, employees: Number(e.target.value) })} className="border p-2 rounded text-sm" />
+    <>
+      <BackGroundLight>
+        <div className="relative min-h-screen">
+          <div className="mx-auto max-w-7xl px-6 py-8 pl-20">
+            {/* Header */}
+            <div className="mb-8 flex items-center justify-between mt-12">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">จัดการองค์กร</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  จัดการข้อมูลองค์กรและข้อมูลสรุป
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAddOpen(true)}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-white hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                <span>เพิ่มองค์กร</span>
+              </button>
             </div>
 
-            <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setEditing(null)} className="px-3 py-2 border rounded">ยกเลิก</button>
-              <button onClick={handleSaveEdit} className="px-3 py-2 bg-indigo-600 text-white rounded">บันทึก</button>
+            {/* Filter */}
+            <div className="mb-6 flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600">สถานะ:</span>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="all">ทั้งหมด</option>
+                <option value="active">ใช้งาน</option>
+                <option value="inactive">ไม่ใช้งาน</option>
+              </select>
+            </div>
+
+            {/* Table */}
+            <div className="rounded-xl bg-white shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                        ชื่อองค์กร
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                        รหัส
+                      </th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
+                        งบประมาณ
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                        หน่วยงาน
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                        พนักงาน
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                        โครงการ
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                        สถานะ
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                        การจัดการ
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-12 text-center">
+                          <div className="flex items-center justify-center">
+                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : error ? (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="px-6 py-12 text-center text-red-600"
+                        >
+                          {error}
+                        </td>
+                      </tr>
+                    ) : filtered.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="px-6 py-12 text-center text-gray-500"
+                        >
+                          ไม่มีข้อมูลองค์กร
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((org) => (
+                        <tr
+                          key={org.id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                                <Building className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {org.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {org.description}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm font-medium text-gray-600">
+                              {org.code}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="text-sm font-medium text-gray-900">
+                              ฿{formatCompactNumber(org.totalBudget)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+                              {org.totalDepartments}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
+                              {org.totalEmployees}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="inline-block rounded-full bg-violet-100 px-3 py-1 text-sm font-medium text-violet-700">
+                              {org.totalProjects}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span
+                              className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${
+                                org.status === "active"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {org.status === "active"
+                                ? "ใช้งาน"
+                                : "ไม่ใช้งาน"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <Link
+                                href={`/admin/manage-org/${org.id}`}
+                                className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                                title="ดูรายละเอียด"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                              {/* Edit moved to detail page */}
+                              <button
+                                onClick={() => handleDelete(org.id)}
+                                className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                                title="ลบ"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
+      </BackGroundLight>
+
+      {/* Edit moved to detail page */}
+
+      {/* Add Modal */}
+      {isAddOpen && (
+        <AddOrganizationModal
+          onAdd={handleAdd}
+          onClose={() => setIsAddOpen(false)}
+        />
       )}
-
-      {/* Add modal (inline simple modal) */}
-      {addOpen && (
-        <div className="fixed inset-0 flex items-end md:items-center justify-center p-4">
-          <div className="w-full md:w-1/2 bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-3">เพิ่มหน่วยงาน</h3>
-            <AddDepartmentForm onAdd={handleAdd} onCancel={() => setAddOpen(false)} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AddDepartmentForm({ onAdd, onCancel }: { onAdd: (d: any) => void; onCancel: () => void }) {
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
-  const [leader, setLeader] = useState("");
-  const [employees, setEmployees] = useState(0);
-
-  return (
-    <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input placeholder="รหัส" value={code} onChange={(e) => setCode(e.target.value)} className="border p-2 rounded text-sm" />
-        <input placeholder="ชื่อแผนก" value={name} onChange={(e) => setName(e.target.value)} className="border p-2 rounded text-sm" />
-        <input placeholder="หัวหน้า" value={leader} onChange={(e) => setLeader(e.target.value)} className="border p-2 rounded text-sm" />
-        <input placeholder="จำนวนพนักงาน" type="number" value={employees} onChange={(e) => setEmployees(Number(e.target.value))} className="border p-2 rounded text-sm" />
-      </div>
-
-      <div className="mt-4 flex justify-end gap-2">
-        <button onClick={onCancel} className="px-3 py-2 border rounded">ยกเลิก</button>
-        <button
-          onClick={() => onAdd({ code: code || uid("DEP"), name, leader, employees })}
-          className="px-3 py-2 bg-green-600 text-white rounded"
-        >
-          เพิ่ม
-        </button>
-      </div>
-    </div>
+    </>
   );
 }

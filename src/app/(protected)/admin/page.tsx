@@ -44,7 +44,6 @@ export default function UserDashboardPage() {
     const [qa_indicators_data, set_qa_indicators_data] = useState<GetQaIndicatorsByYearAllRespond[]>([]);
     const [strategic_plans_data, set_strategic_plans_data] = useState<GetStrategicPlanRespond[]>([]);
     const [projects_data, set_projects_data] = useState<GetProjectsByOrgRespond[]>([]);
-
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 

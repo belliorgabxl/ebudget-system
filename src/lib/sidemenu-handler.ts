@@ -6,6 +6,7 @@ import {
   ClipboardList,
   FileCheck,
   Users,
+  DollarSign,
 } from "lucide-react";
 
 export type RoleKey =
@@ -32,6 +33,13 @@ export const MENU: MenuItem[] = [
     icon: LayoutDashboard,
     label: "ภาพรวม",
     allow: ["department_user", "department_head", "planning", "director", "hr"],
+  },
+  {
+    id: "admin-dashboard",
+    href: "/admin/dashboard",
+    icon: LayoutDashboard,
+    label: "Admin Dashboard",
+    allow: ["admin"],
   },
   {
     id: "department",
@@ -67,6 +75,20 @@ export const MENU: MenuItem[] = [
     icon: FileCheck,
     label: "การอนุมัติ",
     allow: ["director", "department_head", "planning", "hr"],
+  },
+  {
+    id: "manage-org",
+    href: "/admin/manage-org",
+    icon: Building2,
+    label: "จัดการองค์กร",
+    allow: ["admin"],
+  },
+  {
+    id: "budget-settings",
+    href: "/organizer/budget-settings",
+    icon: DollarSign,
+    label: "งบประมาณประจำปี",
+    allow: ["director"],
   },
   {
     id: "setup",
