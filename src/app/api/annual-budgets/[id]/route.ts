@@ -8,9 +8,9 @@ import type { AnnualBudget } from "@/dto/annualBudgetDto";
  */
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   if (!id || isNaN(Number(id))) {
     return NextResponse.json(
@@ -45,9 +45,9 @@ export async function GET(
  */
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   if (!id || isNaN(Number(id))) {
     return NextResponse.json(
