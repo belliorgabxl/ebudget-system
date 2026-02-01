@@ -47,7 +47,9 @@ import {
     GetStrategicPlansFromApi,
 } from "@/api/dashboard"
 import { GetDashboardKPIFromApi, GetBudgetByYearFromApi, GetBudgetByDepartmentFromApi, GetBudgetByStatusFromApi, GetProjectCountByDepartmentFromApi, GetProjectCountByStatusFromApi } from "@/api/dashboard.client"
+import { GetAnnualBudgetSummaryFromApi } from "@/api/annual-budget.client"
 import type { DashboardKPI, BudgetByYear, BudgetByDepartment, BudgetByStatus, ProjectCountByDepartment, ProjectCountByStatus } from "@/dto/dashboardDto"
+import type { GetAnnualBudgetSummaryResponse } from "@/dto/annualBudgetDto"
 import { ProjectsTable } from "@/components/dashboard/ProjectsTable"
 import { getCurrentYearBudget } from "@/resource/mock-budget-settings"
 
@@ -138,6 +140,10 @@ export default function DashboardDirectorPage() {
     // Project count by status data from API
     const [projectByStatusData, setProjectByStatusData] = useState<ProjectCountByStatus[]>([])
     const [projectByStatusLoading, setProjectByStatusLoading] = useState(false)
+
+    // Annual Budget Summary data from API
+    const [annualBudgetSummary, setAnnualBudgetSummary] = useState<GetAnnualBudgetSummaryResponse | null>(null)
+    const [annualBudgetLoading, setAnnualBudgetLoading] = useState(false)
 
     /* ===== effects ===== */
     useEffect(() => {
@@ -283,6 +289,24 @@ export default function DashboardDirectorPage() {
 
         fetchProjectByStatusData()
     }, [year])
+
+    // Fetch Annual Budget Summary data
+    useEffect(() => {
+        const fetchAnnualBudgetSummary = async () => {
+            setAnnualBudgetLoading(true)
+            try {
+                const data = await GetAnnualBudgetSummaryFromApi()
+                setAnnualBudgetSummary(data)
+            } catch (error) {
+                console.error("Failed to fetch annual budget summary:", error)
+                setAnnualBudgetSummary(null)
+            } finally {
+                setAnnualBudgetLoading(false)
+            }
+        }
+
+        fetchAnnualBudgetSummary()
+    }, [])
     
 
     const handleFilterChange = (key: string, value: string) => {
@@ -294,16 +318,17 @@ export default function DashboardDirectorPage() {
     const yearKpi = useMemo(() => {
         if (kpiData) {
             return {
-                totalBudget: kpiData.totalBudget,
+                totalBudget: annualBudgetSummary?.summary.total_budget || 0,
                 totalProjects: kpiData.totalProjects,
                 avgBudget: kpiData.avgBudget,
                 totalEmployees: kpiData.totalEmployees,
                 totalDepartments: kpiData.totalDepartments,
                 selectedYear: year,
+                annualBudgetSummary: annualBudgetSummary || undefined,
             }
         }
-        return { ...MOCK_YEAR_KPI[year], selectedYear: year }
-    }, [kpiData, year])
+        return { ...MOCK_YEAR_KPI[year], totalBudget: annualBudgetSummary?.summary.total_budget || 0, selectedYear: year, annualBudgetSummary: annualBudgetSummary || undefined }
+    }, [kpiData, year, annualBudgetSummary])
 
     /* ===== render ===== */
     return (

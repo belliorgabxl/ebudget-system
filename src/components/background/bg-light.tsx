@@ -9,7 +9,6 @@ export default function BackGroundLight({
   return (
     <div className="wrap">
       <div className="gridOverlay" />
-
       <div className="tri triA" />
       <div className="tri triB" />
       <div className="tri triC" />

@@ -89,6 +89,12 @@ export function toThaiDate(iso?: string | null) {
     day: "2-digit",
   });
 }
+export function convertBEtoCE(yearBE: number): number {
+  return yearBE - 543;
+}
+export function convertCEtoBE(yearCE: number): number {
+  return yearCE + 543;
+}
 
 export function mapStatusToIsActive(status?: string): string | undefined {
   if (!status) return undefined;

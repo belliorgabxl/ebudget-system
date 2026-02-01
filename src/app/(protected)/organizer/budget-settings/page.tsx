@@ -3,38 +3,59 @@
 import { useEffect, useState } from "react"
 import BackGroundLight from "@/components/background/bg-light"
 import { Plus, Edit2, Trash2, DollarSign } from "lucide-react"
-import { formatCompactNumber } from "@/lib/util"
+import { convertBEtoCE, convertCEtoBE, formatCompactNumber } from "@/lib/util"
 import { AnnualBudgetModal } from "@/components/budget-settings/AnnualBudgetModal"
-
-export type AnnualBudget = {
-  id: string
-  year: string
-  maxBudget: number
-  usedBudget: number
-  remainingBudget: number
-  createdAt: string
-  updatedAt: string
-}
+import type { AnnualBudget, GetAnnualBudgetSummaryResponse } from "@/dto/annualBudgetDto"
+import {
+  GetAnnualBudgetsFromApi,
+  CreateAnnualBudgetFromApi,
+  UpdateAnnualBudgetFromApi,
+  DeleteAnnualBudgetFromApi,
+  GetAnnualBudgetSummaryFromApi,
+} from "@/api/annual-budget.client"
 
 export default function BudgetSettingsPage() {
+  
   const [budgets, setBudgets] = useState<AnnualBudget[]>([])
+  const [budgetSummary, setBudgetSummary] = useState<GetAnnualBudgetSummaryResponse | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingBudget, setEditingBudget] = useState<AnnualBudget | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Load mock data
+  // Load data from API
   useEffect(() => {
-    // TODO: Replace with real API call
-    loadMockData()
+    loadBudgets()
+    loadsummary()
   }, [])
 
-  const loadMockData = () => {
+  const loadBudgets = async () => {
     setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setBudgets(MOCK_ANNUAL_BUDGETS)
+    setError(null)
+    try {
+      const data = await GetAnnualBudgetsFromApi()
+      setBudgets(data || [])
+      console.log("Loaded budgets:", data)
+    } catch (err) {
+      console.error("Failed to load budgets:", err)
+      setError("ไม่สามารถโหลดข้อมูลงบประมาณได้")
+    } finally {
       setLoading(false)
-    }, 500)
+    }
+  }
+  const loadsummary = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await GetAnnualBudgetSummaryFromApi()
+      setBudgetSummary(data)
+      console.log("Loaded budget summary:", data)
+    } catch (err) {
+      console.error("Failed to load budget summary:", err)
+      setError("ไม่สามารถโหลดข้อมูลสรุปงบประมาณได้")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleAdd = () => {
@@ -47,92 +68,131 @@ export default function BudgetSettingsPage() {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: number) => {
     if (confirm("คุณต้องการลบงบประมาณประจำปีนี้ใช่หรือไม่?")) {
-      setBudgets(budgets.filter((b) => b.id !== id))
+      try {
+        const success = await DeleteAnnualBudgetFromApi(id)
+        if (success) {
+          setBudgets(budgets.filter((b) => b.id !== id))
+          await loadBudgets()
+          await loadsummary()
+        } else {
+          setError("ไม่สามารถลบงบประมาณได้")
+        }
+      } catch (err) {
+        console.error("Failed to delete budget:", err)
+        setError("ไม่สามารถลบงบประมาณได้")
+      }
     }
   }
 
-  const handleSave = (data: { year: string; maxBudget: number }) => {
-    if (editingBudget) {
-      // Update existing
-      setBudgets(
-        budgets.map((b) =>
-          b.id === editingBudget.id
-            ? {
-                ...b,
-                year: data.year,
-                maxBudget: data.maxBudget,
-                remainingBudget: data.maxBudget - b.usedBudget,
-                updatedAt: new Date().toISOString(),
-              }
-            : b
-        )
-      )
-    } else {
-      // Add new
-      const newBudget: AnnualBudget = {
-        id: Date.now().toString(),
-        year: data.year,
-        maxBudget: data.maxBudget,
-        usedBudget: 0,
-        remainingBudget: data.maxBudget,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+  const handleSave = async (data: { amount: number; fiscal_year: number }) => {
+    setError(null)
+    try {
+      
+      if (editingBudget) {
+        // Update existing
+        const success = await UpdateAnnualBudgetFromApi({
+          id: editingBudget.id,
+          amount: data.amount,
+          fiscal_year: convertBEtoCE(data.fiscal_year),
+        })
+        if (success) {
+          setIsModalOpen(false) // ปิด modal ทันที
+          // Reload data in the background without awaiting
+          loadBudgets()
+          loadsummary()
+        } else {
+          setError("ไม่สามารถอัปเดตงบประมาณได้")
+        }
+      } else {
+        // Add new
+        const result = await CreateAnnualBudgetFromApi({
+          amount: data.amount,
+          fiscal_year: convertBEtoCE(data.fiscal_year),
+        })
+        if (result.ok) {
+          setIsModalOpen(false) // ปิด modal ทันที
+          // Reload data in the background without awaiting
+          loadBudgets()
+          loadsummary()
+        } else {
+          setError(result.message || "ไม่สามารถสร้างงบประมาณได้")
+        }
       }
-      setBudgets([...budgets, newBudget])
+    } catch (err) {
+      console.error("Failed to save budget:", err)
+      setError("ไม่สามารถบันทึกงบประมาณได้")
     }
-    setIsModalOpen(false)
   }
 
   return (
     <>
       <BackGroundLight>
-      <div className="relative min-h-screen">
-        <div className="mx-auto max-w-7xl p-6">
-          {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                งบประมาณประจำปี
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">
-                จัดการงบประมาณสูงสุดในแต่ละปี
-              </p>
+        <div className="relative min-h-screen">
+          <div className="mx-auto max-w-7xl p-6">
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4">
+                <p className="text-sm text-red-700">{error}</p>
+                <button
+                  onClick={() => setError(null)}
+                  className="mt-2 text-xs text-red-600 hover:text-red-700"
+                >
+                  ปิด
+                </button>
+              </div>
+            )}
+            
+            {/* Header */}
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  งบประมาณประจำปี
+                </h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  จัดการงบประมาณสูงสุดในแต่ละปี
+                </p>
+              </div>
+              <button
+                onClick={handleAdd}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-white hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                <span>เพิ่มงบประมาณ</span>
+              </button>
             </div>
-            <button
-              onClick={handleAdd}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-white hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="h-5 w-5" />
-              <span>เพิ่มงบประมาณ</span>
-            </button>
-          </div>
 
           {/* Stats Cards */}
           <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatsCard
-              label="ปีที่ตั้งงบแล้ว"
-              value={budgets.length}
-              icon={<DollarSign className="h-6 w-6" />}
-              color="blue"
-            />
-            <StatsCard
-              label="งบรวมทั้งหมด"
-              value={`฿${formatCompactNumber(
-                budgets.reduce((sum, b) => sum + b.maxBudget, 0)
-              )}`}
-              icon={<DollarSign className="h-6 w-6" />}
-              color="green"
-            />
-            <StatsCard
-              label="งบที่ใช้ไปแล้ว"
-              value={`฿${formatCompactNumber(
-                budgets.reduce((sum, b) => sum + b.usedBudget, 0)
-              )}`}
-              icon={<DollarSign className="h-6 w-6" />}
-              color="orange"
-            />
+            {loading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : (
+              <>
+                <StatsCard
+                  label="ปีที่ตั้งงบแล้ว"
+                  value={budgetSummary?.summary.fiscal_year ?? "-"}
+                  icon={<DollarSign className="h-6 w-6" />}
+                  color="blue"
+                />
+                <StatsCard
+                  label="งบรวมทั้งหมด"
+                  value={`฿${budgetSummary?.summary.total_budget ?? "-"}`}
+                  icon={<DollarSign className="h-6 w-6" />}
+                  color="green"
+                />
+                <StatsCard
+                  label="งบที่ใช้ไปแล้ว"
+                  value={`฿${budgetSummary?.summary.used_budget ?? "-"}`}
+                  icon={<DollarSign className="h-6 w-6" />}
+                  color="orange"
+                />
+              </>
+            )}
           </div>
 
           {/* Budget Table */}
@@ -181,7 +241,7 @@ export default function BudgetSettingsPage() {
                     </tr>
                   ) : (
                     budgets
-                      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
+                      .sort((a, b) => b.fiscal_year - a.fiscal_year)
                       .map((budget) => (
                         <tr
                           key={budget.id}
@@ -190,30 +250,34 @@ export default function BudgetSettingsPage() {
                           <td className="px-6 py-4">
                             <div className="flex items-center">
                               <span className="text-lg font-semibold text-gray-900">
-                                {budget.year}
+                                {convertCEtoBE(budget.fiscal_year)}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <span className="text-sm font-medium text-gray-900">
-                              ฿{formatCompactNumber(budget.maxBudget)}
+                              ฿{formatCompactNumber(budget.amount)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <span className="text-sm text-gray-600">
-                              ฿{formatCompactNumber(budget.usedBudget)}
+                              ฿{formatCompactNumber(budget.used_amount)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <span className="text-sm font-medium text-green-600">
-                              ฿{formatCompactNumber(budget.remainingBudget)}
+                            <span className={`text-sm font-medium ${
+                              budget.remaining_amount < 0 
+                                ? "text-red-600" 
+                                : "text-green-600"
+                            }`}>
+                              ฿{formatCompactNumber(budget.remaining_amount)}
                             </span>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex justify-center">
                               <UsageBar
-                                used={budget.usedBudget}
-                                max={budget.maxBudget}
+                                used={budget.usage_percentage}
+                                max={100}
                               />
                             </div>
                           </td>
@@ -253,10 +317,13 @@ export default function BudgetSettingsPage() {
         onSave={handleSave}
         initialData={
           editingBudget
-            ? { year: editingBudget.year, maxBudget: editingBudget.maxBudget }
+            ? { 
+                amount: editingBudget.amount,
+                fiscal_year: convertCEtoBE(editingBudget.fiscal_year),
+              }
             : undefined
         }
-        existingYears={budgets.map((b) => b.year)}
+        existingYears={budgets.map((b) => convertCEtoBE(b.fiscal_year))}
       />
     </>
   )
@@ -293,9 +360,24 @@ function StatsCard({
   )
 }
 
+// Skeleton Loading Card
+function SkeletonCard() {
+  return (
+    <div className="rounded-xl bg-white shadow-sm p-6 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="h-4 bg-gray-200 rounded w-24 mb-3"></div>
+          <div className="h-8 bg-gray-200 rounded w-32"></div>
+        </div>
+        <div className="rounded-lg p-3 bg-gray-200 w-14 h-14"></div>
+      </div>
+    </div>
+  )
+}
+
 // Usage Bar Component
 function UsageBar({ used, max }: { used: number; max: number }) {
-  const percentage = Math.min((used / max) * 100, 100)
+  const percentage = Math.min(used, max)
   const color =
     percentage >= 90 ? "red" : percentage >= 70 ? "orange" : "green"
 
@@ -315,7 +397,7 @@ function UsageBar({ used, max }: { used: number; max: number }) {
           />
         </div>
         <span className="text-xs font-medium text-gray-600 min-w-[45px] text-right">
-          {percentage.toFixed(0)}%
+          {used.toFixed(1)}%
         </span>
       </div>
     </div>
@@ -323,32 +405,4 @@ function UsageBar({ used, max }: { used: number; max: number }) {
 }
 
 // Mock Data
-const MOCK_ANNUAL_BUDGETS: AnnualBudget[] = [
-  {
-    id: "1",
-    year: "2568",
-    maxBudget: 20000000, // 20 million
-    usedBudget: 15500000,
-    remainingBudget: 4500000,
-    createdAt: "2025-01-01T00:00:00Z",
-    updatedAt: "2025-01-20T00:00:00Z",
-  },
-  {
-    id: "2",
-    year: "2567",
-    maxBudget: 18000000, // 18 million
-    usedBudget: 17200000,
-    remainingBudget: 800000,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-12-31T00:00:00Z",
-  },
-  {
-    id: "3",
-    year: "2566",
-    maxBudget: 15000000, // 15 million
-    usedBudget: 15000000,
-    remainingBudget: 0,
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-12-31T00:00:00Z",
-  },
-]
+const MOCK_ANNUAL_BUDGETS: AnnualBudget[] = []

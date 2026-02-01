@@ -6,9 +6,9 @@ import { X } from "lucide-react"
 type AnnualBudgetModalProps = {
   isOpen: boolean
   onClose: () => void
-  onSave: (data: { year: string; maxBudget: number }) => void
-  initialData?: { year: string; maxBudget: number }
-  existingYears: string[]
+  onSave: (data: { fiscal_year: number; amount: number }) => void
+  initialData?: { fiscal_year: number; amount: number }
+  existingYears: number[]
 }
 
 export function AnnualBudgetModal({
@@ -18,20 +18,20 @@ export function AnnualBudgetModal({
   initialData,
   existingYears,
 }: AnnualBudgetModalProps) {
-  const [year, setYear] = useState("")
-  const [maxBudget, setMaxBudget] = useState("")
-  const [errors, setErrors] = useState<{ year?: string; maxBudget?: string }>(
+  const [fiscalYear, setFiscalYear] = useState("")
+  const [amount, setAmount] = useState("")
+  const [errors, setErrors] = useState<{ fiscalYear?: string; amount?: string }>(
     {}
   )
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        setYear(initialData.year)
-        setMaxBudget(initialData.maxBudget.toString())
+        setFiscalYear(initialData.fiscal_year.toString())
+        setAmount(initialData.amount.toString())
       } else {
-        setYear("")
-        setMaxBudget("")
+        setFiscalYear("")
+        setAmount("")
       }
       setErrors({})
     }
@@ -41,25 +41,25 @@ export function AnnualBudgetModal({
     e.preventDefault()
 
     // Validation
-    const newErrors: { year?: string; maxBudget?: string } = {}
+    const newErrors: { fiscalYear?: string; amount?: string } = {}
 
-    if (!year.trim()) {
-      newErrors.year = "กรุณากรอกปีงบประมาณ"
-    } else if (!/^\d{4}$/.test(year)) {
-      newErrors.year = "กรุณากรอกปีงบประมาณเป็นตัวเลข 4 หลัก"
+    if (!fiscalYear.trim()) {
+      newErrors.fiscalYear = "กรุณากรอกปีงบประมาณ"
+    } else if (!/^\d{4}$/.test(fiscalYear)) {
+      newErrors.fiscalYear = "กรุณากรอกปีงบประมาณเป็นตัวเลข 4 หลัก"
     } else if (
       !initialData &&
-      existingYears.includes(year)
+      existingYears.includes(Number(fiscalYear))
     ) {
-      newErrors.year = "ปีงบประมาณนี้มีอยู่ในระบบแล้ว"
+      newErrors.fiscalYear = "ปีงบประมาณนี้มีอยู่ในระบบแล้ว"
     }
 
-    if (!maxBudget.trim()) {
-      newErrors.maxBudget = "กรุณากรอกงบประมาณสูงสุด"
-    } else if (isNaN(Number(maxBudget)) || Number(maxBudget) <= 0) {
-      newErrors.maxBudget = "กรุณากรอกงบประมาณเป็นตัวเลขที่มากกว่า 0"
-    } else if (Number(maxBudget) > 1000000000000) {
-      newErrors.maxBudget = "งบประมาณสูงเกินกว่าที่กำหนด (สูงสุด 1,000,000 ล้าน)"
+    if (!amount.trim()) {
+      newErrors.amount = "กรุณากรอกงบประมาณสูงสุด"
+    } else if (isNaN(Number(amount)) || Number(amount) <= 0) {
+      newErrors.amount = "กรุณากรอกงบประมาณเป็นตัวเลขที่มากกว่า 0"
+    } else if (Number(amount) > 1000000000000) {
+      newErrors.amount = "งบประมาณสูงเกินกว่าที่กำหนด (สูงสุด 1,000,000 ล้าน)"
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -69,19 +69,19 @@ export function AnnualBudgetModal({
 
     // Save
     onSave({
-      year: year.trim(),
-      maxBudget: Number(maxBudget),
+      fiscal_year: Number(fiscalYear),
+      amount: Number(amount),
     })
 
     // Reset
-    setYear("")
-    setMaxBudget("")
+    setFiscalYear("")
+    setAmount("")
     setErrors({})
   }
 
   const handleClose = () => {
-    setYear("")
-    setMaxBudget("")
+    setFiscalYear("")
+    setAmount("")
     setErrors({})
     onClose()
   }
@@ -108,64 +108,64 @@ export function AnnualBudgetModal({
           {/* Body */}
           <form onSubmit={handleSubmit}>
             <div className="px-6 py-6 space-y-6">
-              {/* Year Input */}
+              {/* Fiscal Year Input */}
               <div>
                 <label
-                  htmlFor="year"
+                  htmlFor="fiscalYear"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
                   ปีงบประมาณ (พ.ศ.) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="year"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
+                  id="fiscalYear"
+                  value={fiscalYear}
+                  onChange={(e) => setFiscalYear(e.target.value)}
                   placeholder="เช่น 2568"
                   disabled={!!initialData}
                   className={`w-full rounded-lg border px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.year
+                    errors.fiscalYear
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
                       : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
                   } ${initialData ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   maxLength={4}
                 />
-                {errors.year && (
-                  <p className="mt-1.5 text-sm text-red-600">{errors.year}</p>
+                {errors.fiscalYear && (
+                  <p className="mt-1.5 text-sm text-red-600">{errors.fiscalYear}</p>
                 )}
               </div>
 
-              {/* Budget Input */}
+              {/* Amount Input */}
               <div>
                 <label
-                  htmlFor="maxBudget"
+                  htmlFor="amount"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
                   งบประมาณสูงสุด (บาท) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="maxBudget"
-                  value={maxBudget}
+                  id="amount"
+                  value={amount}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, "")
-                    setMaxBudget(value)
+                    setAmount(value)
                   }}
                   placeholder="เช่น 20000000"
                   className={`w-full rounded-lg border px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.maxBudget
+                    errors.amount
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
                       : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
                   }`}
                 />
-                {errors.maxBudget && (
+                {errors.amount && (
                   <p className="mt-1.5 text-sm text-red-600">
-                    {errors.maxBudget}
+                    {errors.amount}
                   </p>
                 )}
-                {maxBudget && !errors.maxBudget && (
+                {amount && !errors.amount && (
                   <p className="mt-1.5 text-sm text-gray-500">
-                    {Number(maxBudget).toLocaleString("th-TH")} บาท
+                    {Number(amount).toLocaleString("th-TH")} บาท
                   </p>
                 )}
               </div>

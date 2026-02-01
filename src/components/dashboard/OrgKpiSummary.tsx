@@ -1,17 +1,29 @@
-import { DollarSign, Folder, TrendingUp, AlertTriangle, User2Icon, UserRound, UserCogIcon, Users, CheckCircle2 } from "lucide-react"
-import { DepartmentEditForm } from "../department/EditForm"
-import { formatCompactNumber } from "@/lib/util"
-import { getBudgetByYear, getAllBudgetsTotal } from "@/resource/mock-budget-settings"
+import { DollarSign, Folder, TrendingUp, User2Icon, Users } from "lucide-react";
+import { formatCompactNumber } from "@/lib/util";
 
-interface OrgKpiSummaryProps {
-  totalBudget: number
-  totalProjects: number
-  avgBudget: number
-  totalEmployees: number
-  totalDepartments: number
-  selectedYear?: string
+interface AnnualBudgetYearData {
+  fiscal_year: number;
+  year_label: string;
+  total_budget: number;
+  used_budget: number;
+  remaining_budget: number;
+  usage_percentage: number;
 }
 
+interface AnnualBudgetSummary {
+  summary: AnnualBudgetYearData;
+  yearly_data: AnnualBudgetYearData[];
+}
+
+interface OrgKpiSummaryProps {
+  totalBudget: number;
+  totalProjects: number;
+  avgBudget: number;
+  totalEmployees: number;
+  totalDepartments: number;
+  selectedYear?: string;
+  annualBudgetSummary?: AnnualBudgetSummary | null;
+}
 
 export function OrgKpiSummary({
   totalBudget,
@@ -20,28 +32,47 @@ export function OrgKpiSummary({
   totalEmployees,
   totalDepartments,
   selectedYear,
+  annualBudgetSummary,
 }: OrgKpiSummaryProps) {
-  // Get budget data based on selected year
-  let maxBudget = 0
-  let usedBudget = totalBudget
-  let displayYear = ""
+  // Determine which budget data to use
+ const toChristianYear = (thaiYear?: string) =>
+  thaiYear && thaiYear !== "all"
+    ? String(Number(thaiYear) - 543)
+    : null
 
+let usedBudget = 0
+let maxBudget = 0
+let displayYear = ""
+
+if (annualBudgetSummary) {
+  // === กรณีเลือก "ทั้งหมด" ===
   if (selectedYear === "all") {
-    const allBudgets = getAllBudgetsTotal()
-    maxBudget = allBudgets.totalMaxBudget
-    usedBudget = allBudgets.totalUsedBudget
+    const summary = annualBudgetSummary.summary
+    usedBudget = summary.used_budget
+    maxBudget = summary.total_budget
     displayYear = "ทั้งหมด"
-  } else if (selectedYear) {
-    const yearBudget = getBudgetByYear(selectedYear)
-    if (yearBudget) {
-      maxBudget = yearBudget.maxBudget
-      usedBudget = yearBudget.usedBudget
-      displayYear = selectedYear
+  } 
+  // === กรณีเลือกปี ===
+  else {
+    const christianYear = toChristianYear(selectedYear)
+
+    const yearData = annualBudgetSummary.yearly_data.find(
+      (y) => String(y.fiscal_year) === christianYear
+    )
+
+    if (yearData) {
+      usedBudget = yearData.used_budget
+      maxBudget = yearData.total_budget
+      displayYear = yearData.year_label
+    } else {
+      // ถ้าไม่มีข้อมูลปีนั้นจริง ๆ → แสดง 0 ชัด ๆ
+      usedBudget = 0
+      maxBudget = 0
+      displayYear = `ปี ${selectedYear}`
     }
   }
+}
 
-  const budgetUsagePercentage = maxBudget > 0 ? (usedBudget / maxBudget) * 100 : 0
-  const remainingBudget = maxBudget - usedBudget
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6">
@@ -51,7 +82,7 @@ export function OrgKpiSummary({
         value={
           <div className="flex flex-col">
             <span className="text-2xl">฿{formatCompactNumber(usedBudget)} / <span className="text-md text-muted-foreground text-gray-600">฿{formatCompactNumber(maxBudget)}</span></span>
-              </div>
+          </div>
         }
         color="blue"
         subtitle={displayYear ? `ปี ${displayYear}` : undefined}
