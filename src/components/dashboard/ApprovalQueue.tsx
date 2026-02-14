@@ -62,7 +62,15 @@ export function ApprovalQueue({ approvals }: ApprovalQueueProps) {
 
       {/* list */}
       <div className="space-y-3 p-4 max-h-[640px] overflow-y-auto">
-        {visibleApprovals.map((item, index) => (
+        {visibleApprovals.length === 0 ? (
+          <div className="flex items-center justify-center h-[200px] text-gray-500">
+            <div className="text-center">
+              <p className="text-sm">ไม่มีข้อมูล</p>
+              <p className="text-xs mt-1">ไม่มีรายการรออนุมัติ</p>
+            </div>
+          </div>
+        ) : (
+          visibleApprovals.map((item, index) => (
           <div
             key={index}
             className="relative flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:bg-gray-50"
@@ -118,7 +126,8 @@ export function ApprovalQueue({ approvals }: ApprovalQueueProps) {
               </button>
             </div>
           </div>
-        ))}
+          ))
+        )}
 
         {filteredApprovals.length > 10 && (
           <div className="pt-2 text-center text-xs text-gray-500">

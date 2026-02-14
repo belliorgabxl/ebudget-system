@@ -22,7 +22,7 @@ import {
 import { GetStrategicPlansFromApi,GetCalendarEventsFromApi, GetProjectsByOrgFromApi } from "@/api/dashboard"
 import { GetApprovalItems,GetProjectsByOrgRespond,GetCalenderEventRespond } from "@/dto/dashboardDto"
 import { GetStrategicPlanRespond,GetQaIndicatorsRespond,GetQaIndicatorsByYearAllRespond } from "@/dto/qaDto"
-import { GetQaIndicatorsByYearAllFromApi } from "@/api/qa/route"
+import { GetQaIndicatorsByYearAllFromApi } from "@/api/qa.client"
 
 export default function UserDashboardPage() {
     // คำนวณปีปัจจุบัน (ค.ศ.) และปีพ.ศ. ที่จะแสดง

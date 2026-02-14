@@ -4,6 +4,7 @@
 import React from "react";
 import type { GetQaIndicatorsByYearRespond } from "@/dto/qaDto";
 import { Eye, Trash2 } from "lucide-react";
+import { convertCEtoBE } from "@/lib/util";
 
 type Props = {
   qaIndicatorsData: GetQaIndicatorsByYearRespond[];
@@ -89,7 +90,7 @@ export default function QAIndicatorsTable({
                   </td>
 
                   <td className="px-4 py-4 text-sm text-slate-500 text-center align-middle">
-                    <div className="mx-auto overflow-hidden text-ellipsis whitespace-nowrap">{ind.year ?? "-"}</div>
+                    <div className="mx-auto overflow-hidden text-ellipsis whitespace-nowrap">{ind.year ? convertCEtoBE(ind.year) : "-"}</div>
                   </td>
 
                   <td className="px-4 py-4 text-sm text-slate-700 text-center align-middle">
@@ -154,7 +155,7 @@ export default function QAIndicatorsTable({
                         {ind.code}
                       </div>
 
-                      <div className="text-sm text-slate-700 overflow-hidden text-ellipsis whitespace-nowrap w-[56px] text-right">{ind.year ?? "-"}</div>
+                      <div className="text-sm text-slate-700 overflow-hidden text-ellipsis whitespace-nowrap w-[56px] text-right">{ind.year ? convertCEtoBE(ind.year) : "-"}</div>
                     </div>
 
                     <div className="mt-2 text-xs text-slate-500">ตัวบ่งชี้</div>

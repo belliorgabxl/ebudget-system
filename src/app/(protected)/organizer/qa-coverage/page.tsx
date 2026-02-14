@@ -3,17 +3,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import AddQAModal from "./qa-add-modal";
 import QADetailModal from "./qa-detail-modal";
-import QAHeader from "@/components/qa-coverage/QAHeader";
 import QAIndicatorsTable from "@/components/qa-coverage/QAIndicatorsTable";
-import { Search as SearchIcon, XIcon } from "lucide-react";
+import { Search as SearchIcon, XIcon, Plus } from "lucide-react";
 import {
   DeleteQaFromApi,
   GetQaIndicatorsByYearFromApi,
   GetQaIndicatorsCountsByYearFromApi,
   SearchQaIndicatorsByNameCode,
-} from "@/api/qa/route";
+} from "@/api/qa.client";
 import type { GetQaIndicatorsByYearRespond } from "@/dto/qaDto";
-import { ToastProvider, useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/ToastProvider";
+import BackGroundLight from "@/components/background/bg-light";
 
 type NewQA = {
   code: string;
@@ -294,82 +294,100 @@ export default function  QACoveragePage() {
   };
 
   return (
-    <div className="min-h-screen w-full">
-      <QAHeader
-        onAdd={() => setShowAddModal(true)}
-        years={years}
-        year={year}
-        setYear={(y) => {
-          setYear(y);
-          setPage(1);
-          setSearchQuery("");
-          setQuery("");
-        }}
-      />
-
-      <main className="py-2">
-        <section className="mt-6 flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-center px-4">
-          <div className="relative w-full md:w-1/2">
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-            <input
-              type="search"
-              placeholder="ค้นหาตามโค้ด/ชื่อตัวบ่งชี้… (กด Enter หรือปุ่ม ค้นหา)"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setSearchQuery(query.trim());
-                  setPage(1);
-                }
-              }}
-              className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-20 py-2.5 text-sm text-slate-700 shadow-sm placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100"
-            />
-
-            {query && (
+    <>
+      <BackGroundLight>
+      <div className="w-full flex py-5 justify-center">
+        <div className="lg:max-w-5/6 lg:px-0 px3 w-full">
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <div>
+              <div className="text-2xl font-semibold">ความครอบคลุมตัวบ่งชี้ QA</div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                จัดการตัวบ่งชี้ QA และติดตามการครอบคลุมตามโครงการ
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-2">
+                <span className="text-sm text-slate-600">ปีงบประมาณ</span>
+                <select
+                  value={String(year)}
+                  onChange={(e) => {
+                    setYear(Number(e.target.value));
+                    setPage(1);
+                    setSearchQuery("");
+                    setQuery("");
+                  }}
+                  className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-sm text-slate-700 shadow-sm focus:border-indigo-400 focus:outline-none"
+                >
+                  {years.map((y) => (
+                    <option key={y} value={String(y)}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
-                type="button"
-                onClick={() => {
-                  // เคลียร์ input และ search state, ไปหน้าแรก และดึงข้อมูลปกติ
-                  setQuery("");
-                  setSearchQuery("");
-                  setPage(1);
-                  // fetchList อยู่ใน scope ของ component เป็น async function
-                  try {
-                    fetchList(1, ""); // เรียก API ดึงรายการปกติของปี (ไม่ใช้ search)
-                  } catch (e) {
-                    // ignore
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" /> เพิ่ม QA
+              </button>
+            </div>
+          </div>
+
+          <section className="mb-6">
+            <div className="relative">
+              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+              <input
+                type="search"
+                placeholder="ค้นหาตามโค้ด/ชื่อตัวบ่งชี้… (กด Enter หรือปุ่ม ค้นหา)"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setSearchQuery(query.trim());
+                    setPage(1);
                   }
                 }}
-                className="absolute right-18 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100"
-                title="ล้าง"
-                aria-label="ล้างการค้นหา"
+                className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-20 py-2.5 text-sm text-slate-700 shadow-sm placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100"
+              />
+
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    // เคลียร์ input และ search state, ไปหน้าแรก และดึงข้อมูลปกติ
+                    setQuery("");
+                    setSearchQuery("");
+                    setPage(1);
+                    // fetchList อยู่ใน scope ของ component เป็น async function
+                    try {
+                      fetchList(1, ""); // เรียก API ดึงรายการปกติของปี (ไม่ใช้ search)
+                    } catch (e) {
+                      // ignore
+                    }
+                  }}
+                  className="absolute right-18 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100"
+                  title="ล้าง"
+                  aria-label="ล้างการค้นหา"
+                >
+                  <XIcon className="h-4 w-4 text-slate-400" />
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  setSearchQuery(query.trim());
+                  setPage(1);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-indigo-600 px-3 py-1 text-sm text-white hover:bg-indigo-700"
               >
-                <XIcon className="h-4 w-4 text-slate-400" />
+                ค้นหา
               </button>
-            )}
+            </div>
+          </section>
 
-            <button
-              onClick={() => {
-                setSearchQuery(query.trim());
-                setPage(1);
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-indigo-600 px-3 py-1 text-sm text-white hover:bg-indigo-700"
-            >
-              ค้นหา
-            </button>
-          </div>
-        </section>
-
-        <section className="mt-6 mx-4">
-          <div className="mb-2 flex items-center justify-between mx-4 my-2">
-            <h3 className="text-sm font-semibold text-slate-800">ตัวบ่งชี้ QA ทั้งหมด</h3>
-            <span className="text-xs text-slate-500">
-              ปี {year} • หน้า {page} {isLastPage ? "(สุดท้าย)" : ""} {loading ? "• กำลังโหลด..." : ""}
-            </span>
-          </div>
-
-          <div className="min-h-[420px] transition-all duration-200 ease-in-out">
+          <section>
             <QAIndicatorsTable
               qaIndicatorsData={filteredIndicators}
               onView={handleView}
@@ -379,33 +397,35 @@ export default function  QACoveragePage() {
               onNext={goNext}
               disableNext={isLastPage}
             />
-          </div>
-        </section>
-      </main>
+          </section>
+        </div>
+      </div>
+    </BackGroundLight>
 
-      {showAddModal && (
-        <AddQAModal
-          onClose={() => setShowAddModal(false)}
-          onAdd={handleAddQA}
-          year={year}
-          onSuccess={async () => {
-            setPage(1);
-            setSearchQuery("");
-            setQuery("");
-            await fetchList(1, "");
-            await fetchCounts();
-          }}
-        />
-      )}
+    {showAddModal && (
+      <AddQAModal
+        onClose={() => setShowAddModal(false)}
+        onAdd={handleAddQA}
+        year={year}
+        onSuccess={async () => {
+          setPage(1);
+          setSearchQuery("");
+          setQuery("");
+          await fetchList(1, "");
+          await fetchCounts();
+        }}
+      />
+    )}
 
-      {selectedQaId && (
-        <QADetailModal
-          qaId={selectedQaId}
-          initialData={selectedRecord ?? undefined}
-          onClose={() => setSelectedQaId(null)}
-          onUpdate={handleUpdateQA}
-        />
-      )}
-    </div>
-  );
+    {selectedQaId && (
+      <QADetailModal
+        qaId={selectedQaId!}
+        initialData={selectedRecord ?? undefined}
+        onClose={() => setSelectedQaId(null)}
+        onUpdate={handleUpdateQA}
+      />
+    )}
+  </>
+
+);
 }

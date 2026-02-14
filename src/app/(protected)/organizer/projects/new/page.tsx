@@ -57,18 +57,22 @@ export default function CreateProjectPage() {
         const res = await fetch("/api/auth/me", {
           credentials: "include",
         });
+        console.log("auth/me response status:", res);
 
         if (!res.ok) {
-          throw new Error("Unauthenticated");
+          throw new Error("Unauthenticated1");
         }
 
         const data = await res.json();
 
         if (!data.authenticated) {
-          throw new Error("Unauthenticated");
+          throw new Error("Unauthenticated2");
         }
 
-        setAuthUser(data.user);
+        // Extract user data from response (route.ts returns flat user object)
+        const { authenticated, ...userData } = data;
+        setAuthUser(userData);
+        console.log("Authenticated user data:", userData);
       } catch (err) {
         console.error("auth/me error:", err);
         setAuthUser(undefined);
@@ -219,7 +223,7 @@ export default function CreateProjectPage() {
     return {
       name: generalInfo.name,
       department_id: generalInfo.department_id,
-      organization_id: String(authUser?.org_id) ?? "",
+      organization_id: String(authUser?.organization_id) ?? "",
       owner_user_id: generalInfo.owner_user_id,
       plan_type: generalInfo.type,
       description: generalInfo.description,
@@ -249,7 +253,7 @@ export default function CreateProjectPage() {
 
             fiscal_year: new Date().getFullYear(),
 
-            organization_id: String(authUser?.org_id),
+            organization_id: String(authUser?.organization_id),
 
             plan_number: "",
             status: "draft",

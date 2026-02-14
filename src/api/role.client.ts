@@ -1,10 +1,34 @@
 import type { RoleRespond } from "@/dto/roleDto";
 import { clientFetch } from "@/lib/client-api";
 
-export async function GetRoleFromApi(organization_id?: string): Promise<RoleRespond[]> {
-  const url = organization_id 
-    ? `/api/roles?organization_id=${encodeURIComponent(organization_id)}`
-    : "/api/roles";
+/**
+ * Get roles for the current user's organization (from JWT token)
+ */
+export async function GetRoleFromApi(): Promise<RoleRespond[]> {
+  const r = await clientFetch<{ data?: RoleRespond[] } | RoleRespond[]>(
+    "/api/roles",
+    { cache: "no-store" }
+  );
+
+  if (!r.success) {
+    console.error("GetRoleFromApi error", r.message);
+    return [];
+  }
+
+  const body = r.data as any;
+
+  return Array.isArray(body)
+    ? body
+    : Array.isArray(body?.data)
+    ? body.data
+    : [];
+}
+
+/**
+ * Get roles by organization ID (for admin use)
+ */
+export async function GetRolesByOrgIdFromApi(organization_id: string): Promise<RoleRespond[]> {
+  const url = `/api/roles/by-org?organization_id=${encodeURIComponent(organization_id)}`;
 
   const r = await clientFetch<{ data?: RoleRespond[] } | RoleRespond[]>(
     url,
@@ -12,7 +36,7 @@ export async function GetRoleFromApi(organization_id?: string): Promise<RoleResp
   );
 
   if (!r.success) {
-    console.error("GetRoleFromApi error", r.message);
+    console.error("GetRolesByOrgIdFromApi error", r.message);
     return [];
   }
 

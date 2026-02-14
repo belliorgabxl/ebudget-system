@@ -20,5 +20,6 @@ export function pickHomeByRole(roleCode?: string): string {
   }
   
   // User dashboard (สำหรับ role อื่นๆ ที่ไม่ใช่ admin, director, hr)
+  // รวมถึง department_user, department_head, planning และ role อื่นๆ ที่ไม่ได้กำหนดไว้
   return "/organizer/dashboard/user";
 }

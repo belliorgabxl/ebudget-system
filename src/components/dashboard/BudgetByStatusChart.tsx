@@ -29,8 +29,10 @@ const COLORS: Record<string, string> = {
 const STATUS_ORDER = ["ร่าง", "แก้ไข", "รออนุมัติ", "อนุมัติแล้ว"]
 
 export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
+  const isEmpty = !data || data.length === 0
+  
   // Sort data by status order
-  const sortedData = [...data].sort((a, b) => {
+  const sortedData = isEmpty ? [] : [...data].sort((a, b) => {
     const indexA = STATUS_ORDER.indexOf(a.status)
     const indexB = STATUS_ORDER.indexOf(b.status)
     return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
@@ -45,6 +47,15 @@ export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
         แสดงงบประมาณแยกตามสถานะโครงการ
       </p>
 
+      {isEmpty ? (
+        <div className="flex items-center justify-center h-[320px] text-gray-500">
+          <div className="text-center">
+            <p className="text-sm">ไม่มีข้อมูล</p>
+            <p className="text-xs mt-1">ยังไม่มีข้อมูลงบประมาณตามสถานะ</p>
+          </div>
+        </div>
+      ) : (
+      <>
       <ResponsiveContainer width="100%" height={320}>
         <BarChart
           data={sortedData}
@@ -96,7 +107,7 @@ export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-      {/* Legend แบบเรียบ */}
+
       <div className="mt-4 flex justify-center gap-6 text-sm">
         {STATUS_ORDER.map((status) => (
           <div key={status} className="flex items-center gap-2">
@@ -108,7 +119,8 @@ export function BudgetByStatusChart({ data }: BudgetByStatusChartProps) {
           </div>
         ))}
       </div>
-      </div>
-    
+      </>
+      )}
+    </div>
   )
 }

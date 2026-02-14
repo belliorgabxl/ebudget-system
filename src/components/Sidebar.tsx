@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { pickHomeByRole } from "@/lib/rbac";
-import { canSeeMenuHandler, MENU } from "@/lib/sidemenu-handler";
+import { canSeeMenuHandler, MENU, normalizeRoleCode } from "@/lib/sidemenu-handler";
 
 type ServerUser = {
   id?: string | null;
@@ -36,13 +36,14 @@ export default function Sidebar({ serverUser }: { serverUser: ServerUser }) {
 
   const displayName = serverUser?.name ?? serverUser?.username ?? "Guest";
   const roleLabel = serverUser?.role_label ?? "ผู้ใช้";
-  const roleCode = serverUser?.role_key || "user";
+  const rawRoleCode = serverUser?.role_key || "user";
+  const roleCode = normalizeRoleCode(rawRoleCode);
   const approvalLevel = serverUser?.approval_level ?? 0;
 
   const roleHome = useMemo(() => {
-    const t = pickHomeByRole(roleCode);
+    const t = pickHomeByRole(rawRoleCode);
     return t && t !== "/login" ? t : null;
-  }, [roleCode]);
+  }, [rawRoleCode]);
 
   const visibleItems = useMemo(() => {
     return MENU.map((item) => {

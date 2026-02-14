@@ -107,6 +107,14 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
       </div>
 
       <div className="p-4">
+        {currentProjects.length === 0 ? (
+          <div className="flex items-center justify-center h-[300px] text-gray-500 border border-gray-200 rounded-xl">
+            <div className="text-center">
+              <p className="text-sm">ไม่มีข้อมูล</p>
+              <p className="text-xs mt-1">ไม่พบรายการโครงการ</p>
+            </div>
+          </div>
+        ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
           <table className="w-full border-collapse text-xs">
             <thead>
@@ -198,6 +206,8 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
             </tbody>
           </table>
         </div>
+        )}
+        {currentProjects.length > 0 && (
         <div className="mt-6 flex items-center justify-between">
           <p className="text-xs font-medium text-gray-600">
             แสดง {rows.length === 0 ? 0 : startIndex + 1}-
@@ -227,8 +237,7 @@ export function ProjectsTable({ projects = [] }: ProjectsTableProps) {
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-        </div>
-      </div>
+        </div>        )}      </div>
     </div>
   );
 }

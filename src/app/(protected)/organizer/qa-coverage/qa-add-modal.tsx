@@ -3,7 +3,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { CreateQaFromApi } from "@/api/qa/route";
+import { CreateQaFromApi } from "@/api/qa.client";
 import type { QaRequest } from "@/dto/qaDto";
 import { useToast } from "@/components/ToastProvider"; // keep your import path
 

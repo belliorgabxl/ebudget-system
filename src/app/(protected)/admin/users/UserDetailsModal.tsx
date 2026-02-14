@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import type { GetUserRespond } from "@/dto/userDto";
-import { GetRoleFromApi } from "@/api/role.client";
+import { GetRolesByOrgIdFromApi } from "@/api/role.client";
 import { fetchDepartments } from "@/api/department";
 import { UpdateUserFromApi } from "@/api/users.client";
 import { useToast } from "@/components/ToastProvider";
@@ -109,7 +109,15 @@ export default function UserDetailsModal({ open, user, loading, error, onClose, 
       setLoadingOptions(true);
       setOptionsError(null);
       try {
-        const [r, d] = await Promise.all([GetRoleFromApi(), fetchDepartments()]);
+        // Get roles by user's organization_id for admin
+        const userOrgId = user?.organization_id;
+        if (!userOrgId) {
+          throw new Error("User organization_id not found");
+        }
+        const [r, d] = await Promise.all([
+          GetRolesByOrgIdFromApi(userOrgId), 
+          fetchDepartments()
+        ]);
         if (!mounted) return;
         const roleList = r ?? [];
         const deptList = d ?? [];

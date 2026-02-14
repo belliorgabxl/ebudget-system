@@ -387,7 +387,7 @@ export default function DashboardDirectorPage() {
                         <BudgetByYearChart data={budgetByYearData} />
                     </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {/* <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
                         <ApprovalQueue
                         approvals={MOCK_APPROVALS}
@@ -398,7 +398,7 @@ export default function DashboardDirectorPage() {
                             qaIndicators={qa_indicators_data}
                             onFilterChange={handleFilterChange}
                         />
-                    </div>
+                    </div> */}
 
                    
                         <ProjectsTable filters={filters} projects={projects_data} />

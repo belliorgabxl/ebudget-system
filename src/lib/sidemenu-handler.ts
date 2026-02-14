@@ -79,6 +79,13 @@ export const MENU: MenuItem[] = [
     allow: ["director", "department_head", "planning", "hr"],
   },
   {
+    id: "qa-coverage",
+    href: "/organizer/qa-coverage",
+    icon: ClipboardList,
+    label: "ความครอบคลุมตัวบ่งชี้ QA",
+    allow: ["director"],
+  },
+  {
     id: "manage-org",
     href: "/admin/manage-org",
     icon: Building2,
@@ -109,9 +116,12 @@ export const MENU: MenuItem[] = [
 ];
 
 export const canSeeMenuHandler = (roleCode: string, item: MenuItem, approvalLevel?: number | null) => {
-  if (item.deny?.includes(roleCode)) return false;
+  // Normalize role code - ถ้าไม่ใช่ role ที่กำหนดไว้ ให้ใช้เป็น "user"
+  const normalizedRole = normalizeRoleCode(roleCode);
+  
+  if (item.deny?.includes(normalizedRole)) return false;
   if (!item.allow) return true;
-  if (!item.allow.includes(roleCode)) return false;
+  if (!item.allow.includes(normalizedRole)) return false;
   
   // Special condition for approve menu: only show if approval_level > 0
   if (item.id === "approve") {
@@ -119,4 +129,11 @@ export const canSeeMenuHandler = (roleCode: string, item: MenuItem, approvalLeve
   }
   
   return true;
+};
+
+// Normalize role code: ถ้าไม่ใช่ role ที่รู้จัก ให้ใช้เป็น "user" (department_user)
+export const normalizeRoleCode = (roleCode: string): string => {
+  const knownRoles = ["admin", "hr", "director", "department_user", "department_head", "planning"];
+  const normalized = roleCode.toLowerCase();
+  return knownRoles.includes(normalized) ? normalized : "department_user";
 };

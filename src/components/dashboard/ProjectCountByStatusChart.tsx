@@ -28,8 +28,10 @@ const STATUS_ORDER = ["ร่าง", "แก้ไข", "รออนุมั�
 export function ProjectCountByStatusChart({
   data,
 }: ProjectCountByStatusChartProps) {
+  const isEmpty = !data || data.length === 0
+  
   // Sort data by status order
-  const sortedData = [...data].sort((a, b) => {
+  const sortedData = isEmpty ? [] : [...data].sort((a, b) => {
     const indexA = STATUS_ORDER.indexOf(a.status)
     const indexB = STATUS_ORDER.indexOf(b.status)
     return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
@@ -48,7 +50,14 @@ export function ProjectCountByStatusChart({
         </p>
       </div>
 
-      {/* ===== Chart ===== */}
+      {isEmpty ? (
+        <div className="flex items-center justify-center h-[320px] text-gray-500">
+          <div className="text-center">
+            <p className="text-sm">ไม่มีข้อมูล</p>
+            <p className="text-xs mt-1">ยังไม่มีข้อมูลจำนวนโครงการตามสถานะ</p>
+          </div>
+        </div>
+      ) : (
       <div className="p-6">
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -92,6 +101,7 @@ export function ProjectCountByStatusChart({
           ))}
         </div>
       </div>
+      )}
     </div>
   )
 }

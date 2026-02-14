@@ -51,49 +51,43 @@ export default function ClientManageUser() {
   /* -----------------------------
    * load users
    * ----------------------------- */
-  useEffect(() => {
-    let mounted = true;
+  const loadUsers = async () => {
+    setLoading(true);
+    setError(null);
 
-    async function load() {
-      setLoading(true);
-      setError(null);
+    try {
+      const resp = await GetUserByOrgFromApi(page, PAGE_LIMIT, filter);
 
-      try {
-        const resp = await GetUserByOrgFromApi(page, PAGE_LIMIT, filter);
-        if (!mounted) return;
+      const mapped: TableUser[] = resp.items.map((u) => ({
+        id: u.id,
+        name: u.full_name,
+        title: u.position || "-",
+        department_name: u.department_name,
+        isActive: u.is_active,
+      }));
 
-        const mapped: TableUser[] = resp.items.map((u) => ({
-          id: u.id,
-          name: u.full_name,
-          title: u.position || "-",
-          department_name: u.department_name,
-          isActive: u.is_active,
-        }));
+      setUsers(mapped);
 
-        setUsers(mapped);
-
-        // บันทึก total และ total_pages จาก API
-        setTotalItems(resp.total);
-        if (resp.total_pages) {
-          setTotalPages(resp.total_pages);
-        }
-        console.log("Total items from API:", resp.total, "Total pages:", resp.total_pages);
-
-        // sync page จาก backend
-        if (resp.page && resp.page !== page) {
-          setPage(resp.page);
-        }
-      } catch {
-        if (mounted) setError("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
-      } finally {
-        if (mounted) setLoading(false);
+      // บันทึก total และ total_pages จาก API
+      setTotalItems(resp.total);
+      if (resp.total_pages) {
+        setTotalPages(resp.total_pages);
       }
-    }
+      console.log("Total items from API:", resp.total, "Total pages:", resp.total_pages);
 
-    load();
-    return () => {
-      mounted = false;
-    };
+      // sync page จาก backend
+      if (resp.page && resp.page !== page) {
+        setPage(resp.page);
+      }
+    } catch {
+      setError("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
   }, [page, filter]);
 
   // When filter changes, reset to first page so backend returns page=1 of filtered results
@@ -134,6 +128,7 @@ export default function ClientManageUser() {
       toast.push("error", "เปลี่ยนสถานะไม่สำเร็จ");
     } else {
       toast.push("success", "เปลี่ยนสถานะเรียบร้อย");
+      loadUsers();
     }
   };
 
@@ -215,7 +210,7 @@ export default function ClientManageUser() {
           onClose={() => setAddOpen(false)}
           onAdd={() => {
             setAddOpen(false);
-            setPage(1);
+            loadUsers();
           }}
         />
 

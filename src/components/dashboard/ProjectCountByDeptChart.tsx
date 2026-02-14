@@ -31,8 +31,10 @@ const COLORS = [
 export function ProjectCountByDeptChart({
   data,
 }: ProjectCountByDeptChartProps) {
+  const isEmpty = !data || data.length === 0
+  
   // If more than 6 departments, keep top 6 and group the rest as "อื่นๆ"
-  const processedData = data.length > 6
+  const processedData = isEmpty ? [] : data.length > 6
     ? (() => {
         // Sort by count descending
         const sorted = [...data].sort((a, b) => b.count - a.count)
@@ -62,7 +64,14 @@ export function ProjectCountByDeptChart({
         </p>
       </div>
 
-      {/* ===== Chart ===== */}
+      {isEmpty ? (
+        <div className="flex items-center justify-center h-[320px] text-gray-500">
+          <div className="text-center">
+            <p className="text-sm">ไม่มีข้อมูล</p>
+            <p className="text-xs mt-1">ยังไม่มีข้อมูลจำนวนโครงการต่อหน่วยงาน</p>
+          </div>
+        </div>
+      ) : (
       <div className="p-6">
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -107,6 +116,7 @@ export function ProjectCountByDeptChart({
           ))}
         </div>
       </div>
+      )}
     </div>
   )
 }

@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { X, Edit2, Save } from "lucide-react";
-import { GetQaIndicatorsDetailByIdApi, UpdateQaDetailFromApi } from "@/api/qa/route";
+import { GetQaIndicatorsDetailByIdApi, UpdateQaDetailFromApi } from "@/api/qa.client";
 import type { GetQaIndicatorsRespond, QaRequest } from "@/dto/qaDto";
+import { convertCEtoBE } from "@/lib/util";
 
 type QADetailModalProps = {
   qaId: string;
@@ -303,7 +304,7 @@ export default function QADetailModal({
 
             <div className="w-40">
               <div className="text-xs text-slate-500">ปี</div>
-              <div className="font-medium text-slate-900">{formData.year ?? '-'}</div>
+              <div className="font-medium text-slate-900">{formData.year ? convertCEtoBE(formData.year) : '-'}</div>
             </div>
           </div>
 

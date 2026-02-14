@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, X } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
+import { CreateDepartmentFromApi } from "@/api/department.client";
 
 const initialForm = {
   code: "",
@@ -19,6 +20,36 @@ export default function CreateDepartmentForm({
   const { push } = useToast();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string>("");
+
+  useEffect(() => {
+    // Fetch current user to get organization_id
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/auth/me", {
+          credentials: "include",
+        });
+        console.log("auth/me response status:", res.status);
+        if (res.ok) {
+          const data = await res.json();
+          console.log("auth/me response data:", data);
+          if (data && data.organization_id) {
+            console.log("Setting organizationId to:", data.organization_id);
+            setOrganizationId(data.organization_id);
+            console.log("Organization ID set successfully: " + data.organization_id);
+          } else {
+            console.log("No organization_id found in response");
+          }
+        } else {
+          console.log("auth/me request failed");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,14 +59,27 @@ export default function CreateDepartmentForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log("Submitting form with data:", { ...form, organization_id: organizationId });
 
     try {
-      // TODO: call API
-      await new Promise((r) => setTimeout(r, 1000));
-      push('success', 'สร้างหน่วยงานสำเร็จ');
-      onSuccess?.();
-    } catch {
-      push('error', 'เกิดข้อผิดพลาด');
+      if (!organizationId) {
+        throw new Error("ไม่พบข้อมูลองค์กร");
+      }
+
+      const result = await CreateDepartmentFromApi({
+        code: form.code,
+        name: form.name,
+        organization_id: organizationId,
+      });
+
+      if (result.success) {
+        push('success', 'สร้างหน่วยงานสำเร็จ');
+        onSuccess?.();
+      } else {
+        throw new Error(result.message || 'เกิดข้อผิดพลาด');
+      }
+    } catch (error: any) {
+      push('error', error.message || 'เกิดข้อผิดพลาด');
     } finally {
       setLoading(false);
     }

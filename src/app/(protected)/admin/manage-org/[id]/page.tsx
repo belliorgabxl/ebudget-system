@@ -27,6 +27,7 @@ import { GetDepartmentsByOrgFromApi } from "@/api/department.client";
 import EditOrganizationModal from "@/components/manage-org/EditOrganizationModal";
 import AddRoleModal from "@/components/manage-org/AddRoleModal";
 import EditRoleModal from "@/components/manage-org/EditRoleModal";
+import AddUserModal from "@/app/(protected)/admin/users/AddUserModal";
 import { useToast } from "@/components/ToastProvider";
 import {
   DndContext,
@@ -61,6 +62,7 @@ export default function OrgDetailPage() {
   const [activeTab, setActiveTab] = useState<"employees" | "departments" | "roles">("employees");
   const [isEditingOpen, setIsEditingOpen] = useState(false);
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<OrganizationRole | null>(null);
   const [employees, setEmployees] = useState<GetUserRespond[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -461,6 +463,14 @@ export default function OrgDetailPage() {
                     </div>
                   </button>
                 </div>
+                {activeTab === "employees" && (
+                  <button
+                    onClick={() => setIsAddUserOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 shadow-sm"
+                  >
+                    <Plus className="h-4 w-4" /> เพิ่มผู้ใช้
+                  </button>
+                )}
                 {activeTab === "roles" && (
                   <button
                     onClick={() => setIsAddRoleOpen(true)}
@@ -495,6 +505,17 @@ export default function OrgDetailPage() {
           </div>
         </div>
       </BackGroundLight>
+      {isAddUserOpen && (
+        <AddUserModal
+          open={isAddUserOpen}
+          onClose={() => setIsAddUserOpen(false)}
+          onAdd={() => {
+            setIsAddUserOpen(false);
+            loadTabsData(); // Reload employees after adding
+          }}
+          lockedOrgId={orgId}
+        />
+      )}
       {isAddRoleOpen && (
         <AddRoleModal
           organizationId={orgId}

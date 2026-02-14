@@ -28,14 +28,16 @@ const YEAR_LEGEND = [
 
 export function BudgetByYearChart({ data }: BudgetByYearChartProps) {
   const [range, setRange] = useState<RangeOption>(5)
+  const isEmpty = !data || data.length === 0
 
   // sort + slice ตามช่วงปี
   const displayData = useMemo(() => {
+    if (isEmpty) return []
     const sorted = [...data].sort(
       (a, b) => Number(a.year) - Number(b.year)
     )
     return sorted.slice(-range)
-  }, [data, range])
+  }, [data, range, isEmpty])
 
   return (
     <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow p-6">
@@ -67,7 +69,15 @@ export function BudgetByYearChart({ data }: BudgetByYearChartProps) {
         </div>
       </div>
 
-
+      {isEmpty ? (
+        <div className="flex items-center justify-center h-[320px] text-gray-500">
+          <div className="text-center">
+            <p className="text-sm">ไม่มีข้อมูล</p>
+            <p className="text-xs mt-1">ยังไม่มีข้อมูลงบประมาณตามปี</p>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* ===== Chart ===== */}
       <div className="p-6">
         <ResponsiveContainer width="100%" height={320}>
@@ -103,6 +113,8 @@ export function BudgetByYearChart({ data }: BudgetByYearChartProps) {
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

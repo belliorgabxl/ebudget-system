@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { X, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { CreateUserByAdminFromApi } from "@/api/users.client";
-import { GetRoleFromApi } from "@/api/role.client";
+import { GetRolesByOrgIdFromApi } from "@/api/role.client";
 import { GetOrganizationsFromApi } from "@/api/organization.client";
 import type { CreateUserRequest } from "@/dto/userDto";
 import type { RoleRespond } from "@/dto/roleDto";
@@ -35,12 +35,14 @@ type AddUserModalProps = {
   open: boolean;
   onClose: () => void;
   onAdd: (u: any) => void;
+  lockedOrgId?: string; // Optional: If provided, organization will be locked to this ID
 };
 
 export default function AddUserModal({
   open,
   onClose,
   onAdd,
+  lockedOrgId,
 }: AddUserModalProps) {
   const { push } = useToast();
 
@@ -85,6 +87,14 @@ export default function AddUserModal({
   useEffect(() => {
     if (!open) return;
 
+    // If lockedOrgId is provided, set it immediately
+    if (lockedOrgId) {
+      setForm(prev => ({ ...prev, organization_id: lockedOrgId }));
+    }
+
+    // Skip loading organizations if we have a locked org
+    if (lockedOrgId) return;
+
     let mounted = true;
     (async () => {
       setLoadingOptions(true);
@@ -113,7 +123,27 @@ export default function AddUserModal({
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, lockedOrgId]);
+
+  // Load organization name if lockedOrgId is provided
+  useEffect(() => {
+    if (!lockedOrgId || !open) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const orgs = await GetOrganizationsFromApi({ limit: 1000 });
+        if (!mounted) return;
+        setOrganizations(orgs.items || []);
+      } catch (err) {
+        console.error("Failed to load locked organization:", err);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [lockedOrgId, open]);
 
   // load roles when organization changes
   useEffect(() => {
@@ -127,7 +157,7 @@ export default function AddUserModal({
     (async () => {
       setLoadingRoles(true);
       try {
-        const r = await GetRoleFromApi(form.organization_id);
+        const r = await GetRolesByOrgIdFromApi(form.organization_id);
         if (!mounted) return;
         setRoles(r);
         // Reset role_id if current selection is not in new list
@@ -362,6 +392,7 @@ export default function AddUserModal({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 องค์กร <span className="text-red-500">*</span>
+                {lockedOrgId && <span className="ml-2 text-xs text-blue-600">(ล็อกแล้ว)</span>}
               </label>
               <select
                 value={form.organization_id}
@@ -372,28 +403,38 @@ export default function AddUserModal({
                   }))
                 }
                 onBlur={() => handleBlur("organization_id")}
-                disabled={loadingOptions}
+                disabled={loadingOptions || !!lockedOrgId}
                 className={`w-full px-3 py-2 border rounded-lg text-sm ${
                   fieldErrors.organization_id
                     ? "border-red-500"
+                    : lockedOrgId 
+                    ? "border-blue-300 bg-blue-50"
                     : "border-gray-300"
                 } disabled:opacity-50`}
               >
-                <option value="">-- เลือกองค์กร --</option>
-                {organizations.map((org) => (
-                  <option key={org.id} value={org.id}>
-                    {org.name}
+                {!lockedOrgId && <option value="">-- เลือกองค์กร --</option>}
+                {lockedOrgId ? (
+                  <option value={lockedOrgId}>
+                    {organizations.find(o => o.id === lockedOrgId)?.name || "กำลังโหลด..."}
                   </option>
-                ))}
+                ) : (
+                  organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))
+                )}
               </select>
               {fieldErrors.organization_id && (
                 <p className="text-xs text-red-600 mt-1">
                   {fieldErrors.organization_id}
                 </p>
               )}
-              <p className="text-xs text-gray-500 mt-1">
-                กรุณาเลือกองค์กรก่อนเพื่อโหลดบทบาทที่เกี่ยวข้อง
-              </p>
+              {!lockedOrgId && (
+                <p className="text-xs text-gray-500 mt-1">
+                  กรุณาเลือกองค์กรก่อนเพื่อโหลดบทบาทที่เกี่ยวข้อง
+                </p>
+              )}
             </div>
 
             {/* First Name & Last Name */}

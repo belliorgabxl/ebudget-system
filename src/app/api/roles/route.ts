@@ -2,18 +2,15 @@ import { NextResponse } from "next/server";
 import { nestGet, nestPost } from "@/lib/server-api";
 import type { RoleRespond } from "@/dto/roleDto";
 
+/**
+ * GET /api/roles
+ * Get roles for the current user's organization (from JWT token)
+ */
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const organization_id = searchParams.get("organization_id");
-
-    // Build query string
-    let url = "/roles";
-    if (organization_id) {
-      url += `?organization_id=${encodeURIComponent(organization_id)}`;
-    }
-
-    const r = await nestGet<{ data?: RoleRespond | RoleRespond[] }>(url);
+    // Call backend without organization_id parameter
+    // Backend will use organization from JWT token
+    const r = await nestGet<{ data?: RoleRespond | RoleRespond[] }>("/roles");
 
     if (!r.success) {
       return NextResponse.json(

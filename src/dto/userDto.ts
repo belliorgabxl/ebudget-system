@@ -14,12 +14,23 @@ export interface User {
 export interface AuthUser {
   id: string;
   username: string;
-  name: string;
-  role_key: string | null;
-  role_id: string | null;
-  role_label: string | null;
-  org_id: string | null;
+  name?: string;
+  role_key?: string | null;
+  role_id?: string | null;
+  role_label?: string | null;
+  organization_id: string | null;
   department_id: string | null;
+  role?: string | null;
+  role_code?: string | null;
+  approval_level?: number;
+  email?: string | null;
+  position?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name?: string;
+  last_login_at?: string | null;
+  is_active?: boolean;
+  department_name?: string | null;
 }
 
 export interface GetUserRespond {

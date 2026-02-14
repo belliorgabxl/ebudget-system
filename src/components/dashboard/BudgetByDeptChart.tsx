@@ -20,6 +20,7 @@ interface BudgetByDeptChartProps {
 }
 
 export function BudgetByDeptChart({ data }: BudgetByDeptChartProps) {
+  const isEmpty = !data || data.length === 0
 
   return (
     <div className="rounded-xl bg-white shadow-sm p-6">
@@ -30,6 +31,15 @@ export function BudgetByDeptChart({ data }: BudgetByDeptChartProps) {
         แสดงงบประมาณที่จัดสรรให้แต่ละหน่วยงาน
       </p>
 
+      {isEmpty ? (
+        <div className="flex items-center justify-center h-[320px] text-gray-500">
+          <div className="text-center">
+            <p className="text-sm">ไม่มีข้อมูล</p>
+            <p className="text-xs mt-1">ยังไม่มีข้อมูลงบประมาณตามหน่วยงาน</p>
+          </div>
+        </div>
+      ) : (
+      <>
       <ResponsiveContainer width="100%" height={320}>
         <BarChart
           data={data}
@@ -59,6 +69,8 @@ export function BudgetByDeptChart({ data }: BudgetByDeptChartProps) {
           <span>งบประมาณ</span>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

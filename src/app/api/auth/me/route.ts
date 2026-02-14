@@ -12,6 +12,7 @@ export async function GET() {
 
   // Return user data in flat format
   return NextResponse.json({
+    authenticated: true,
     id: user.sub,
     organization_id: user.org_id ?? null,
     department_id: user.department_id ?? null,
