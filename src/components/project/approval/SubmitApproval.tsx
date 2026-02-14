@@ -3,7 +3,7 @@ import { submitBudgetPlan } from "@/api/approval.client";
 import ConfirmSubmitPopup from "@/components/popup/ConfirmPopup";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/components/ToastProvider";
 
 type Props = {
   budgetPlanId: string;
@@ -15,13 +15,12 @@ export default function SubmitApprovalClient({
   projectName,
 }: Props) {
   const router = useRouter();
+  const { push } = useToast();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
   const handleConfirm = async () => {
     setLoading(true);
-    setError(null);
 
     try {
       const res = await submitBudgetPlan(budgetPlanId);
@@ -32,27 +31,23 @@ export default function SubmitApprovalClient({
       });
 
       setOpen(false);
-      toast.success("ส่งอนุมัติสำเร็จ");
+      push("success", "ส่งอนุมัติสำเร็จ");
       router.push("/success-screen");
-    } catch (e) {
-       console.error(" Submit approval failed", {
-      budgetPlanId: budgetPlanId,
-      error: e,
-    });
+    } catch (e: any) {
+      console.error("Submit approval failed", {
+        budgetPlanId: budgetPlanId,
+        error: e,
+      });
 
-      setError("ไม่สามารถส่งอนุมัติได้ กรุณาลองใหม่");
+      const errorMsg = e?.message || e?.response?.data?.message || "ไม่สามารถส่งอนุมัติได้ กรุณาลองใหม่";
+      push("error", "ส่งอนุมัติไม่สำเร็จ", errorMsg);
     } finally {
       setLoading(false);
     }
   };
+  
   return (
     <>
-      {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <button
           type="button"

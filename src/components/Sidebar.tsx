@@ -3,8 +3,8 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { pickHomeByRole, ROLE_MAP } from "@/lib/rbac";
-import { canSeeMenuHandler, MENU, RoleKey } from "@/lib/sidemenu-handler";
+import { pickHomeByRole } from "@/lib/rbac";
+import { canSeeMenuHandler, MENU } from "@/lib/sidemenu-handler";
 
 type ServerUser = {
   id?: string | null;
@@ -14,6 +14,7 @@ type ServerUser = {
   role_label?: string | null;
   org_id?: string | null;
   department_id?: string | null;
+  approval_level?: number | null;
 } | null;
 
 const normalizePath = (p: string) => {
@@ -35,18 +36,13 @@ export default function Sidebar({ serverUser }: { serverUser: ServerUser }) {
 
   const displayName = serverUser?.name ?? serverUser?.username ?? "Guest";
   const roleLabel = serverUser?.role_label ?? "ผู้ใช้";
-
-  const isRoleKey = (v: any): v is RoleKey =>
-    typeof v === "string" && Object.values(ROLE_MAP).some((x) => x.key === v);
-
-  const roleKey: RoleKey = isRoleKey(serverUser?.role_key)
-    ? serverUser!.role_key
-    : "department_user";
+  const roleCode = serverUser?.role_key || "user";
+  const approvalLevel = serverUser?.approval_level ?? 0;
 
   const roleHome = useMemo(() => {
-    const t = pickHomeByRole(roleKey);
+    const t = pickHomeByRole(roleCode);
     return t && t !== "/login" ? t : null;
-  }, [roleKey]);
+  }, [roleCode]);
 
   const visibleItems = useMemo(() => {
     return MENU.map((item) => {
@@ -65,12 +61,12 @@ export default function Sidebar({ serverUser }: { serverUser: ServerUser }) {
           href: string;
           icon: any;
           label: string;
-          allow?: RoleKey[];
-          deny?: RoleKey[];
+          allow?: string[];
+          deny?: string[];
         } => !!x
       )
-      .filter((item) => canSeeMenuHandler(roleKey, item));
-  }, [roleKey, roleHome]);
+      .filter((item) => canSeeMenuHandler(roleCode, item, approvalLevel));
+  }, [roleCode, roleHome, approvalLevel]);
 
   const initials = (displayName || "U").slice(0, 2).toUpperCase();
 

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ToastProvider";
 
 const USE_MOCK_API = true;
 
@@ -76,6 +77,7 @@ async function saveProfile(payload: ProfilePayload): Promise<ApiResult> {
 
 export default function AccountSettingsPage() {
   const router = useRouter();
+  const { push } = useToast();
 
   const initial = {
     name: "ภัทรจาริน นภากาญจน์",
@@ -145,10 +147,12 @@ export default function AccountSettingsPage() {
       const res = await saveProfile(payload);
       if (!res.ok) throw new Error(res.message);
 
-      alert("อัปเดตข้อมูลสำเร็จ ✅");
+      push("success", "อัปเดตข้อมูลสำเร็จ");
       setEditing(false);
     } catch (err: any) {
-      setError(err?.message ?? "เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล");
+      const errorMsg = err?.message ?? "เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล";
+      push("error", "บันทึกข้อมูลไม่สำเร็จ", errorMsg);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

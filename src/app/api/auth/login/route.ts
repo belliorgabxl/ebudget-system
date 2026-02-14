@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { decodeExternalJwt, signUserToken } from "@/lib/auth";
-import { pickHomeByRole, roleIdToKey } from "@/lib/rbac";
+import { pickHomeByRole } from "@/lib/rbac";
 
 type LoginBody = { username: string; password: string; remember?: boolean };
 
@@ -83,27 +83,25 @@ export async function POST(req: Request) {
       );
     }
 
-    const rawRoleId =
-      claims.role_id ??
-      claims.role ??
-      claims.user_role ??
-      claims.roleId ??
-      claims.user_role_id;
+    // ใช้ role code โดยตรงจาก backend
+    const role_code = claims.role_code || claims.role || claims.user_role || "user";
+    const role_id = Number(claims.role_id || claims.roleId || 0);
+    const approval_level = Number(claims.approval_level || 0);
 
-    const role_key = roleIdToKey(rawRoleId);
-    if (!role_key) {
+    // Validate role code
+    if (!role_code || typeof role_code !== "string") {
       return NextResponse.json(
-        { success: false, message: "สิทธิ์การใช้งานไม่ถูกต้อง (Unknown role)" },
+        { success: false, message: "สิทธิ์การใช้งานไม่ถูกต้อง (Missing role)" },
         { status: 403 }
       );
     }
-    const role_id = Number(rawRoleId);
 
     const userForOurJwt = {
       sub: (claims.sub as string) || claims.user_id || claims.id || username,
       username: (claims.username as string) || username,
-      role: role_key,
+      role: role_code.toLowerCase(),
       role_id,
+      approval_level,
       name: (claims.name as string) || claims.fullname || username,
       org_id: claims.org_id || claims.organization_id || undefined,
       department_id: claims.department_id || claims.dept_id || undefined,
@@ -115,7 +113,7 @@ export async function POST(req: Request) {
     const ourJwt = await signUserToken(userForOurJwt, expiretoken);
 
     const res = NextResponse.json(
-      { success: true, home: pickHomeByRole(role_key) },
+      { success: true, home: pickHomeByRole(role_code) },
       { headers: { "Cache-Control": "no-store, max-age=0" } }
     );
 

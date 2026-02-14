@@ -182,3 +182,88 @@ export const MOCK_ROLES: Role[] = [
     createdAt: "2020-02-01",
   },
 ]
+
+// Organization Role Type
+export type OrganizationRole = {
+  approval_level: number
+  can_approve: boolean
+  can_create_budget_plan: boolean
+  can_view_all_plans: boolean
+  description: string
+  display_name: string
+  name: string
+}
+
+// Approval Levels Type (for UI display)
+export type ApprovalLevel = {
+  level: number
+  roles: { id: string; name: string }[]
+}
+
+// Mock Organization Roles
+export const MOCK_ORGANIZATION_ROLES: OrganizationRole[] = [
+  {
+    approval_level: 1,
+    can_approve: false,
+    can_create_budget_plan: true,
+    can_view_all_plans: false,
+    description: "เจ้าหน้าที่จัดทำแผนงบประมาณ",
+    display_name: "Budget Officer",
+    name: "budget_officer",
+  },
+  {
+    approval_level: 2,
+    can_approve: true,
+    can_create_budget_plan: true,
+    can_view_all_plans: false,
+    description: "หัวหน้าหน่วยงาน ตรวจสอบและอนุมัติเบื้องต้น",
+    display_name: "Department Head",
+    name: "department_head",
+  },
+  {
+    approval_level: 3,
+    can_approve: true,
+    can_create_budget_plan: false,
+    can_view_all_plans: true,
+    description: "ผู้บริหารระดับสูง อนุมัติขั้นกลาง",
+    display_name: "Executive Manager",
+    name: "executive_manager",
+  },
+  {
+    approval_level: 4,
+    can_approve: true,
+    can_create_budget_plan: false,
+    can_view_all_plans: true,
+    description: "ผู้อนุมัติสูงสุดขององค์กร",
+    display_name: "Director",
+    name: "director",
+  },
+]
+
+// Mock Approval Levels (for displaying approval flow)
+export const MOCK_APPROVAL_LEVELS: ApprovalLevel[] = [
+  {
+    level: 1,
+    roles: [
+      { id: "budget_officer", name: "Budget Officer" },
+    ],
+  },
+  {
+    level: 2,
+    roles: [
+      { id: "department_head", name: "Department Head" },
+    ],
+  },
+  {
+    level: 3,
+    roles: [
+      { id: "executive_manager", name: "Executive Manager" },
+    ],
+  },
+  {
+    level: 4,
+    roles: [
+      { id: "director", name: "Director" },
+    ],
+  },
+]

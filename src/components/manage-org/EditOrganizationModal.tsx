@@ -1,5 +1,7 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useToast } from "@/components/ToastProvider";
+import { X } from "lucide-react";
 import type { OrganizationResponse } from "@/dto/organizationDto";
 
 interface EditOrganizationModalProps {
@@ -13,7 +15,9 @@ export default function EditOrganizationModal({
   onSave,
   onClose,
 }: EditOrganizationModalProps) {
-  const [editing, setEditing] = React.useState<OrganizationResponse>(org);
+  const { push } = useToast();
+  const [editing, setEditing] = useState<OrganizationResponse>(org);
+
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -43,6 +47,14 @@ export default function EditOrganizationModal({
     };
   }, [onClose]);
 
+  const validateForm = () => {
+    if (!editing?.name?.trim()) {
+      push('error', 'กรุณาระบุชื่อองค์กร');
+      return false;
+    }
+    return true;
+  };
+
   return (
     <div
       ref={modalRef}
@@ -50,7 +62,7 @@ export default function EditOrganizationModal({
     >
       <div
         ref={contentRef}
-        className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
+        className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
@@ -59,16 +71,16 @@ export default function EditOrganizationModal({
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-6 space-y-4">
+        <div className="px-6 py-6 space-y-6 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                ชื่อองค์กร
+                ชื่อองค์กร <span className="text-red-500">*</span>
               </label>
               <input
                 value={editing?.name || ""}
@@ -79,7 +91,7 @@ export default function EditOrganizationModal({
                       : org
                   )
                 }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
             <div>
@@ -95,10 +107,14 @@ export default function EditOrganizationModal({
                       : org
                   )
                 }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
           </div>
+
+          <p className="text-xs text-gray-500">
+            <span className="text-red-500">*</span> ฟีลด์ที่จำเป็น
+          </p>
         </div>
 
         {/* Footer */}
@@ -111,7 +127,7 @@ export default function EditOrganizationModal({
           </button>
           <button
             onClick={() => {
-              if (editing) {
+              if (validateForm() && editing) {
                 onSave(editing);
               }
             }}

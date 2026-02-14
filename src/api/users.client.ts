@@ -124,6 +124,105 @@ export async function GetAllUsers(): Promise<GetUserRespond[]> {
 }
 
 /**
+ * GET /api/users - Get all users in organization with filters and pagination
+ */
+export type GetUsersFilters = {
+  page?: number;
+  limit?: number;
+  organization_name?: string;
+  is_active?: boolean;
+  role?: string;
+  is_system_role?: boolean;
+  full_name?: string;
+};
+
+export type GetUsersResponse = {
+  data: GetUserRespond[];
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+};
+
+export async function GetAllUsersFromApi(
+  filters: GetUsersFilters = {}
+): Promise<GetUsersResponse> {
+  try {
+    const params = new URLSearchParams();
+    
+    // Pagination
+    if (filters.page) params.set("page", String(filters.page));
+    if (filters.limit) params.set("limit", String(filters.limit));
+    
+    // Filters
+    if (filters.organization_name) params.set("organization_name", filters.organization_name);
+    if (typeof filters.is_active === "boolean") params.set("is_active", String(filters.is_active));
+    if (filters.role) params.set("role", filters.role);
+    if (typeof filters.is_system_role === "boolean") params.set("is_system_role", String(filters.is_system_role));
+    if (filters.full_name) params.set("full_name", filters.full_name);
+
+    const queryString = params.toString();
+    const url = queryString ? `/api/users?${queryString}` : "/api/users";
+
+    const r = await clientFetchArray<GetUsersResponse>(url, {
+      cache: "no-store",
+    });
+
+    if (!r.success) {
+      console.warn("[GetAllUsersFromApi] API call failed:", r);
+      return {
+        data: [],
+        page: filters.page || 1,
+        limit: filters.limit || 10,
+        total: 0,
+        total_pages: 0,
+      };
+    }
+
+    const body = r.data;
+    
+    // Backend returns { data: [...], page, limit, total, total_pages }
+    if (body && typeof body === "object" && "data" in body) {
+      return {
+        data: Array.isArray(body.data) ? body.data : [],
+        page: typeof body.page === "number" ? body.page : (filters.page || 1),
+        limit: typeof body.limit === "number" ? body.limit : (filters.limit || 10),
+        total: typeof body.total === "number" ? body.total : 0,
+        total_pages: typeof body.total_pages === "number" ? body.total_pages : 0,
+      };
+    }
+
+    // Fallback: if response is array directly
+    if (Array.isArray(body)) {
+      return {
+        data: body,
+        page: filters.page || 1,
+        limit: filters.limit || 10,
+        total: (body as GetUserRespond[]).length,
+        total_pages: 1,
+      };
+    }
+
+    return {
+      data: [],
+      page: filters.page || 1,
+      limit: filters.limit || 10,
+      total: 0,
+      total_pages: 0,
+    };
+  } catch (error) {
+    console.error("[GetAllUsersFromApi] Error:", error);
+    return {
+      data: [],
+      page: filters.page || 1,
+      limit: filters.limit || 10,
+      total: 0,
+      total_pages: 0,
+    };
+  }
+}
+
+/**
  * Call server change-password route which uses HttpOnly cookie for auth.
  */
 export async function ChangePassword(currentPassword: string, newPassword: string): Promise<string> {
@@ -147,6 +246,36 @@ export async function ChangePassword(currentPassword: string, newPassword: strin
 }
 
 /* -------------------- mutations -------------------- */
+
+/**
+ * POST /api/admin/users/create - Admin creates a new user
+ */
+export async function CreateUserByAdminFromApi(
+  payload: CreateUserRequest
+): Promise<{ ok: boolean; status: number; data?: any; message?: string }> {
+  try {
+    const res = await fetch("/api/admin/users/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        data: body,
+        message: body?.message ?? body?.responseMessage ?? `HTTP ${res.status}`,
+      };
+    }
+
+    // successful create
+    return { ok: true, status: res.status, data: body?.data ?? body };
+  } catch (err: any) {
+    return { ok: false, status: 0, message: err?.message ?? "Network error" };
+  }
+}
 
 /**
  * POST /api/users

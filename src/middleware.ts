@@ -62,6 +62,8 @@ export async function middleware(request: NextRequest) {
   }
 
   const role = payload.role;
+  const approval_level = payload.approval_level || 0;
+  
   if (!role) {
     const res = NextResponse.redirect(new URL("/login", request.url));
     res.cookies.delete("auth_token");
@@ -71,42 +73,47 @@ export async function middleware(request: NextRequest) {
 
   const forbid = () => NextResponse.redirect(new URL("/403", request.url));
 
-  if (
-    pathStarts(pathname, "/organizer/dashboard/user") &&
-    !["department_user", "planning", "department_head","director"].includes(role)
-  ) {
-    return forbid();
+  // /organizer/dashboard/user - สำหรับ role นอกเหนือจาก hr, director, admin
+  if (pathStarts(pathname, "/organizer/dashboard/user")) {
+    if (["hr", "director", "admin"].includes(role)) return forbid();
   }
+  
+  // /organizer/dashboard/hr - สำหรับ role code "hr"
   if (pathStarts(pathname, "/organizer/dashboard/hr") && role !== "hr") {
     return forbid();
   }
-  if (
-    pathStarts(pathname, "/organizer/dashboard/director") &&
-    role !== "director"
-  ) {
+  
+  // /organizer/dashboard/director - สำหรับ role code "director"
+  if (pathStarts(pathname, "/organizer/dashboard/director") && role !== "director") {
     return forbid();
   }
 
+  // /organizer/qa-coverage - สำหรับ director
   if (pathStarts(pathname, "/organizer/qa-coverage") && role !== "director") {
     return forbid();
   }
 
+  // /organizer/projects/my-project - ห้าม hr, admin
   if (pathStarts(pathname, "/organizer/projects/my-project")) {
     if (["hr", "admin"].includes(role)) return forbid();
   }
 
+  // /organizer/approve/ - สำหรับคนที่มี approval_level > 0
   if (pathStarts(pathname, "/organizer/approve/")) {
-    if (["hr", "admin", "planning"].includes(role)) return forbid();
+    if (approval_level <= 0) return forbid();
   }
 
+  // /organizer/reports/ - ห้าม hr, admin, planning
   if (pathStarts(pathname, "/organizer/reports/")) {
     if (["hr", "admin", "planning"].includes(role)) return forbid();
   }
 
+  // /organizer/department - ต้องเป็น hr หรือ admin
   if (pathStarts(pathname, "/organizer/department")) {
     if (!["hr", "admin"].includes(role)) return forbid();
   }
 
+  // /admin - ต้องเป็น admin
   if (pathStarts(pathname, "/admin") && role !== "admin") {
     return forbid();
   }
@@ -117,6 +124,7 @@ export async function middleware(request: NextRequest) {
   if (payload.name) headers.set("x-user-name", payload.name);
   if (payload.org_id) headers.set("x-org-id", payload.org_id);
   if (payload.department_id) headers.set("x-dept-id", payload.department_id);
+  if (payload.approval_level !== undefined) headers.set("x-approval-level", String(payload.approval_level));
 
   return NextResponse.next({ request: { headers } });
 }

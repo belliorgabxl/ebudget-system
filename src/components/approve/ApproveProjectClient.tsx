@@ -6,7 +6,7 @@ import RejectConfirmPopup from "../popup/RejectConfirmPopup";
 import ReturnProjectPopup from "../popup/ReturnProjectPopup";
 import { processApprovalAction } from "@/api/approval.client";
 import ConfirmSubmitPopup from "../popup/ConfirmPopup";
-import { toast } from "react-toastify";
+import { useToast } from "@/components/ToastProvider";
 
 type Props = {
   projectId: string;
@@ -18,15 +18,14 @@ export default function ApproveProjectClient({
   projectName,
 }: Props) {
   const router = useRouter();
+  const { push } = useToast();
   const [loading, setLoading] = useState(false);
   const [openReject, setOpenReject] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [openReturn, setOpenReturn] = useState(false);
   const [openApprove, setOpenApprove] = useState(false);
 
   const handleApproveConfirm = async () => {
     setLoading(true);
-    setError(null);
 
     try {
       await processApprovalAction({
@@ -36,19 +35,19 @@ export default function ApproveProjectClient({
       });
 
       setOpenApprove(false);
-      toast.success("อนุมัติสำเร็จ")
-      router.push("/success-screen")
+      push("success", "อนุมัติสำเร็จ");
+      router.push("/success-screen");
     } catch (e: any) {
-      setError(e?.message ?? "ไม่สามารถอนุมัติโครงการได้");
-      toast.error("อนุมัติไม่สำเร็จ")
-      router.push("/failed-screen")
+      const errorMsg = e?.message || e?.response?.data?.message || "ไม่สามารถอนุมัติโครงการได้";
+      push("error", "อนุมัติไม่สำเร็จ", errorMsg);
+      router.push("/failed-screen");
     } finally {
       setLoading(false);
     }
   };
+  
   const handleReturnConfirm = async (reason?: string) => {
     setLoading(true);
-    setError(null);
 
     try {
       await processApprovalAction({
@@ -58,10 +57,12 @@ export default function ApproveProjectClient({
       });
 
       setOpenReturn(false);
+      push("success", "ส่งกลับโครงการสำเร็จ");
       router.back();
       router.refresh();
     } catch (e: any) {
-      setError(e?.message ?? "ไม่สามารถส่งกลับโครงการได้");
+      const errorMsg = e?.message || e?.response?.data?.message || "ไม่สามารถส่งกลับโครงการได้";
+      push("error", "ส่งกลับไม่สำเร็จ", errorMsg);
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,6 @@ export default function ApproveProjectClient({
 
   const handleRejectConfirm = async (reason: string) => {
     setLoading(true);
-    setError(null);
 
     try {
       await processApprovalAction({
@@ -80,22 +80,19 @@ export default function ApproveProjectClient({
       });
 
       setOpenReject(false);
+      push("success", "ปฏิเสธโครงการสำเร็จ");
       router.back();
       router.refresh();
     } catch (e: any) {
-      setError(e?.message ?? "ไม่สามารถทำรายการได้");
+      const errorMsg = e?.message || e?.response?.data?.message || "ไม่สามารถทำรายการได้";
+      push("error", "ปฏิเสธไม่สำเร็จ", errorMsg);
     } finally {
       setLoading(false);
     }
   };
+  
   return (
     <div>
-      {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <button
           type="button"

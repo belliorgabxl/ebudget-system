@@ -9,21 +9,14 @@ import {
   DollarSign,
 } from "lucide-react";
 
-export type RoleKey =
-  | "department_user"
-  | "department_head"
-  | "planning"
-  | "director"
-  | "admin"
-  | "hr";
-
+// ใช้ role code เป็น string โดยตรง
 export type MenuItem = {
   id: string;
   href: string | ((roleHome: string | null) => string | null);
   icon: any;
   label: string;
-  allow?: RoleKey[];
-  deny?: RoleKey[];
+  allow?: string[]; // role codes
+  deny?: string[]; // role codes
 };
 
 export const MENU: MenuItem[] = [
@@ -42,18 +35,27 @@ export const MENU: MenuItem[] = [
     allow: ["admin"],
   },
   {
+    id: "admin-users",
+    href: "/admin/users",
+    icon: Users,
+    label: "จัดการผู้ใช้งาน",
+    allow: ["admin"],
+  },
+  {
     id: "department",
     href: "/organizer/department",
     icon: Building2,
     label: "หน่วยงาน",
-    allow: ["hr", "admin"],
+    allow: ["hr"],
+    deny: ["admin"],
   },
   {
     id: "users",
     href: "/organizer/users",
     icon: Users,
     label: "พนักงาน",
-    allow: ["hr", "admin"],
+    allow: ["hr"],
+    deny: ["admin"],
   },
   {
     id: "projects",
@@ -106,8 +108,15 @@ export const MENU: MenuItem[] = [
   },
 ];
 
-export const canSeeMenuHandler = (role: RoleKey, item: MenuItem) => {
-  if (item.deny?.includes(role)) return false;
+export const canSeeMenuHandler = (roleCode: string, item: MenuItem, approvalLevel?: number | null) => {
+  if (item.deny?.includes(roleCode)) return false;
   if (!item.allow) return true;
-  return item.allow.includes(role);
+  if (!item.allow.includes(roleCode)) return false;
+  
+  // Special condition for approve menu: only show if approval_level > 0
+  if (item.id === "approve") {
+    return (approvalLevel ?? 0) > 0;
+  }
+  
+  return true;
 };

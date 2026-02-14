@@ -5,6 +5,7 @@ import type {
   OrganizationListResponse,
   GetOrganizationsParams,
 } from "@/dto/organizationDto";
+import type { GetUserRespond } from "@/dto/userDto";
 import { clientFetch, clientFetchArray } from "@/lib/client-api";
 
 /* -------------------- queries -------------------- */
@@ -105,6 +106,30 @@ export async function GetOrganizationByIdFromApi(
   } catch (error) {
     console.error("[GetOrganizationByIdFromApi] Error:", error);
     return null;
+  }
+}
+
+/**
+ * GET /api/admin/organization/{org_id}
+ * Get users by organization ID
+ */
+export async function GetUsersByOrgFromApi(
+  orgId: string
+): Promise<GetUserRespond[]> {
+  try {
+    const r = await clientFetchArray<{ success: boolean; data: GetUserRespond[] }>(
+      `/api/admin/organization/${orgId}`,
+      { cache: "no-store" }
+    );
+
+    if (!r.success || !r.data) return [];
+    
+    // r.data is the response object { success: true, data: [...] }
+    const responseData = r.data as any;
+    return Array.isArray(responseData.data) ? responseData.data : [];
+  } catch (error) {
+    console.error("[GetUsersByOrgFromApi] Error:", error);
+    return [];
   }
 }
 

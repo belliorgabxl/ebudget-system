@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Save, X } from "lucide-react";
+import { useToast } from "@/components/ToastProvider";
 
 const initialForm = {
   code: "",
@@ -15,6 +16,7 @@ export default function CreateDepartmentForm({
   onCancel: () => void;
   onSuccess?: () => void;
 }) {
+  const { push } = useToast();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
 
@@ -30,10 +32,10 @@ export default function CreateDepartmentForm({
     try {
       // TODO: call API
       await new Promise((r) => setTimeout(r, 1000));
-      alert("สร้างหน่วยงานสำเร็จ");
+      push('success', 'สร้างหน่วยงานสำเร็จ');
       onSuccess?.();
     } catch {
-      alert("เกิดข้อผิดพลาด");
+      push('error', 'เกิดข้อผิดพลาด');
     } finally {
       setLoading(false);
     }

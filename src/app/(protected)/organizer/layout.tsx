@@ -17,6 +17,7 @@ type ServerUser = {
   role_label?: string | null
   org_id?: string | null
   department_id?: string | null
+  approval_level?: number | null
 } | null
 async function getServerUser(): Promise<ServerUser> {
   try {
@@ -30,8 +31,7 @@ async function getServerUser(): Promise<ServerUser> {
       role_key: ((payload.role_key ?? payload.role) as string) ?? "department_user",
       role_label: (payload.role_label as string) ?? null,
       org_id: (payload.org_id as string) ?? null,
-      department_id: (payload.department_id as string) ?? null,
-    }
+      department_id: (payload.department_id as string) ?? null,      approval_level: (payload.approval_level as number) ?? null,    }
   } catch {
     return null
   }

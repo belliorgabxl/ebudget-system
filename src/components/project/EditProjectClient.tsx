@@ -9,6 +9,7 @@ import type {
 } from "@/dto/projectDto";
 import { FieldBlock, SectionCard } from "./Helper";
 import { mapApiToForm, mapFormToPayload } from "@/lib/helper";
+import { useToast } from "@/components/ToastProvider";
 
 export default function EditProjectClient({
   id,
@@ -17,9 +18,9 @@ export default function EditProjectClient({
   id: string;
   initialData: ProjectInformationResponse;
 }) {
+  const { push } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [form, setForm] = useState<EditFormState>(() =>
     mapApiToForm(initialData)
@@ -159,7 +160,6 @@ export default function EditProjectClient({
     if (!form) return;
 
     setSaving(true);
-    setError(null);
     setSuccess(null);
 
     try {
@@ -174,18 +174,16 @@ export default function EditProjectClient({
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(
-          data?.message ||
-            "ไม่สามารถบันทึกข้อมูลโครงการได้ กรุณาลองใหม่อีกครั้ง"
-        );
+        const errorMsg = data?.message || "ไม่สามารถบันทึกข้อมูลโครงการได้ กรุณาลองใหม่อีกครั้ง";
+        throw new Error(errorMsg);
       }
 
       setSuccess("บันทึกข้อมูลโครงการสำเร็จ");
+      push("success", "บันทึกข้อมูลโครงการสำเร็จ");
     } catch (err: any) {
       console.error("save project error:", err);
-      setError(
-        err?.message || "ไม่สามารถบันทึกข้อมูลโครงการได้ กรุณาลองใหม่อีกครั้ง"
-      );
+      const errorMsg = err?.message || "ไม่สามารถบันทึกข้อมูลโครงการได้ กรุณาลองใหม่อีกครั้ง";
+      push("error", "บันทึกไม่สำเร็จ", errorMsg);
     } finally {
       setSaving(false);
     }
@@ -205,7 +203,6 @@ export default function EditProjectClient({
         <h1 className="text-xl font-semibold text-gray-900">
           ไม่สามารถโหลดข้อมูลสำหรับแก้ไขได้
         </h1>
-        {error && <p className="text-sm text-red-600">{error}</p>}
         <Link
           href="/organizer/projects/my-project"
           className="text-sm text-indigo-600 hover:underline"

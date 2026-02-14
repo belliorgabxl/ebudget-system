@@ -64,7 +64,6 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
   const [optionsError, setOptionsError] = useState<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // field-level errors
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
@@ -107,7 +106,6 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
   const handleClose = () => {
     setForm(initialForm);
     setFieldErrors({});
-    setError(null);
     setOptionsError(null);
     setShowPassword(false);
     setShowConfirm(false);
@@ -194,7 +192,6 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
   };
 
   const handleSubmit = async () => {
-    setError(null);
     const ok = validateAll();
     if (!ok) {
       push("error", "ข้อมูลไม่ครบ/ไม่ถูกต้อง", "กรุณาตรวจสอบช่องที่มีข้อความเตือน");
@@ -223,7 +220,6 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
         const serverMsg =
           (res && typeof res === "object" && (res.message || JSON.stringify((res as any).data || res))) ||
           `HTTP error`;
-        setError(`ไม่สามารถสร้างผู้ใช้ได้: ${serverMsg}`);
         push("error", "สร้างผู้ใช้ไม่สำเร็จ", serverMsg);
         console.error("CreateUserFromApi failed:", res);
         return;
@@ -274,7 +270,6 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
     } catch (err: any) {
       console.error("Unhandled create-user error", err);
       const msg = err?.message ?? "เกิดข้อผิดพลาดไม่คาดคิด";
-      setError(msg);
       push("error", "เกิดข้อผิดพลาด", msg);
     } finally {
       setSubmitting(false);
@@ -318,7 +313,6 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
 
         <div className="p-6 space-y-4">
           {optionsError && <div className="text-sm text-red-600">โหลดตัวเลือกผิดพลาด: {optionsError}</div>}
-          {error && <div className="text-sm text-red-600">{error}</div>}
 
           <div className="grid grid-cols-2 gap-4">
             {/* first_name */}

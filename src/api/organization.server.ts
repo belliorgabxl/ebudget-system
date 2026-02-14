@@ -5,6 +5,7 @@ import type {
   OrganizationListResponse,
   GetOrganizationsParams,
 } from "@/dto/organizationDto";
+import type { GetUserRespond } from "@/dto/userDto";
 import { nestFetch } from "@/lib/server-api";
 
 /* -------------------- queries -------------------- */
@@ -77,7 +78,32 @@ export async function GetOrganizationByIdFromApiServer(
       method: "GET",
     });
 
-    return r.success ? r.data ?? null : null;
+    if (!r.success || !r.data) return null;
+
+    const organization = r.data as OrganizationResponse;
+
+    // Enrich roles with user_count (only include when > 0)
+    try {
+      const usersResp = await GetUsersByOrgFromApiServer(id);
+      const users = usersResp.data ?? [];
+      const counts: Record<string, number> = {};
+      users.forEach((u) => {
+        if (!u.role) return;
+        counts[u.role] = (counts[u.role] || 0) + 1;
+      });
+
+      if (Array.isArray(organization.roles)) {
+        organization.roles = organization.roles.map((role) => {
+          const count = counts[role.code as string] || 0;
+          // shallow copy and include user_count only if > 0
+          return count > 0 ? { ...role, user_count: count } : { ...role };
+        });
+      }
+    } catch (err) {
+      console.warn('[GetOrganizationByIdFromApiServer] failed to enrich roles with user_count', err);
+    }
+
+    return organization;
   } catch (error) {
     console.error("[GetOrganizationByIdFromApiServer] Error:", error);
     return null;
@@ -134,6 +160,38 @@ export async function UpdateOrganizationFromApiServer(
   } catch (error) {
     console.error("[UpdateOrganizationFromApiServer] Error:", error);
     return { ok: false, message: "Failed to update organization" };
+  }
+}
+
+export type UserListByOrgResponse = {
+  data: GetUserRespond[];
+};
+
+/**
+ * GET /admin/organization/{org_id}
+ * Get users by organization ID
+ */
+export async function GetUsersByOrgFromApiServer(
+  orgId: string
+): Promise<UserListByOrgResponse> {
+  try {
+    const r = await nestFetch<UserListByOrgResponse>(`/admin/organization/${orgId}`, {
+      method: "GET",
+    });
+
+    if (!r.success) {
+      console.warn(`[GetUsersByOrgFromApiServer] Backend API failed:`, r.message);
+      return {
+        data: [],
+      };
+    }
+
+    return r.data ?? { data: [] };
+  } catch (error) {
+    console.error("[GetUsersByOrgFromApiServer] Error:", error);
+    return {
+      data: [],
+    };
   }
 }
 

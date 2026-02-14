@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Prompt } from "next/font/google";
 import "./globals.css";
+import { ToastProvider } from "@/components/ToastProvider";
 
 const prompt = Prompt({
   subsets: ["thai", "latin"],
@@ -25,7 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={` ${prompt.className} antialiased`}>{children}</body>
+      <body className={` ${prompt.className} antialiased`}>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </body>
     </html>
   );
 }

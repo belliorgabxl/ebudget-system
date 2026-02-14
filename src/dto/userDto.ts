@@ -23,30 +23,35 @@ export interface AuthUser {
 }
 
 export interface GetUserRespond {
-  department_id: string;
+  approval_level?: number;
+  department_id: string | null;
   department_name: string;
   email: string;
   first_name: string;
   full_name: string;
   id: string;
-  last_login_at: string;
+  is_active: boolean;
+  is_system_role?: boolean;
+  last_login_at: string | null;
   last_name: string;
   organization_id: string;
-  is_active : boolean;
-  position: string;
+  organization_name?: string;
+  position: string | null;
   role: string;
+  role_code?: string;
   username: string;
 }
 
 export interface CreateUserRequest {
-  department_id: string;
+  department_id: string | null;
   email: string;
   first_name: string;
   last_name: string;
-  username :string;
-  password :string;
-  position: string;
+  organization_id: string;
+  password: string;
+  position: string | null;
   role_id: number;
+  username: string;
 }
 export interface UpdateUserStatusRequest {
   user_id: string;

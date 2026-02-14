@@ -104,8 +104,57 @@ export async function GetUserByIdFromApiServer(id: string) {
   return r.success ? r.data ?? null : null;
 }
 
+/**
+ * GET /users - Get all users in organization with query string
+ */
+export async function GetAllUsersFromApiServer(urlPath: string = "/users"): Promise<any> {
+  try {
+    const r = await nestFetch<any>(urlPath, { method: "GET" });
+
+    if (!r.success) {
+      console.warn("[GetAllUsersFromApiServer] Backend API failed:", r.message);
+      return {
+        data: [],
+        page: 1,
+        limit: 10,
+        total: 0,
+        total_pages: 0,
+      };
+    }
+
+    // Backend returns { data, page, limit, total, total_pages }
+    return r.data;
+  } catch (error) {
+    console.error("[GetAllUsersFromApiServer] Error:", error);
+    return {
+      data: [],
+      page: 1,
+      limit: 10,
+      total: 0,
+      total_pages: 0,
+    };
+  }
+}
+
 
 /* -------------------- mutations -------------------- */
+
+/**
+ * POST /admin/users/create - Admin creates a new user
+ */
+export async function CreateUserByAdminFromApiServer(
+  payload: CreateUserRequest
+) {
+  const r = await nestFetch<any>("/admin/users/create", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+  });
+
+  return r.success
+    ? { ok: true, data: r.data }
+    : { ok: false, message: r.message };
+}
 
 export async function CreateUserFromApiServer(
   payload: CreateUserRequest

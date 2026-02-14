@@ -90,6 +90,8 @@ export async function PUT(
       id,
       name: body.name,
       type: body.type,
+      max_approval_level: body.max_approval_level,
+      roles: body.roles,
     });
 
     if (!result.ok) {

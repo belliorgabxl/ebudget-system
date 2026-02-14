@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
 import type { Department as DepartmentDto } from "@/dto/departmentDto";
+import { useToast } from "@/components/ToastProvider";
 
 type Props = {
   open: boolean;
@@ -12,11 +13,11 @@ type Props = {
 };
 
 export default function EditDepartmentModal({ open, department, onClose, onSave }: Props) {
+  const { push } = useToast();
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Sync form with department prop
   useEffect(() => {
@@ -24,7 +25,6 @@ export default function EditDepartmentModal({ open, department, onClose, onSave 
       setCode(department.code || "");
       setName(department.name || "");
       setIsActive(department.is_active ?? true);
-      setError(null);
     }
   }, [department]);
 
@@ -32,10 +32,9 @@ export default function EditDepartmentModal({ open, department, onClose, onSave 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     if (!code.trim() || !name.trim()) {
-      setError("กรุณากรอกข้อมูลให้ครบถ้วน");
+      push('error', 'กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
 
@@ -45,10 +44,10 @@ export default function EditDepartmentModal({ open, department, onClose, onSave 
       if (success) {
         onClose();
       } else {
-        setError("บันทึกไม่สำเร็จ");
+        push('error', 'บันทึกไม่สำเร็จ');
       }
     } catch (err: any) {
-      setError(err?.message || "เกิดข้อผิดพลาด");
+      push('error', 'เกิดข้อผิดพลาด', err?.message || 'Unknown error');
     } finally {
       setSaving(false);
     }
@@ -56,7 +55,6 @@ export default function EditDepartmentModal({ open, department, onClose, onSave 
 
   const handleClose = () => {
     if (!saving) {
-      setError(null);
       onClose();
     }
   };
@@ -82,12 +80,6 @@ export default function EditDepartmentModal({ open, department, onClose, onSave 
             <X className="h-5 w-5" />
           </button>
         </div>
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

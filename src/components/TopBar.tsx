@@ -19,9 +19,9 @@ type ServerUser = {
 export default function TopBar({ serverUser }: { serverUser: ServerUser }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const roleKey = (serverUser?.role_key ?? "department_user").toLowerCase()
-  const roleHome = pickHomeByRole(roleKey)
-  const canSeeDepartment = roleKey === "hr"
+  const roleCode = (serverUser?.role_key ?? "user").toLowerCase()
+  const roleHome = pickHomeByRole(roleCode)
+  const canSeeDepartment = roleCode === "hr" || roleCode === "admin"
 
   // เมนูบนมือถือ
   const menuItems = useMemo(() => {

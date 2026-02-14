@@ -8,8 +8,10 @@ import { formatCompactNumber } from "@/lib/util";
 import type { OrganizationResponse } from "@/dto/organizationDto";
 import { GetOrganizationsFromApi, CreateOrganizationFromApi, DeleteOrganizationFromApi } from "@/api/organization.client";
 import AddOrganizationModal from "@/components/manage-org/AddOrganizationModal";
+import { useToast } from "@/components/ToastProvider";
 
 export default function AdminManageOrgPage() {
+  const { push } = useToast();
   const [organizations, setOrganizations] = useState<OrganizationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,29 +47,69 @@ export default function AdminManageOrgPage() {
     }
   };
 
-  const handleAdd = async (org: { name: string; type?: string }) => {
+  const handleAdd = async (org: { 
+    name: string; 
+    type?: string;
+    approvalLevels: Array<{
+      level: number;
+      roles: Array<{
+        code: string;
+        name: string;
+        display_name: string;
+        description: string;
+        approval_level: number;
+        can_create_budget_plan: boolean;
+        can_view_all_plans: boolean;
+        can_approve: boolean;
+        can_edit_qas: boolean;
+      }>;
+    }>;
+  }) => {
     try {
       console.log("Creating organization:", org);
+      
+      // Flatten roles from approval levels
+      const allRoles = org.approvalLevels.flatMap(level => 
+        level.roles.map(role => ({
+          name: role.name,
+          display_name: role.display_name,
+          description: role.description,
+          approval_level: role.approval_level,
+          code: role.code,
+          can_create_budget_plan: role.can_create_budget_plan,
+          can_view_all_plans: role.can_view_all_plans,
+          can_approve: role.can_approve,
+          can_edit_qas: role.can_edit_qas,
+        }))
+      );
+      
+      // Calculate max approval level
+      const maxApprovalLevel = allRoles.length > 0 
+        ? Math.max(...allRoles.map(r => r.approval_level))
+        : 3;
       
       const result = await CreateOrganizationFromApi({
         name: org.name,
         type: org.type,
+        max_approval_level: maxApprovalLevel,
+        roles: allRoles
       });
       
       console.log("Create result:", result);
 
       if (result.ok) {
         setIsAddOpen(false);
+        push('success', 'สร้างองค์กรสำเร็จ');
         // Reload data
         await loadOrganizations();
       } else {
         const errorMsg = result.message || "ไม่สามารถสร้างองค์กรได้";
         console.error("Failed to create organization:", errorMsg);
-        alert(`เกิดข้อผิดพลาด: ${errorMsg}`);
+        push('error', 'เกิดข้อผิดพลาด', errorMsg);
       }
     } catch (err: any) {
       console.error("Exception while creating organization:", err);
-      alert(`เกิดข้อผิดพลาดในการสร้างองค์กร: ${err?.message || "Unknown error"}`);
+      push('error', 'เกิดข้อผิดพลาดในการสร้างองค์กร', err?.message || "Unknown error");
     }
   };
 
@@ -77,9 +119,10 @@ export default function AdminManageOrgPage() {
     if (confirm("คุณต้องการลบองค์กรนี้ใช่หรือไม่?")) {
       const success = await DeleteOrganizationFromApi(id);
       if (success) {
+        push('success', 'ลบองค์กรสำเร็จ');
         await loadOrganizations();
       } else {
-        alert("ไม่สามารถลบองค์กรได้ (ฟีเจอร์ยังไม่เปิดใช้งาน)");
+        push('error', 'ไม่สามารถลบองค์กรได้', 'ฟีเจอร์ยังไม่เปิดใช้งาน');
       }
     }
   };

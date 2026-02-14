@@ -10,6 +10,7 @@ export interface UserPayload {
   department_id?: string;
   iat?: number;
   exp?: number;
+  approval_level?: number;
 }
 
 const secret = process.env.JWT_SECRET;

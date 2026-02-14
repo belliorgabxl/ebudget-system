@@ -85,3 +85,14 @@ export const nestPut = <T>(path: string, body?: any) =>
 
 export const nestDelete = <T>(path: string) =>
   nestFetch<T>(path, { method: "DELETE" });
+
+
+export async function updateRole(id: string, data: any) {
+  // TODO: Implement actual update logic
+  const updateData = { ...data }
+  if (data.is_system_role !== undefined) {
+    updateData.is_system = data.is_system_role
+    delete updateData.is_system_role
+  }
+  return { success: true, data: { id, ...updateData } }
+}

@@ -1,23 +1,26 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import type { Role } from "@/resource/mock-org-detail";
+import type { OrganizationRole } from "@/dto/organizationDto";
+import { CreateRoleFromApi } from "@/api/role.client";
+import { useToast } from "@/components/ToastProvider";
 
 interface AddRoleModalProps {
-  onSave: (role: Role) => void;
+  organizationId: string;
+  onSave: (role: any) => void;
   onClose: () => void;
 }
 
-function generateRoleId() {
-  return `ROLE-${Math.floor(Math.random() * 100000)}`;
-}
-
-export default function AddRoleModal({ onSave, onClose }: AddRoleModalProps) {
+export default function AddRoleModal({ organizationId, onSave, onClose }: AddRoleModalProps) {
+  const { push } = useToast();
   const [form, setForm] = useState({
-    code: "",
     name: "",
+    display_name: "",
+    role_code: "",
     description: "",
-    permissionsText: "",
-    approvalOrder: "",
+    approval_level: 0,
+    can_create_budget_plan: false,
+    can_view_all_plans: false,
+    can_approve: false,
   });
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -42,24 +45,44 @@ export default function AddRoleModal({ onSave, onClose }: AddRoleModalProps) {
     };
   }, [onClose]);
 
-  const handleSave = () => {
-    if (!form.code.trim() || !form.name.trim()) return;
-    const permissions = form.permissionsText
-      .split(",")
-      .map((p) => p.trim())
-      .filter(Boolean);
-    const approvalOrder = form.approvalOrder.trim() ? parseInt(form.approvalOrder.trim()) : undefined;
-    const newRole: Role = {
-      id: generateRoleId(),
-      code: form.code.trim(),
+  const handleSave = async () => {
+    // Validate required fields
+    if (!form.name.trim()) {
+      push('error', 'กรุณากรอกชื่อบทบาท');
+      return;
+    }
+    if (!form.role_code.trim()) {
+      push('error', 'กรุณากรอกรหัสบทบาท');
+      return;
+    }
+    if (form.approval_level < 0) {
+      push('error', 'ระดับการอนุมัติต้องไม่น้อยกว่า 0');
+      return;
+    }
+
+    const newRoleData = {
       name: form.name.trim(),
+      display_name: form.display_name.trim() || form.name.trim(),
+      role_code: form.role_code.trim(),
       description: form.description.trim(),
-      permissions,
-      userCount: 0,
-      approvalOrder,
-      createdAt: new Date().toISOString(),
+      approval_level: form.approval_level,
+      can_create_budget_plan: form.can_create_budget_plan,
+      can_view_all_plans: form.can_view_all_plans,
+      can_approve: form.can_approve,
+      organization_id: organizationId,
     };
-    onSave(newRole);
+
+    try {
+      const result = await CreateRoleFromApi(newRoleData);
+      if (result.success) {
+        push('success', 'สร้างบทบาทสำเร็จ');
+        onSave(result.data);
+      } else {
+        push('error', 'ไม่สามารถสร้างบทบาทได้', result.message || 'Unknown error');
+      }
+    } catch (error) {
+      push('error', 'เกิดข้อผิดพลาดในการสร้างบทบาท');
+    }
   };
 
   return (
@@ -82,42 +105,55 @@ export default function AddRoleModal({ onSave, onClose }: AddRoleModalProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                รหัสบทบาท <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={form.code}
-                onChange={(e) => setForm({ ...form, code: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                placeholder="เช่น custom_role"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
                 ชื่อบทบาท <span className="text-red-500">*</span>
               </label>
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                placeholder="เช่น ผู้ดูแลระบบภายใน"
+                placeholder="เช่น custom_manager"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ชื่อแสดง
+              </label>
+              <input
+                value={form.display_name}
+                onChange={(e) => setForm({ ...form, display_name: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                placeholder="เช่น Custom Manager"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                รหัสบทบาท <span className="text-red-500">*</span>
+              </label>
+              <input
+                value={form.role_code}
+                onChange={(e) => setForm({ ...form, role_code: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                placeholder="เช่น custom_manager"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ระดับการอนุมัติ
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.approval_level}
+                onChange={(e) => setForm({ ...form, approval_level: parseInt(e.target.value) || 0 })}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                placeholder="0"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              ลำดับในการอนุมัติ
-            </label>
-            <input
-              type="number"
-              value={form.approvalOrder}
-              onChange={(e) => setForm({ ...form, approvalOrder: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              placeholder="เช่น 1, 2, 3"
-              min="1"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">คำอธิบาย</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -126,14 +162,43 @@ export default function AddRoleModal({ onSave, onClose }: AddRoleModalProps) {
               placeholder="อธิบายบทบาทนี้"
             />
           </div>
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">สิทธิ์ (คั่นด้วยจุลภาค)</label>
-            <input
-              value={form.permissionsText}
-              onChange={(e) => setForm({ ...form, permissionsText: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              placeholder="view_dashboard, manage_projects"
-            />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">สิทธิ์</label>
+            <div className="space-y-2">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={form.can_create_budget_plan}
+                  onChange={(e) => setForm({ ...form, can_create_budget_plan: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-gray-900">
+                  สร้างแผนงบประมาณ
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={form.can_view_all_plans}
+                  onChange={(e) => setForm({ ...form, can_view_all_plans: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-gray-900">
+                  ดูแผนทั้งหมด
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={form.can_approve}
+                  onChange={(e) => setForm({ ...form, can_approve: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-gray-900">
+                  อนุมัติ
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
