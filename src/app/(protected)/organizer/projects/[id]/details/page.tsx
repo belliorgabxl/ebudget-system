@@ -22,6 +22,7 @@ import ApprovalStatusButton from "@/components/project/approval/ApprovalStatusBu
 
 type Project = {
   id: string;
+  budgetPlanId?: string;
   budgetPlanStatus: string;
   status: "draft" | "in_progress" | "on_hold" | "done";
   progress: number;
@@ -199,6 +200,7 @@ async function getProject(id: string): Promise<Project | null> {
 
     const project: Project = {
       id,
+      budgetPlanId: apiData.budget_plan_id,
       status: "in_progress",
       progress: 0,
       updatedAt: apiData.updated_at,
@@ -281,6 +283,7 @@ export default async function Page({ params }: { params: PageParams }) {
           </div>
           <ApprovalStatusButton
             projectId={p.id}
+            budgetPlanId={p.budgetPlanId}
             status={p.budgetPlanStatus}
             processSteps={[
               {

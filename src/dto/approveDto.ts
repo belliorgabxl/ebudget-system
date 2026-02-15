@@ -68,3 +68,28 @@ export type PendingApprovalsParams = {
   page?: string;
   limit?: string;
 };
+
+export type ApprovalFlowItem = {
+  action: string;
+  actionDate: string;
+  comments: string;
+  level: number;
+  reviewerName: string;
+  roleTitle: string;
+};
+
+export type ApprovalQueueData = {
+  approvalFlow: ApprovalFlowItem[];
+  budget: number;
+  department: string;
+  id: string;
+  planNumber: string;
+  projectName: string;
+  status: string;
+};
+
+export type ApprovalQueueResponse = {
+  success: boolean;
+  data: ApprovalQueueData;
+  message?: string;
+};

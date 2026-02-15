@@ -75,11 +75,16 @@ async function getProject(id: string): Promise<Project | null> {
       type: apiData.plan_type || "",
       department: apiData.department_name || "",
       owner_user_id: apiData.owner_user || "",
+      description: apiData.project_description || "",
+      code: apiData.project_code || "",
+      rationale: apiData.rationale || "",
+      location: apiData.location || "",
     } as any;
 
     const goal: GoalParams = {
       quantityGoal: apiData.quantitative_goal || "",
       qualityGoal: apiData.qualitative_goal || "",
+      objectiveDescription: apiData.objective_description || "",
     };
 
     const startDate = apiData.start_date || "";
@@ -145,7 +150,21 @@ async function getProject(id: string): Promise<Project | null> {
       qaIndicator: "",
     };
 
-    const kpiList = (apiData.project_kpis || [])
+    const outputKpis = (apiData.project_kpis || [])
+      .filter(k => k.indicator === "Output" || k.indicator?.toLowerCase() === "output")
+      .map((k) => {
+        const t =
+          k.target_value !== null && k.target_value !== undefined
+            ? ` (เป้า: ${k.target_value})`
+            : "";
+        const desc = k.description?.trim() ? ` — ${k.description.trim()}` : "";
+        return `• ${k.indicator}${t}${desc}`;
+      })
+      .filter(Boolean)
+      .join("\n");
+
+    const outcomeKpis = (apiData.project_kpis || [])
+      .filter(k => k.indicator === "Outcome" || k.indicator?.toLowerCase() === "outcome")
       .map((k) => {
         const t =
           k.target_value !== null && k.target_value !== undefined
@@ -158,8 +177,8 @@ async function getProject(id: string): Promise<Project | null> {
       .join("\n");
 
     const kpi: KPIParams = {
-      output: kpiList || "",
-      outcome: "",
+      output: outputKpis || "",
+      outcome: outcomeKpis || "",
     };
 
     const evalList = apiData.project_evaluation || [];
@@ -344,7 +363,7 @@ export default async function Page({ params }: { params: PageParams }) {
                 label="หน่วยงานที่รับผิดชอบ"
                 value={"หน่วยงานความมั่นคง"}
               />
-              <Field label="ผู้รับผิดชอบโครงการ" value={"นาย ศรันท์"} />
+              <Field label="ผู้รับผิดชอบโครงการ" value={generalInfo?.owner_user_id || "—"} />
             </Grid2>
           </Section>
 

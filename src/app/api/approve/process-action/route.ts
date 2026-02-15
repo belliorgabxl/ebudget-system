@@ -22,9 +22,22 @@ export async function POST(req: NextRequest) {
       "/approval-workflow/process-action",
       body
     );
-    
 
-    return NextResponse.json(r, { status: 200 });
+    // Check if the upstream request was successful
+    if (!r.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: r.message || "Failed to process approval action",
+        },
+        { status: r.status ?? 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, data: r.data },
+      { status: 200 }
+    );
   } catch (err: any) {
     console.error("[process-approval-action] error", err);
 

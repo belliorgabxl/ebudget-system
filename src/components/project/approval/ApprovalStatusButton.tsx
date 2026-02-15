@@ -8,19 +8,21 @@ import { ProcessStep, ProcessTooltip } from "../details/ProgressDetail";
 
 interface ApprovalStatusButtonProps {
   projectId: string;
+  budgetPlanId?: string;
   status: string;
   processSteps?: ProcessStep[];
 }
 
 export default function ApprovalStatusButton({
   projectId,
+  budgetPlanId,
   status,
   processSteps,
 }: ApprovalStatusButtonProps) {
   const router = useRouter();
 
-  const onNavigationToProcess = (projectId: string) => {
-    router.push(`/organizer/approve/${projectId}/process/`);
+  const onNavigationToProcess = (budgetPlanId: string) => {
+    router.push(`/organizer/approve/process/${budgetPlanId}`);
   };
 
   if (status === "draft") {
@@ -47,34 +49,36 @@ export default function ApprovalStatusButton({
           <CheckCircle className="h-5 w-5" />
           โครงการได้รับการอนุมัติแล้ว
         </div>
-        <div className="relative group">
-          <div
-            onClick={() => {
-              onNavigationToProcess(projectId);
-            }}
-            className="rounded-md bg-gradient-to-r from-emerald-500 to-sky-500 p-2 cursor-pointer"
-          >
-            <ClipboardClockIcon className="h-5 w-5 text-white" />
-          </div>
+        {budgetPlanId && (
+          <div className="relative group">
+            <div
+              onClick={() => {
+                onNavigationToProcess(budgetPlanId);
+              }}
+              className="rounded-md bg-gradient-to-r from-emerald-500 to-sky-500 p-2 cursor-pointer"
+            >
+              <ClipboardClockIcon className="h-5 w-5 text-white" />
+            </div>
 
-          <div
-            className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2
+            <div
+              className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2
                 whitespace-nowrap rounded-md bg-gray-900 px-3 py-1.5 text-xs text-white
                 opacity-0 transition-opacity duration-200
                 group-hover:opacity-100"
-          >
-            กดเพื่อดูสถานะการอนุมัติ
-          </div>
-          {processSteps?.length ? (
-            <div className="mt-16 pointer-events-none absolute -top-9 -left-20
+            >
+              กดเพื่อดูสถานะการอนุมัติ
+            </div>
+            {processSteps?.length ? (
+              <div className="mt-16 pointer-events-none absolute -top-9 -left-20
              -translate-x-1/2
                 whitespace-nowrap  px-3 py-1.5 text-xs text-white
                 opacity-0 transition-opacity duration-200
                 group-hover:opacity-100">
-              <ProcessTooltip steps={processSteps} />
-            </div>
-          ) : null}
-        </div>
+                <ProcessTooltip steps={processSteps} />
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     );
   }
@@ -89,34 +93,36 @@ export default function ApprovalStatusButton({
           <Clock className="h-5 w-5 animate-pulse" />
           กำลังรออนุมัติโครงการ...
         </div>
-        <div className="relative group">
-          <div
-            onClick={() => {
-              onNavigationToProcess(projectId);
-            }}
-            className="rounded-md bg-amber-500 p-2 cursor-pointer"
-          >
-            <ClipboardClockIcon className="h-5 w-5 text-white" />
-          </div>
+        {budgetPlanId && (
+          <div className="relative group">
+            <div
+              onClick={() => {
+                onNavigationToProcess(budgetPlanId);
+              }}
+              className="rounded-md bg-amber-500 p-2 cursor-pointer"
+            >
+              <ClipboardClockIcon className="h-5 w-5 text-white" />
+            </div>
 
-          <div
-            className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2
+            <div
+              className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2
                 whitespace-nowrap rounded-md bg-gray-900 px-3 py-1.5 text-xs text-white
                 opacity-0 transition-opacity duration-200
                 group-hover:opacity-100"
-          >
-            กดเพื่อดูสถานะการอนุมัติ
-          </div>
-           {processSteps?.length ? (
-            <div className="mt-16 pointer-events-none absolute -top-9 -left-20
+            >
+              กดเพื่อดูสถานะการอนุมัติ
+            </div>
+             {processSteps?.length ? (
+              <div className="mt-16 pointer-events-none absolute -top-9 -left-20
              -translate-x-1/2
                 whitespace-nowrap  px-3 py-1.5 text-xs text-white
                 opacity-0 transition-opacity duration-200
                 group-hover:opacity-100">
-              <ProcessTooltip steps={processSteps} />
-            </div>
-          ) : null}
-        </div>
+                <ProcessTooltip steps={processSteps} />
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     );
   }

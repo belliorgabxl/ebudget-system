@@ -2,6 +2,7 @@ import {
   ApprovalSubmitResponse,
   ProcessApprovalActionRequest,
   ProcessApprovalActionResponse,
+  ApprovalQueueResponse,
 } from "@/dto/approveDto";
 import { clientFetch } from "@/lib/client-api";
 
@@ -22,5 +23,12 @@ export async function processApprovalAction(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     }
+  );
+}
+
+export async function getApprovalQueue(budgetPlanId: string) {
+  return clientFetch<ApprovalQueueResponse>(
+    `/api/approve/queue/${encodeURIComponent(budgetPlanId)}`,
+    { method: "GET" }
   );
 }

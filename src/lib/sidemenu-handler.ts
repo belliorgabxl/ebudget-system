@@ -127,14 +127,14 @@ export const canSeeMenuHandler = (roleCode: string, item: MenuItem, approvalLeve
   // Normalize role code - ถ้าไม่ใช่ role ที่กำหนดไว้ ให้ใช้เป็น "user"
   const normalizedRole = normalizeRoleCode(roleCode);
   
-  if (item.deny?.includes(normalizedRole)) return false;
-  if (!item.allow) return true;
-  if (!item.allow.includes(normalizedRole)) return false;
-  
   // Special condition for approve menu: only show if approval_level > 0
   if (item.id === "approve") {
     return (approvalLevel ?? 0) > 0;
   }
+  
+  if (item.deny?.includes(normalizedRole)) return false;
+  if (!item.allow) return true;
+  if (!item.allow.includes(normalizedRole)) return false;
   
   return true;
 };

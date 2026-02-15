@@ -15,6 +15,13 @@ export interface Project {
   qaIndicators?: string[];
   strategies?: string[];
   attachmentsCount?: number;
+  code?: string;
+  rationale?: string;
+  location?: string;
+  createdAt?: string;
+  budgetPlanStatus?: string;
+  objectiveType?: string;
+  objectiveDescription?: string;
 }
 export type Department = {
   id: string;
@@ -72,6 +79,9 @@ export type GeneralInfoCreateParams = {
   department_id: string;
   owner_user_id: string;
   description: string;
+  code?: string;
+  rationale?: string;
+  location?: string;
 };
 
 // strategy component part
@@ -94,6 +104,7 @@ export type ApproveParams = {
 export type GoalParams = {
   quantityGoal: string;
   qualityGoal: string;
+  objectiveDescription?: string;
 };
 
 // activity component part

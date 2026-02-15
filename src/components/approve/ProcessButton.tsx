@@ -4,10 +4,10 @@ import React from "react";
 import { History } from "lucide-react";
 
 interface Props {
-  project_id: string;
+  budget_plan_id: string;
 }
 
-export default function ProcessButton({ project_id }: Props) {
+export default function ProcessButton({ budget_plan_id }: Props) {
   const router = useRouter();
 
   return (
@@ -16,7 +16,7 @@ export default function ProcessButton({ project_id }: Props) {
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        router.push(`/organizer/approve/${project_id}/process`);
+        router.push(`/organizer/approve/process/${budget_plan_id}`);
       }}
       className="flex items-center cursor-pointer justify-end gap-2"
     >

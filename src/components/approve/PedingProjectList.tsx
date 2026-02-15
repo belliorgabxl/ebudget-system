@@ -1,8 +1,8 @@
 import React from "react";
-import Link from "next/link";
 import { checkApprovalPermissionServer } from "@/api/approval.server";
 import { cache } from "react";
-import ProcessButton from "./ProcessButton";
+import { getCurrentUser } from "@/lib/auth";
+import ProjectListItem from "./ProjectListItem";
 
 type ProjectItem = {
   id: string;
@@ -12,6 +12,7 @@ type ProjectItem = {
   start_date?: string | null;
   end_date?: string | null;
   budget_plan_id?: string | null;
+  current_approval_level?: number | null;
 };
 
 type Pagination = {
@@ -23,17 +24,15 @@ type Props = {
   pg?: Pagination | null;
 };
 
-function truncateText(text?: string | null, max = 100) {
-  if (!text) return "—";
-  if (text.length <= max) return text;
-  return text.slice(0, max) + "...";
-}
-
 const getPermCached = cache(async (budgetPlanId: string) => {
   return checkApprovalPermissionServer(budgetPlanId);
 });
 
 export default async function PendingProjectList({ projects, pg }: Props) {
+  // Get current user's approval level
+  const currentUser = await getCurrentUser();
+  const userApprovalLevel = currentUser?.approval_level ?? 0;
+
   const perms = await Promise.all(
     projects.map(async (p) => {
       const budgetPlanId = p.budget_plan_id;
@@ -62,69 +61,44 @@ export default async function PendingProjectList({ projects, pg }: Props) {
         <div className="divide-y divide-gray-300">
           {projects.map((p) => {
             const canApprove = canApproveMap.get(p.id) ?? false;
+            const currentApprovalLevel = p.current_approval_level ?? 0;
+
+            // Determine status based on approval levels
+            let statusLabel = "";
+            let statusClass = "";
+            let canAccess = true;
+
+            if (userApprovalLevel === currentApprovalLevel) {
+              // ถึงขั้นที่เราต้องอนุมัติแล้ว
+              statusLabel = "พร้อมให้คุณอนุมัติ";
+              statusClass = "border-green-400 bg-green-50 text-green-700";
+              canAccess = true;
+            } else if (userApprovalLevel > currentApprovalLevel) {
+              // ยังไม่ถึงลำดับเรา
+              statusLabel = "รอการอนุมัติจากลำดับก่อนหน้า";
+              statusClass = "border-gray-400 bg-gray-50 text-gray-600";
+              canAccess = false;
+            } else {
+              // เราอนุมัติไปแล้ว
+              statusLabel = "ลำดับขั้นของคุณได้อนุมัติแล้ว";
+              statusClass = "border-blue-400 bg-blue-50 text-blue-700";
+              canAccess = true;
+            }
 
             return (
-              <Link
-                href={`/organizer/approve/${p.id}/project-detail`}
+              <ProjectListItem
                 key={p.id}
-                className="flex flex-col gap-2 px-4 py-2 md:flex-row md:items-center md:justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="truncate flex items-center gap-4 text-sm text-gray-700 font-medium">
-                    <p className="text-green-600">ชื่อโครงการ</p> {p.name}
-                  </div>
-
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    {p.code ? (
-                      <span className="flex gap-3 items-center">
-                        <p className="font-semibold">รหัส:</p> {p.code}
-                      </span>
-                    ) : null}
-                    |
-                    <span className="flex gap-3 items-center">
-                      <p className="font-semibold line-clamp-1">รายละเอียด:</p>{" "}
-                      <p className="lg:block hidden">
-                        {truncateText(p.description, 150)}
-                      </p>
-                      <p className="lg:hidden block">
-                        {truncateText(p.description, 45)}
-                      </p>
-                    </span>
-                  </div>
-
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    {p.start_date ? (
-                      <span className="flex gap-3 items-center">
-                        <p className="font-semibold">เริ่ม:</p> {p.start_date}
-                      </span>
-                    ) : null}
-                    {p.end_date ? (
-                      <span className="flex gap-3 items-center">
-                        <p className="font-semibold">สิ้นสุด:</p> {p.end_date}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="grid grid-rows-2 z-10 h-full gap-2 place-items-end">
-                  <ProcessButton project_id={p.id} />
-                  {!canApprove ? (
-                    <span
-                      className="h-fit rounded-lg border border-green-400 bg-green-50 px-3
-                     py-2 text-xs font-medium text-green-700 cursor-text"
-                    >
-                      พร้อมให้คุณอนุมัติ
-                    </span>
-                  ) : (
-                    <span
-                      className="h-fit rounded-lg border border-sky-400 bg-sky-50 px-3
-                     py-2 text-xs font-medium text-sky-700 cursor-text"
-                    >
-                      อยู่ในขั้นตอนอนุมัติ...
-                    </span>
-                  )}
-                </div>
-              </Link>
+                id={p.id}
+                name={p.name}
+                code={p.code}
+                description={p.description}
+                start_date={p.start_date}
+                end_date={p.end_date}
+                budget_plan_id={p.budget_plan_id}
+                statusLabel={statusLabel}
+                statusClass={statusClass}
+                canAccess={canAccess}
+              />
             );
           })}
         </div>

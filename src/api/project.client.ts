@@ -154,3 +154,9 @@ export async function updateProjectObjectivesOutcomes(
     throw new Error(r.message ?? "Update objectives/outcomes failed");
   return r.data;
 }
+
+export async function fetchProjectInformation(projectId: string) {
+  return clientFetch<any>(`/api/projects/information?project_id=${encodeURIComponent(projectId)}`, {
+    method: "GET",
+  });
+}
