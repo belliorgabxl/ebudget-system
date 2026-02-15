@@ -13,7 +13,7 @@ import AddUserModal from "./AddUserModal";
 import UserDetailsModal from "./UserDetailsModal";
 import { useToast } from "@/components/ToastProvider";
 import BackGroundLight from "@/components/background/bg-light";
-import { Search, X } from "lucide-react";
+import { Search, X, Plus } from "lucide-react";
 
 /* -----------------------------
  * Table contract
@@ -205,19 +205,20 @@ export default function ClientManageUser() {
     <BackGroundLight>
       <main className="mx-auto max-w-7xl px-4 py-6">
         <div className="p-6 space-y-6">
-          <header className="flex items-center justify-between">
+          <header className="flex items-center justify-between mb-8 mt-12">
             <div>
-              <h1 className="text-2xl font-semibold">จัดการผู้ใช้งาน (Admin)</h1>
-              <div className="text-sm text-gray-500">
+              <h1 className="text-3xl font-bold text-gray-900">จัดการผู้ใช้งาน (Admin)</h1>
+              <p className="mt-1 text-sm text-gray-500">
                 จัดการผู้ใช้ทั้งหมดในระบบ
-              </div>
+              </p>
             </div>
 
             <button
               onClick={() => setAddOpen(true)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-white hover:bg-blue-700 transition-colors"
             >
-              + เพิ่มผู้ใช้
+              <Plus className="h-5 w-5" />
+              <span>เพิ่มผู้ใช้</span>
             </button>
           </header>
 

@@ -76,7 +76,7 @@ export const MENU: MenuItem[] = [
     href: "/organizer/approve",
     icon: FileCheck,
     label: "การอนุมัติ",
-    allow: ["director", "department_head", "planning", "hr"],
+    // No allow list - only check approval_level > 0
   },
   {
     id: "qa-coverage",

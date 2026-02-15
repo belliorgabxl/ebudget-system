@@ -78,10 +78,6 @@ export async function middleware(request: NextRequest) {
     if (["hr", "director", "admin"].includes(role)) return forbid();
   }
   
-  // /organizer/dashboard/hr - สำหรับ role code "hr"
-  if (pathStarts(pathname, "/organizer/dashboard/hr") && role !== "hr") {
-    return forbid();
-  }
   
   // /organizer/dashboard/director - สำหรับ role code "director"
   if (pathStarts(pathname, "/organizer/dashboard/director") && role !== "director") {

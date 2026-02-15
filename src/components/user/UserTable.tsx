@@ -199,7 +199,7 @@ export default function UsersTable({
           )}
           <TH className="w-2/12">ชื่อ</TH>
           <TH className="w-2/12">ตำแหน่ง</TH>
-          <TH className="w-3/12">แผนก</TH>
+          <TH className="w-3/12">อีเมล</TH>
           <TH className="w-1/12 text-center">สถานะใช้งาน</TH>
           <TH className="w-1/12" align="right">จัดการ</TH>
         </THead>

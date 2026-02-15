@@ -317,12 +317,34 @@ export async function UpdateUserStatusFromApi(
 }
 
 /**
- * PATCH /api/users/details
+ * PATCH /api/users/details (for regular users)
  */
 export async function UpdateUserFromApi(
   payload: UpdateUserRequest
 ): Promise<boolean> {
   const r = await clientFetch("/api/users/details", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+
+  return r.success;
+}
+
+/**
+ * PATCH /api/admin/users/details (for admin updating any user)
+ */
+export async function UpdateUserDetailsByAdmin(
+  payload: {
+    user_id: string;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    position?: string;
+    role_id?: number;
+    department_id?: string;
+  }
+): Promise<boolean> {
+  const r = await clientFetch("/api/admin/users/details", {
     method: "PATCH",
     body: JSON.stringify(payload),
   });

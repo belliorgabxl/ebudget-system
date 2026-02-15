@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { 
   Building, 
@@ -35,6 +35,24 @@ interface RecentActivity {
   status: "success" | "warning" | "info"
 }
 
+interface Organization {
+  id: string
+  name: string
+  code: string
+  description: string
+  totalBudget: number
+  totalDepartments: number
+  totalEmployees: number
+  totalProjects: number
+  status: "active" | "inactive"
+  createdAt: string
+  updatedAt: string
+  type?: string
+  max_approval_level?: number
+  is_active?: boolean
+  created_at?: string
+}
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<SystemStats>({
     totalOrganizations: 0,
@@ -46,64 +64,97 @@ export default function AdminDashboardPage() {
   })
 
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [tableLoading, setTableLoading] = useState(false)
+  const isInitialLoad = useRef(true)
 
   useEffect(() => {
-    // Simulate loading system data
-    setTimeout(() => {
-      const activeOrgs = MOCK_ORGANIZATIONS.filter(org => org.status === "active").length
-      const inactiveOrgs = MOCK_ORGANIZATIONS.filter(org => org.status === "inactive").length
-      
-      setStats({
-        totalOrganizations: MOCK_ORGANIZATIONS.length,
-        activeOrganizations: activeOrgs,
-        inactiveOrganizations: inactiveOrgs,
-        totalUsers: 1247,
-        totalProjects: 342,
-        systemUptime: 99.8
-      })
-
-      setRecentActivities([
-        {
-          id: "1",
-          type: "org_created",
-          message: "องค์กร 'บริษัท ABC จำกัด' ถูกสร้างขึ้น",
-          timestamp: "2 นาทีที่แล้ว",
-          status: "success"
-        },
-        {
-          id: "2",
-          type: "user_added",
-          message: "เพิ่มผู้ใช้ 15 คนในระบบ",
-          timestamp: "15 นาทีที่แล้ว",
-          status: "info"
-        },
-        {
-          id: "3",
-          type: "org_updated",
-          message: "อัพเดทข้อมูลองค์กร 'กรมสรรพากร'",
-          timestamp: "1 ชั่วโมงที่แล้ว",
-          status: "success"
-        },
-        {
-          id: "4",
-          type: "system_event",
-          message: "ระบบทำการ backup ข้อมูลเรียบร้อย",
-          timestamp: "2 ชั่วโมงที่แล้ว",
-          status: "success"
-        },
-        {
-          id: "5",
-          type: "system_event",
-          message: "การใช้งาน database เกิน 80%",
-          timestamp: "3 ชั่วโมงที่แล้ว",
-          status: "warning"
+    const loadData = async () => {
+      if (isInitialLoad.current) {
+        setLoading(true)
+      } else {
+        setTableLoading(true)
+      }
+      try {
+        // Fetch organizations with pagination
+        const orgResponse = await fetch(`/api/organizations?page=${currentPage}&limit=5`)
+        if (orgResponse.ok) {
+          const orgData = await orgResponse.json()
+          if (orgData.success) {
+            setOrganizations(orgData.data || [])
+            // Assuming the API returns total count
+            const total = orgData.total || orgData.data?.length || 0
+            setTotalPages(Math.ceil(total / 5))
+          }
         }
-      ])
 
-      setLoading(false)
-    }, 500)
-  }, [])
+        // Fetch dashboard stats from API
+        const statsResponse = await fetch('/api/admin/dashboard/stats')
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json()
+          if (statsData.success) {
+            setStats({
+              totalOrganizations: statsData.data.totalOrganizations || 0,
+              activeOrganizations: statsData.data.activeOrganizations || 0,
+              inactiveOrganizations: statsData.data.inactiveOrganizations || 0,
+              totalUsers: statsData.data.totalUsers || 0,
+              totalProjects: statsData.data.totalProjects || 0,
+              systemUptime: statsData.data.systemUptime || 0
+            })
+          }
+        }
+
+        setRecentActivities([
+          {
+            id: "1",
+            type: "org_created",
+            message: "องค์กร 'บริษัท ABC จำกัด' ถูกสร้างขึ้น",
+            timestamp: "2 นาทีที่แล้ว",
+            status: "success"
+          },
+          {
+            id: "2",
+            type: "user_added",
+            message: "เพิ่มผู้ใช้ 15 คนในระบบ",
+            timestamp: "15 นาทีที่แล้ว",
+            status: "info"
+          },
+          {
+            id: "3",
+            type: "org_updated",
+            message: "อัพเดทข้อมูลองค์กร 'กรมสรรพากร'",
+            timestamp: "1 ชั่วโมงที่แล้ว",
+            status: "success"
+          },
+          {
+            id: "4",
+            type: "system_event",
+            message: "ระบบทำการ backup ข้อมูลเรียบร้อย",
+            timestamp: "2 ชั่วโมงที่แล้ว",
+            status: "success"
+          },
+          {
+            id: "5",
+            type: "system_event",
+            message: "การใช้งาน database เกิน 80%",
+            timestamp: "3 ชั่วโมงที่แล้ว",
+            status: "warning"
+          }
+        ])
+      } catch (error) {
+        console.error('Error loading dashboard data:', error)
+      } finally {
+        setLoading(false)
+        setTableLoading(false)
+        isInitialLoad.current = false
+      }
+    }
+
+    loadData()
+  }, [currentPage])
 
   if (loading) {
     return (
@@ -114,8 +165,8 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gray-50">
-         <BackGroundLight>
+    <BackGroundLight>
+    <div className="relative min-h-screen">
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Header */}
           <div className="mb-8 mt-12">
@@ -159,10 +210,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">ผู้ใช้ในระบบ</p>
                   <p className="mt-2 text-3xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</p>
-                  <p className="mt-2 text-sm text-green-600 flex items-center">
-                    <TrendingUp className="mr-1 h-4 w-4" />
-                    +12% จากเดือนที่แล้ว
-                  </p>
+                
                 </div>
                 <div className="rounded-full bg-purple-100 p-4">
                   <Users className="h-8 w-8 text-purple-600" />
@@ -176,10 +224,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">โครงการทั้งหมด</p>
                   <p className="mt-2 text-3xl font-bold text-gray-900">{stats.totalProjects.toLocaleString()}</p>
-                  <p className="mt-2 text-sm text-blue-600 flex items-center">
-                    <TrendingUp className="mr-1 h-4 w-4" />
-                    +8% จากเดือนที่แล้ว
-                  </p>
+                  
                 </div>
                 <div className="rounded-full bg-green-100 p-4">
                   <FolderKanban className="h-8 w-8 text-green-600" />
@@ -188,103 +233,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Content Grid */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Recent Activities - Takes 2 columns */}
-            <div className="lg:col-span-2 rounded-xl bg-white shadow-sm border border-gray-200">
-              <div className="border-b border-gray-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-gray-900">กิจกรรมล่าสุด</h2>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-4 rounded-lg border border-gray-100 p-4 hover:bg-gray-50 transition-colors">
-                      <div className={`rounded-full p-2 ${
-                        activity.status === "success" ? "bg-green-100" :
-                        activity.status === "warning" ? "bg-yellow-100" :
-                        "bg-blue-100"
-                      }`}>
-                        {activity.status === "success" && <CheckCircle className="h-5 w-5 text-green-600" />}
-                        {activity.status === "warning" && <AlertCircle className="h-5 w-5 text-yellow-600" />}
-                        {activity.status === "info" && <Activity className="h-5 w-5 text-blue-600" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{activity.message}</p>
-                        <p className="mt-1 text-xs text-gray-500">{activity.timestamp}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
 
-            {/* System Info - Takes 1 column */}
-            <div className="space-y-6">
-              {/* System Health */}
-              <div className="rounded-xl bg-white shadow-sm border border-gray-200">
-                <div className="border-b border-gray-200 px-6 py-4">
-                  <h2 className="text-lg font-semibold text-gray-900">สถานะระบบ</h2>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Database className="h-5 w-5 text-gray-600" />
-                      <span className="text-sm text-gray-600">Database</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                      <span className="text-sm font-medium text-green-600">Online</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-gray-600" />
-                      <span className="text-sm text-gray-600">Security</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                      <span className="text-sm font-medium text-green-600">Protected</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-gray-600" />
-                      <span className="text-sm text-gray-600">API Status</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                      <span className="text-sm font-medium text-green-600">Healthy</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="rounded-xl bg-white shadow-sm border border-gray-200">
-                <div className="border-b border-gray-200 px-6 py-4">
-                  <h2 className="text-lg font-semibold text-gray-900">การจัดการ</h2>
-                </div>
-                <div className="p-6 space-y-2">
-                  <a
-                    href="/admin/manage-org"
-                    className="block w-full rounded-lg border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    จัดการองค์กร
-                  </a>
-                  <button
-                    className="block w-full rounded-lg border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    ตั้งค่าระบบ
-                  </button>
-                  <button
-                    className="block w-full rounded-lg border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    รายงานระบบ
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Organizations Overview */}
           <div className="mt-6 rounded-xl bg-white shadow-sm border border-gray-200">
@@ -302,54 +251,113 @@ export default function AdminDashboardPage() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">ชื่อองค์กร</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">หน่วยงาน</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">พนักงาน</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">โครงการ</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">ประเภท</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">วันที่สร้าง</th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">สถานะ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {MOCK_ORGANIZATIONS.slice(0, 5).map((org) => (
-                    <tr 
-                      key={org.id} 
-                      onClick={() => window.location.href = `/admin/manage-org/${org.id}`}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <Building className="h-5 w-5 text-gray-400" />
-                          <div>
-                            <p className="font-medium text-gray-900">{org.name}</p>
-                            <p className="text-sm text-gray-500">{org.code}</p>
+                  {tableLoading ? (
+                    // Skeleton loading rows
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <tr key={`skeleton-${index}`} className="animate-pulse">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-5 w-5 bg-gray-200 rounded"></div>
+                            <div>
+                              <div className="h-4 bg-gray-200 rounded w-32 mb-1"></div>
+                              <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-sm text-gray-900">{org.totalDepartments}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-sm text-gray-900">{org.totalEmployees}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-sm text-gray-900">{org.totalProjects}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                          org.status === "active" 
-                            ? "bg-green-100 text-green-700" 
-                            : "bg-gray-100 text-gray-700"
-                        }`}>
-                          {org.status === "active" ? "ใช้งาน" : "ปิดใช้งาน"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="h-4 bg-gray-200 rounded w-20 mx-auto"></div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="h-6 bg-gray-200 rounded-full w-16 mx-auto"></div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    organizations.map((org) => (
+                      <tr 
+                        key={org.id} 
+                        onClick={() => window.location.href = `/admin/manage-org/${org.id}`}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <Building className="h-5 w-5 text-gray-400" />
+                            <div>
+                              <p className="font-medium text-gray-900">{org.name}</p>
+                              <p className="text-sm text-gray-500">{org.code}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="text-sm text-gray-900">{org.type || "-"}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="text-sm text-gray-900">{org.created_at ? new Date(org.created_at).toLocaleDateString('th-TH') : "-"}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                            org.is_active 
+                              ? "bg-green-100 text-green-700" 
+                              : "bg-gray-100 text-gray-700"
+                          }`}>
+                            {org.is_active ? "true" : "false"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                <div className="text-sm text-gray-700">
+                  แสดงหน้า {currentPage} จาก {totalPages}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ก่อนหน้า
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 text-sm border rounded-md ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ถัดไป
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        </BackGroundLight>
       </div>
+      </BackGroundLight>
   )
 }

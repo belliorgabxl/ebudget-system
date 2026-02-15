@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { pickHomeByRole } from "@/lib/rbac";
@@ -33,12 +33,33 @@ const normalizePath = (p: string) => {
 
 export default function Sidebar({ serverUser }: { serverUser: ServerUser }) {
   const pathname = usePathname();
+  const [approvalLevel, setApprovalLevel] = useState<number>(serverUser?.approval_level ?? 0);
 
   const displayName = serverUser?.name ?? serverUser?.username ?? "Guest";
   const roleLabel = serverUser?.role_label ?? "ผู้ใช้";
   const rawRoleCode = serverUser?.role_key || "user";
   const roleCode = normalizeRoleCode(rawRoleCode);
-  const approvalLevel = serverUser?.approval_level ?? 0;
+
+  // Fetch approval_level from auth/me API
+  useEffect(() => {
+    const fetchApprovalLevel = async () => {
+      try {
+        const res = await fetch("/api/auth/me", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.approval_level === "number") {
+            setApprovalLevel(data.approval_level);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch approval level:", error);
+      }
+    };
+
+    fetchApprovalLevel();
+  }, []);
 
   const roleHome = useMemo(() => {
     const t = pickHomeByRole(rawRoleCode);

@@ -1,75 +1,66 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Save,
   LogOut,
-  Upload,
   PencilLine,
   X,
   KeyRound,
   Loader2,
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastProvider";
+import ChangePasswordModal from "@/components/user/ChangePasswordModal";
 
-const USE_MOCK_API = true;
+type ProfileData = {
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  position: string;
+  organization_name?: string;
+  department_name?: string;
+  role?: string;
+};
 
 type ProfilePayload = {
-  name: string;
+  username: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone: string;
-  position: string;
-  avatarUrl?: string | null;
+  position?: string;
 };
 
 type ApiResult<T = any> =
   | { ok: true; data: T }
   | { ok: false; message: string };
 
-async function uploadAvatar(file: File): Promise<ApiResult<{ url: string }>> {
-  if (USE_MOCK_API) {
-    const url = await new Promise<string>((res) => {
-      const r = new FileReader();
-      r.onload = () => res(String(r.result));
-      r.readAsDataURL(file);
-    });
-    await new Promise((r) => setTimeout(r, 500));
-    return { ok: true, data: { url } };
-  }
-
+async function fetchProfile(): Promise<ApiResult<ProfileData>> {
   try {
-    const fd = new FormData();
-    fd.append("file", file);
-    const resp = await fetch("/api/account/avatar", {
-      method: "POST",
-      body: fd,
+    const resp = await fetch("/api/users/me", {
+      cache: "no-store",
     });
-    if (!resp.ok)
-      return { ok: false, message: `Upload failed (${resp.status})` };
+    if (!resp.ok) return { ok: false, message: `Failed to fetch profile (${resp.status})` };
     const data = await resp.json();
-    return { ok: true, data };
+    if (!data.success) return { ok: false, message: data.message || "Failed to fetch profile" };
+    return { ok: true, data: data.data };
   } catch (e: any) {
-    return { ok: false, message: e?.message ?? "Upload error" };
+    return { ok: false, message: e?.message ?? "Fetch error" };
   }
 }
 
 async function saveProfile(payload: ProfilePayload): Promise<ApiResult> {
-  if (USE_MOCK_API) {
-    await new Promise((r) => setTimeout(r, 700));
-    return { ok: true, data: { updatedAt: new Date().toISOString() } };
-  }
-
   try {
-    const resp = await fetch("/api/account/profile", {
+    const resp = await fetch("/api/users/me", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     if (!resp.ok) return { ok: false, message: `Save failed (${resp.status})` };
     const data = await resp.json();
-    return { ok: true, data };
+    if (!data.success) return { ok: false, message: data.message || "Failed to save profile" };
+    return { ok: true, data: data.data };
   } catch (e: any) {
     return { ok: false, message: e?.message ?? "Save error" };
   }
@@ -79,20 +70,37 @@ export default function AccountSettingsPage() {
   const router = useRouter();
   const { push } = useToast();
 
-  const initial = {
-    name: "ภัทรจาริน นภากาญจน์",
-    email: "patarajarin.n@tcc-technology.com",
-    phone: "0812345678",
-    position: "Backend Developer",
-  };
-
-  const [form, setForm] = useState({ ...initial });
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [form, setForm] = useState<ProfileData>({
+    username: "",
+    first_name: "",
+    last_name: "",
+    email: "",
+    position: "",
+    organization_name: "",
+    department_name: "",
+    role: "",
+  });
+  const [originalData, setOriginalData] = useState<ProfileData | null>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      setLoadingData(true);
+      const result = await fetchProfile();
+      if (result.ok) {
+        setForm(result.data);
+        setOriginalData(result.data);
+      } else {
+        push("error", "โหลดข้อมูลไม่สำเร็จ", result.message);
+      }
+      setLoadingData(false);
+    };
+    loadProfile();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editing) return;
@@ -100,24 +108,34 @@ export default function AccountSettingsPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!editing) return;
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setAvatarPreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
   const emailValid = useMemo(
     () => /\S+@\S+\.\S+/.test(form.email),
     [form.email]
   );
-  const phoneValid = useMemo(
-    () => /^[0-9]{9,10}$/.test(form.phone.replace(/\D/g, "")),
-    [form.phone]
-  );
+
+  const handleChangePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      const res = await fetch("/api/users/me/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to change password");
+      }
+
+      push("success", "เปลี่ยนรหัสผ่านสำเร็จ", "รหัสผ่านถูกเปลี่ยนแล้ว");
+    } catch (err: any) {
+      push("error", "เปลี่ยนรหัสผ่านไม่สำเร็จ", err?.message || "เกิดข้อผิดพลาด");
+      throw err;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,28 +143,21 @@ export default function AccountSettingsPage() {
     setError(null);
 
     if (!emailValid) return setError("รูปแบบอีเมลไม่ถูกต้อง");
-    if (!phoneValid) return setError("เบอร์โทรศัพท์ควรเป็นตัวเลข 9–10 หลัก");
 
     setLoading(true);
     try {
-      let avatarUrl: string | null = null;
-      if (avatarFile) {
-        const up = await uploadAvatar(avatarFile);
-        if (!up.ok) throw new Error(up.message);
-        avatarUrl = up.data.url;
-      }
-
       const payload: ProfilePayload = {
-        name: form.name.trim(),
+        username: form.username.trim(),
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
         email: form.email.trim(),
-        phone: form.phone.trim(),
-        position: form.position,
-        avatarUrl,
+        position: form.position.trim(),
       };
 
       const res = await saveProfile(payload);
       if (!res.ok) throw new Error(res.message);
 
+      setOriginalData(form);
       push("success", "อัปเดตข้อมูลสำเร็จ");
       setEditing(false);
     } catch (err: any) {
@@ -159,9 +170,9 @@ export default function AccountSettingsPage() {
   };
 
   const handleCancel = () => {
-    setForm({ ...initial });
-    setAvatarFile(null);
-    setAvatarPreview(null);
+    if (originalData) {
+      setForm(originalData);
+    }
     setError(null);
     setEditing(false);
   };
@@ -179,9 +190,58 @@ export default function AccountSettingsPage() {
       setLoading(false);
     }
   };
-  const goChangePassword = () => {
-    router.push("/organizer/setup/change-password");
-  };
+
+  if (loadingData) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-80"></div>
+          </div>
+          <div className="h-10 bg-gray-200 rounded w-24"></div>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-xl space-y-6">
+          <div className="flex flex-col items-center justify-center gap-3">
+            <div className="h-24 w-24 bg-gray-200 rounded-full animate-pulse"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+            <div>
+              <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+            <div>
+              <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+            <div>
+              <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+            <div>
+              <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+            <div>
+              <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-4 pt-4">
+            <div className="h-10 bg-gray-200 rounded w-32"></div>
+            <div className="h-10 bg-gray-200 rounded w-24"></div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
@@ -221,69 +281,29 @@ export default function AccountSettingsPage() {
         className="rounded-xl border border-gray-200 bg-white p-6 shadow-xl space-y-6"
       >
         <div className="flex flex-col items-center justify-center gap-3">
-          <div className="relative h-24 w-24">
-            <Image
-              src={avatarPreview || "/user.jpg"}
-              alt="avatar"
-              fill
-              className="rounded-full object-cover border border-gray-200"
-            />
+          <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+            <span className="text-lg font-medium">
+              {form.username?.charAt(0)?.toUpperCase() || ""}
+              {form.username?.charAt(1)?.toUpperCase() || ""}
+            </span>
           </div>
-          <button
-            type="button"
-            disabled={!editing}
-            onClick={() => editing && fileRef.current?.click()}
-            className={`flex items-center gap-2 text-sm ${
-              editing
-                ? "text-indigo-600 hover:underline"
-                : "text-gray-400 cursor-not-allowed"
-            }`}
-            title={editing ? "อัปโหลดรูปใหม่" : "กดปุ่มแก้ไขก่อนจึงอัปโหลดได้"}
-          >
-            <Upload className="h-4 w-4" /> เปลี่ยนรูปโปรไฟล์
-          </button>
-          <input
-            ref={fileRef}
-            id="avatar"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleUpload}
-          />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              ชื่อ - นามสกุล
+              ชื่อผู้ใช้
             </label>
             <input
               type="text"
-              name="name"
-              value={form.name}
+              name="username"
+              value={form.username}
               onChange={handleChange}
               readOnly={!editing}
               aria-disabled={!editing}
               className={`${inputClass} ${
                 !editing ? "bg-gray-50 text-gray-500" : ""
               }`}
-              placeholder="ชื่อของคุณ"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              ตำแหน่ง{" "}
-              <span className="text-gray-400">(ล็อกแก้ไขโดยผู้ดูแล)</span>
-            </label>
-            <input
-              type="text"
-              name="position"
-              value={form.position}
-              readOnly
-              aria-disabled
-              className={`${inputClass} bg-gray-50 text-gray-500 cursor-not-allowed`}
-              title="แก้ไขได้โดยผู้ดูแลระบบเท่านั้น"
-              placeholder="เช่น อาจารย์ / เจ้าหน้าที่ / Developer"
+              placeholder="username"
             />
           </div>
 
@@ -312,26 +332,90 @@ export default function AccountSettingsPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              เบอร์โทรศัพท์
+              ชื่อจริง
             </label>
             <input
-              type="tel"
-              name="phone"
-              inputMode="numeric"
-              value={form.phone}
+              type="text"
+              name="first_name"
+              value={form.first_name}
               onChange={handleChange}
               readOnly={!editing}
               aria-disabled={!editing}
-              className={`${inputClass} ${phoneValid ? "" : "border-red-400"} ${
+              className={`${inputClass} ${
                 !editing ? "bg-gray-50 text-gray-500" : ""
               }`}
-              placeholder="08XXXXXXXX"
+              placeholder="ชื่อของคุณ"
             />
-            {!phoneValid && editing && (
-              <p className="mt-1 text-xs text-red-600">
-                กรุณากรอกเบอร์โทร 9–10 หลัก
-              </p>
-            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              นามสกุล
+            </label>
+            <input
+              type="text"
+              name="last_name"
+              value={form.last_name}
+              onChange={handleChange}
+              readOnly={!editing}
+              aria-disabled={!editing}
+              className={`${inputClass} ${
+                !editing ? "bg-gray-50 text-gray-500" : ""
+              }`}
+              placeholder="นามสกุลของคุณ"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              ตำแหน่ง
+            </label>
+            <input
+              type="text"
+              value={form.position || "-"}
+              readOnly
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+              placeholder="-"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              องค์กร
+            </label>
+            <input
+              type="text"
+              value={form.organization_name || "-"}
+              readOnly
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+              placeholder="-"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              แผนก
+            </label>
+            <input
+              type="text"
+              value={form.department_name || "-"}
+              readOnly
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+              placeholder="-"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              บทบาท
+            </label>
+            <input
+              type="text"
+              value={form.role || "-"}
+              readOnly
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+              placeholder="-"
+            />
           </div>
         </div>
 
@@ -344,7 +428,7 @@ export default function AccountSettingsPage() {
         <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-100">
           <button
             type="button"
-            onClick={goChangePassword}
+            onClick={() => setShowChangePassword(true)}
             className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <KeyRound className="h-4 w-4" />
@@ -375,6 +459,12 @@ export default function AccountSettingsPage() {
           )}
         </div>
       </form>
+
+      <ChangePasswordModal
+        open={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onConfirm={handleChangePassword}
+      />
     </main>
   );
 }

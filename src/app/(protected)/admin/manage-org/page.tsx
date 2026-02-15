@@ -196,13 +196,34 @@ export default function AdminManageOrgPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {loading ? (
-                      <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center">
-                          <div className="flex items-center justify-center">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-                          </div>
-                        </td>
-                      </tr>
+                      Array.from({ length: 10 }).map((_, index) => (
+                        <tr key={`skeleton-${index}`} className="animate-pulse">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                              <div>
+                                <div className="h-4 bg-gray-200 rounded w-32 mb-1"></div>
+                                <div className="h-3 bg-gray-200 rounded w-20"></div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <div className="h-6 bg-gray-200 rounded-full w-16 mx-auto"></div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                              <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                     ) : error ? (
                       <tr>
                         <td

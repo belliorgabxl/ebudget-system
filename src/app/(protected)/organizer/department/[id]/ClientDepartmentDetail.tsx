@@ -125,7 +125,7 @@ type TableUser = {
   id: string;
   name: string;
   title: string;
-  department: string;
+  email: string;
   isActive: boolean;
 };
 
@@ -183,10 +183,10 @@ export default function ClientDepartmentDetail({ id }: Props) {
 
         const mapped: TableUser[] = (res.users || []).map((u: any) => ({
           id: u.id,
-          name: u.name || "-",
-          title: u.title || "-",
-          department: u.department_name || "-",
-          isActive: u.isActive,
+          name: u.full_name || "-",
+          title: u.position || "-",
+          email: u.email || "-",
+          isActive: u.is_active,
         }));
 
         setUsers(mapped);

@@ -16,7 +16,7 @@ export function pickHomeByRole(roleCode?: string): string {
   
   // HR dashboard
   if (code === "hr") {
-    return "/organizer/dashboard/hr";
+    return "/organizer/department";
   }
   
   // User dashboard (สำหรับ role อื่นๆ ที่ไม่ใช่ admin, director, hr)

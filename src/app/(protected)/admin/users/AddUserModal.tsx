@@ -72,6 +72,7 @@ export default function AddUserModal({
     username: string;
     password: string;
     organization_name: string;
+    data?: any;
   } | null>(null);
 
   // field-level errors
@@ -308,14 +309,16 @@ export default function AddUserModal({
       const res = await CreateUserByAdminFromApi(payload);
       
       console.log("[AddUserModal] API Response:", res);
-      
-      // Check if creation was successful
-      if (!res || !res.ok) {
-        const serverMsg =
+    console.log("[AddUserModal] res.ok:", res?.ok);
+    
+    // Check if creation was successful
+    if (!res || !res.ok) {
+      console.log("[AddUserModal] API failed, showing error toast instead of success modal");
+          const msg =
           res?.message ||
           (res?.data && JSON.stringify(res.data)) ||
           "HTTP error";
-        push("error", "สร้างผู้ใช้ไม่สำเร็จ", serverMsg);
+        push("error", "สร้างผู้ใช้ไม่สำเร็จ", msg);
         console.error("CreateUserByAdminFromApi failed:", res);
         return;
       }
@@ -330,11 +333,13 @@ export default function AddUserModal({
         username: form.username,
         password: form.password,
         organization_name: selectedOrg?.name || form.organization_id,
+        data: res.data,
       });
       setShowSuccessModal(true);
+      console.log("[AddUserModal] Success modal set to show");
       
       // Don't close main modal yet, wait for success modal to close
-      onAdd(res.data ?? {});
+      // onAdd moved to success modal close button
     } catch (err: any) {
       console.error("CreateUser error:", err);
       const msg = err?.message ?? "เกิดข้อผิดพลาด";
@@ -828,6 +833,9 @@ export default function AddUserModal({
               <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
                 <button
                   onClick={() => {
+                    if (createdUserData?.data) {
+                      onAdd(createdUserData.data);
+                    }
                     setShowSuccessModal(false);
                     setCreatedUserData(null);
                     handleClose();

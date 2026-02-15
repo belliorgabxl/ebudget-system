@@ -7,6 +7,7 @@ import { GetRoleFromApi } from "@/api/role.client";
 import { fetchDepartments } from "@/api/department";
 import { UpdateUserFromApi } from "@/api/users.client";
 import { useToast } from "@/components/ToastProvider";
+import ResetPasswordModal from "@/components/user/ResetPasswordModal";
 import type { RoleRespond } from "@/dto/roleDto";
 import type { Department } from "@/dto/departmentDto";
 
@@ -42,6 +43,7 @@ export default function UserDetailsModal({ open, user, loading, error, onClose, 
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [optionsError, setOptionsError] = useState<string | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<number>(0);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const { push } = useToast();
 
   const makeEditable = (u?: GetUserRespond | null): Partial<GetUserRespond> | null => {
@@ -178,6 +180,31 @@ export default function UserDetailsModal({ open, user, loading, error, onClose, 
   const handleEditChange = (key: string, value: any) => {
     if (!editData) return;
     setEditData({ ...editData, [key]: value });
+  };
+
+  const handleResetPassword = async (newPassword: string) => {
+    try {
+      const userId = displayedUser?.id ?? user?.id;
+      if (!userId) throw new Error("User ID not found");
+
+      const res = await fetch("/api/users/hr/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, new_password: newPassword }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to reset password");
+      }
+
+      push("success", "รีเซ็ตรหัสผ่านสำเร็จ", "รหัสผ่านถูกเปลี่ยนแล้ว");
+      setShowResetPassword(false);
+    } catch (err: any) {
+      push("error", "รีเซ็ตรหัสผ่านไม่สำเร็จ", err?.message || "เกิดข้อผิดพลาด");
+      throw err;
+    }
   };
 
   const handleSave = async () => {
@@ -421,28 +448,36 @@ export default function UserDetailsModal({ open, user, loading, error, onClose, 
           )}
         </div>
 
-        <div className="px-6 pb-4 flex justify-end gap-2 border-t border-slate-200 pt-4">
+        <div className="px-6 pb-4 flex justify-between gap-2 border-t border-slate-200 pt-4">
           {!isEditing ? (
             <>
               <button
-                onClick={() => {
-                  setEditData(makeEditable(displayedUser));
-                  setIsEditing(true);
-                }}
-                className="rounded-lg bg-indigo-600 text-white px-4 py-2 text-sm font-medium hover:bg-indigo-700"
+                onClick={() => setShowResetPassword(true)}
+                className="rounded-lg bg-orange-600 text-white px-4 py-2 text-sm font-medium hover:bg-orange-700"
               >
-                แก้ไข
+                รีเซ็ตรหัสผ่าน
               </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setEditData(makeEditable(displayedUser));
+                    setIsEditing(true);
+                  }}
+                  className="rounded-lg bg-indigo-600 text-white px-4 py-2 text-sm font-medium hover:bg-indigo-700"
+                >
+                  แก้ไข
+                </button>
 
-              <button
-                onClick={() => {
-                  setEditData(displayedUser ? { ...displayedUser } : null);
-                  onClose();
-                }}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                ปิด
-              </button>
+                <button
+                  onClick={() => {
+                    setEditData(displayedUser ? { ...displayedUser } : null);
+                    onClose();
+                  }}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  ปิด
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -468,6 +503,14 @@ export default function UserDetailsModal({ open, user, loading, error, onClose, 
           )}
         </div>
       </div>
+
+      <ResetPasswordModal
+        open={showResetPassword}
+        userId={displayedUser?.id ?? ""}
+        username={displayedUser?.username ?? ""}
+        onClose={() => setShowResetPassword(false)}
+        onConfirm={handleResetPassword}
+      />
     </div>
   );
 }
