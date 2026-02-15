@@ -293,7 +293,7 @@ function demoMe(): Me {
   };
 }
 
-/** ---------- helpers ---------- */
+
 const cx = (...xs: Array<string | false | undefined | null>) => xs.filter(Boolean).join(" ");
 
 function formatTHB(n: number) {
@@ -315,7 +315,6 @@ function initials(name: string) {
   return (a + b).toUpperCase();
 }
 
-/** ---------- tiny svg icons (no libs) ---------- */
 function Icon({
   name,
   className,
@@ -527,7 +526,7 @@ function CardHeader({ title, desc, icon }: { title: string; desc?: string; icon?
         </div>
         {desc ? <p className="text-sm text-slate-600">{desc}</p> : null}
       </div>
-      <div className="hidden md:block">{/* right slot */}</div>
+      <div className="hidden md:block"></div>
     </div>
   );
 }
@@ -610,7 +609,6 @@ function Toggle({
   );
 }
 
-/** ---------- Modal ---------- */
 function Modal({
   open,
   onClose,
@@ -656,7 +654,6 @@ function Modal({
   );
 }
 
-/** ---------- Page ---------- */
 type TabKey = "overview" | "approvals" | "projects" | "security" | "prefs";
 
 export default function ProfilePage() {
@@ -1158,7 +1155,6 @@ export default function ProfilePage() {
   );
 }
 
-/** ---------- Sections ---------- */
 
 function Overview({ loading, me }: { loading: boolean; me: Me | null }) {
   return (
