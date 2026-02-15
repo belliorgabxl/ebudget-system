@@ -7,6 +7,7 @@ import {
   FileCheck,
   Users,
   DollarSign,
+  User,
 } from "lucide-react";
 
 // ใช้ role code เป็น string โดยตรง
@@ -97,6 +98,13 @@ export const MENU: MenuItem[] = [
     href: "/organizer/budget-settings",
     icon: DollarSign,
     label: "งบประมาณประจำปี",
+    allow: ["planning", "director", "department_user", "department_head", "hr"],
+  },
+  {
+    id: "profile",
+    href: "/organizer/profile",
+    icon: User,
+    label: "ข้อมูลผู้ใช้",
     allow: ["director"],
   },
   {
