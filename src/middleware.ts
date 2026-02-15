@@ -59,6 +59,7 @@ export async function middleware(request: NextRequest) {
 
     res.cookies.delete("auth_token");
     res.cookies.delete("api_token");
+    return res;
   }
 
   const role = payload.role;
