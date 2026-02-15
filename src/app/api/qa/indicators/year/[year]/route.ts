@@ -5,7 +5,11 @@ import { nestGet } from "@/lib/server-api";
  * GET /api/qa/indicators/year/[year]
  * Get paginated QA indicators for a specific year
  */
-export async function GET(req: Request, { params }: { params: { year: string } }) {
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ year: string }> }
+) {
+  const params = await context.params;
   try {
     const { searchParams } = new URL(req.url);
     const page = searchParams.get("page") || "1";

@@ -5,7 +5,11 @@ import { nestPut } from '@/lib/server-api'
  * PUT /api/roles/[id]
  * Proxy update to upstream and forward status/message
  */
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const params = await context.params;
   try {
     const body = await req.json();
 

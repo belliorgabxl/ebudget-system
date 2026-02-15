@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { BadgeCreateFormProject } from "../Helper";
 import { Department, GeneralInfoCreateParams } from "@/dto/projectDto";
 import { fetchDepartments } from "@/api/department";
-import { User } from "@/dto/userDto";
+import { GetUserRespond } from "@/dto/userDto";
 import { GetAllUsers } from "@/api/users";
 
 type Props = {
@@ -21,7 +21,7 @@ export default function GeneralInfoTable({ value, onChange }: Props) {
   );
 
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<GetUserRespond[]>([]);
 
   useEffect(() => {
     const loadDepartments = async () => {

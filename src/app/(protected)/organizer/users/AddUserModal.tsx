@@ -64,6 +64,7 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
   const [optionsError, setOptionsError] = useState<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string>("");
 
   // field-level errors
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
@@ -81,6 +82,15 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
       setLoadingOptions(true);
       setOptionsError(null);
       try {
+        // Fetch current user to get organization_id
+        const userRes = await fetch("/api/auth/me", { credentials: "include" });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData && userData.organization_id) {
+            setOrganizationId(userData.organization_id);
+          }
+        }
+
         const [r, d] = await Promise.all([GetRoleFromApi(), fetchDepartments()]);
         if (!mounted) return;
         setRoles(r);
@@ -199,13 +209,14 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
     }
 
     const payload: CreateUserRequest = {
-      department_id: form.department_id || "",
+      department_id: form.department_id || null,
       email: form.email,
       first_name: form.first_name,
       last_name: form.last_name,
+      organization_id: organizationId,
       username: form.username,
       password: form.password,
-      position: form.position,
+      position: form.position || null,
       role_id: (form.role_id as unknown) as number,
     };
 

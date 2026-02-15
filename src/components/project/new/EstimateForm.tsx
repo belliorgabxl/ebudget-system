@@ -4,7 +4,7 @@ import * as React from "react";
 import { BadgeCreateFormProject } from "../Helper";
 import { EstimateParams } from "@/dto/projectDto";
 import { GetAllUsers } from "@/api/users";
-import { User } from "@/dto/userDto";
+import { GetUserRespond } from "@/dto/userDto";
 
 type Props = {
   value?: EstimateParams;
@@ -21,7 +21,7 @@ export default function EstimateForm({ value, onChange }: Props) {
   const [startDate, setStartDate] = React.useState(value?.startDate ?? "");
   const [endDate, setEndDate] = React.useState(value?.endDate ?? "");
 
-  const [users, setUsers] = React.useState<User[]>([]);
+  const [users, setUsers] = React.useState<GetUserRespond[]>([]);
 
   React.useEffect(() => {
     onChange({

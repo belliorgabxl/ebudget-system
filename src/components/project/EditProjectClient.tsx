@@ -21,6 +21,7 @@ export default function EditProjectClient({
   const { push } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [form, setForm] = useState<EditFormState>(() =>
     mapApiToForm(initialData)
