@@ -18,6 +18,7 @@ import { toBudgetSourceType, toNumber } from "@/lib/helper";
 import { BudgetSectionDraft } from "@/dto/sectionupdate";
 import { KpiSection } from "../sections/KpiSection";
 import { ObjectiveOutcomeSection } from "../sections/ObjectiveOutcomeSection";
+import { ExportPDFDocument } from "@/components/button/ExportProjectButton";
 
 export function ProjectDetailClient({
   initialProject,
@@ -25,6 +26,7 @@ export function ProjectDetailClient({
   initialProject: Project;
 }) {
   const [project, setProject] = useState<Project>(initialProject);
+  const isApproved = project.budgetPlanStatus === "approved";
 
   const [editing, setEditing] = useState<EditKey | null>(null);
   const [savingKey, setSavingKey] = useState<EditKey | null>(null);
@@ -116,6 +118,17 @@ export function ProjectDetailClient({
         onCancel={cancelEdit}
         onSave={saveGeneralInfo}
       />
+      
+      {isApproved && (
+        <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">ไฟล์เอกสารโครงการ</h3>
+          <div className="flex items-center gap-4">
+            <ExportPDFDocument id={project.id} />
+            <span className="text-sm text-gray-600">ดาวน์โหลดเอกสารโครงการ (PDF)</span>
+          </div>
+        </div>
+      )}
+      
       <BudgetSection
         projectId={project.id}
         budget={project.budget}

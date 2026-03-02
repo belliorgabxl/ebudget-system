@@ -11,6 +11,7 @@ import {
 interface ProjectCountByDeptChartProps {
   data: Array<{
     department: string
+    department_code: string
     count: number
   }>
 }
@@ -46,7 +47,7 @@ export function ProjectCountByDeptChart({
         
         // Return top 6 + "อื่นๆ" if there are others
         return othersCount > 0 
-          ? [...top6, { department: "อื่นๆ", count: othersCount }]
+          ? [...top6, { department: "อื่นๆ", department_code: "อื่นๆ", count: othersCount }]
           : top6
       })()
     : data
@@ -103,6 +104,7 @@ export function ProjectCountByDeptChart({
             <div
               key={item.department}
               className="flex items-center gap-2"
+              title={item.department}
             >
               <span
                 className="h-3 w-3 rounded-sm"
@@ -111,7 +113,7 @@ export function ProjectCountByDeptChart({
                     COLORS[i % COLORS.length],
                 }}
               />
-              <span>{item.department}</span>
+              <span>{item.department_code || item.department}</span>
             </div>
           ))}
         </div>
@@ -123,8 +125,10 @@ export function ProjectCountByDeptChart({
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
-    const { name, value } = payload[0]
+    const { value } = payload[0]
     const fill = payload[0].payload.fill
+    const department = payload[0].payload.department
+    const departmentCode = payload[0].payload.department_code
 
     return (
       <div
@@ -137,7 +141,7 @@ const CustomTooltip = ({ active, payload }: any) => {
           className="mr-1 inline-block h-2 w-2 rounded-full"
           style={{ backgroundColor: fill }}  
         />
-        หน่วยงาน <b>{name}</b> มีโครงการ:{" "}
+        หน่วยงาน <b>{department}</b> ({departmentCode || department}) มีโครงการ:{" "}
         <b>{value}</b> โครงการ
       </div>
     )

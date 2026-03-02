@@ -10,6 +10,57 @@ type Props = {
   limit: number;
 };
 
+const getStatusBadge = (status?: string) => {
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    draft: {
+      label: "กำลังร่าง",
+      className: "bg-gray-100 text-gray-700 border-gray-300",
+    },
+    pending_approval: {
+      label: "รออนุมัติ",
+      className: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    },
+    in_progress: {
+      label: "กำลังดำเนินการ",
+      className: "bg-blue-100 text-blue-800 border-blue-300",
+    },
+    completed: {
+      label: "เสร็จสิ้น",
+      className: "bg-green-100 text-green-800 border-green-300",
+    },
+    cancelled: {
+      label: "ยกเลิก",
+      className: "bg-gray-100 text-gray-600 border-gray-300",
+    },
+    rejected: {
+      label: "ถูกปฏิเสธ",
+      className: "bg-red-100 text-red-800 border-red-300",
+    },
+    out_of_date: {
+      label: "หมดอายุ",
+      className: "bg-orange-100 text-orange-800 border-orange-300",
+    },
+  };
+
+  const config = status ? statusConfig[status] : null;
+
+  if (!config) {
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300">
+        —
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config.className}`}
+    >
+      {config.label}
+    </span>
+  );
+};
+
 export function ProjectsTable({ projects, page, limit }: Props) {
   return (
     <section className="w-full grid place-items-center relative sm:mx-0 overflow-x-auto ">
@@ -22,8 +73,8 @@ export function ProjectsTable({ projects, page, limit }: Props) {
               <Th className="w-20 text-xs whitespace-nowrap">รหัสโครงการ</Th>
               <Th className="w-50 whitespace-nowrap">หน่วยงาน</Th>
               <Th className="w-50 whitespace-nowrap">ระยะเวลา</Th>
-              <Th className="w-45 whitespace-nowrap">สถานที่</Th>
-              <Th className="w-50">ไฟล์</Th>
+              <Th className="w-45 whitespace-nowrap text-center">สถานะ</Th>
+              <Th className="w-50 text-center ">งบประมาณที่อนุมัติ</Th>
               <Th className="w-40 text-center">จัดการ</Th>
             </tr>
           </thead>
@@ -64,12 +115,12 @@ export function ProjectsTable({ projects, page, limit }: Props) {
                     {renderDateRange(p.start_date, p.end_date)}
                   </Td>
 
-                  <Td className="text-green-700 text-xs text-start py-1.5">
-                    {p.location ? p.location.slice(0, 30) : "—"}
+                  <Td className="text-center py-1.5">
+                    {getStatusBadge(p.status)}
                   </Td>
 
-                  <Td className="text-gray-700 py-3 flex justify-center items-center">
-                    <ExportPDFDocument id={p.id} />
+                  <Td className="text-gray-700 text-xs text-center py-1.5 pr-4">
+                    {p.approved_budget ? p.approved_budget.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
                   </Td>
 
                   <Td className="text-center py-1.5">

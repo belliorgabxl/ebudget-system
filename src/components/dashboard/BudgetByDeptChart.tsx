@@ -14,6 +14,7 @@ import { formatCompactNumber } from "@/lib/util"
 interface BudgetByDeptChartProps {
   data: {
     department: string
+    department_code: string
     budget: number
     actual: number
   }[]
@@ -47,11 +48,14 @@ export function BudgetByDeptChart({ data }: BudgetByDeptChartProps) {
           barCategoryGap="35%"
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="department" />
+          <XAxis dataKey="department_code" />
           <YAxis tickFormatter={(value) => formatCompactNumber(value)} />
           <Tooltip
             formatter={(v: number) => [`฿${formatCompactNumber(v)}`, "งบประมาณ"]}
-            labelFormatter={(label) => `หน่วยงาน: ${label}`}
+            labelFormatter={(label) => {
+              const item = data.find(d => d.department_code === label)
+              return item ? `${item.department} (${label})` : label
+            }}
           />
 
           <Bar

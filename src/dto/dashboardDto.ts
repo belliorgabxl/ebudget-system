@@ -37,6 +37,8 @@ export type GetProjectsByOrgRespond = {
   start_date?: string;
   end_date?: string;
   updated_by?: string;
+  status?: string;
+  approved_budget?: number;
 };
 
 export type Pagination = {
@@ -85,6 +87,7 @@ export type BudgetByYear = {
 
 export type BudgetByDepartment = {
   department: string;
+  department_code: string;
   budget: number;
   actual: number;
 };
@@ -96,6 +99,7 @@ export type BudgetByStatus = {
 
 export type ProjectCountByDepartment = {
   department: string;
+  department_code: string;
   count: number;
 };
 
