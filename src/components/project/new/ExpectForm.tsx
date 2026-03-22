@@ -8,10 +8,12 @@ import { Trash } from "lucide-react";
 type Props = {
   value: ExpectParams;
   onChange: (v: ExpectParams) => void;
+  locked?: boolean;
 };
 
-export default function ExpectForm({ value, onChange }: Props) {
+export default function ExpectForm({ value, onChange, locked = false }: Props) {
   const update = (idx: number, text: string) => {
+    if (locked) return;
     const clone = [...value.results];
     clone[idx] = {
       ...clone[idx],
@@ -21,6 +23,7 @@ export default function ExpectForm({ value, onChange }: Props) {
   };
 
   const addRow = () => {
+    if (locked) return;
     onChange({
       results: [
         ...value.results,
@@ -33,9 +36,14 @@ export default function ExpectForm({ value, onChange }: Props) {
   };
 
   const removeRow = (idx: number) => {
+    if (locked) return;
     const clone = value.results.filter((_, i) => i !== idx);
     onChange({ results: clone });
   };
+
+  const textareaCls = locked
+    ? "min-h-[120px] w-full rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-800 py-2 px-4 cursor-not-allowed"
+    : "min-h-[120px] w-full rounded-lg border border-gray-300 py-2 px-4";
 
   return (
     <div className="space-y-4">
@@ -48,11 +56,12 @@ export default function ExpectForm({ value, onChange }: Props) {
             <textarea
               value={item.description}
               onChange={(e) => update(idx, e.target.value)}
-              className="min-h-[120px] w-full rounded-lg border border-gray-300 py-2 px-4"
+              readOnly={locked}
+              className={textareaCls}
               placeholder={`ข้อที่ ${idx + 1}`}
             />
 
-            {value.results.length > 1 && (
+            {value.results.length > 1 && !locked && (
               <button
                 type="button"
                 onClick={() => removeRow(idx)}
@@ -64,6 +73,7 @@ export default function ExpectForm({ value, onChange }: Props) {
           </div>
         ))}
 
+        {!locked && (
         <button
           type="button"
           onClick={addRow}
@@ -71,6 +81,7 @@ export default function ExpectForm({ value, onChange }: Props) {
         >
           + เพิ่มผลที่คาดว่าจะได้รับ
         </button>
+        )}
       </div>
     </div>
   );

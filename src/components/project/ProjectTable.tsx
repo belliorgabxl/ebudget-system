@@ -1,13 +1,18 @@
 import Link from "next/link";
 import type { GetProjectsByOrgRespond } from "@/dto/dashboardDto";
-import { ExportPDFDocument } from "@/components/button/ExportProjectButton";
 import { renderDateRange } from "@/lib/helper";
 import { Td, Th } from "./ProjectHeader";
+import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+
+type SortDir = "asc" | "desc";
 
 type Props = {
   projects: GetProjectsByOrgRespond[];
   page: number;
   limit: number;
+  sortBy?: string;
+  sortDir?: SortDir;
+  onSort?: (field: string) => void;
 };
 
 const getStatusBadge = (status?: string) => {
@@ -61,7 +66,39 @@ const getStatusBadge = (status?: string) => {
   );
 };
 
-export function ProjectsTable({ projects, page, limit }: Props) {
+function SortIcon({ field, sortBy, sortDir }: { field: string; sortBy?: string; sortDir?: string }) {
+  if (sortBy !== field) return <ChevronsUpDown className="h-3.5 w-3.5 text-gray-400" />;
+  return sortDir === "asc"
+    ? <ChevronUp className="h-3.5 w-3.5 text-indigo-700" />
+    : <ChevronDown className="h-3.5 w-3.5 text-indigo-700" />;
+}
+
+function SortableTh({ field, sortBy, sortDir, onSort, children, className = "" }: {
+  field: string;
+  sortBy?: string;
+  sortDir?: string;
+  onSort?: (f: string) => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const active = sortBy === field;
+  return (
+    <th
+      onClick={() => onSort?.(field)}
+      className={`px-3 py-2 text-sm font-semibold text-center text-gray-700 select-none
+        ${onSort ? "cursor-pointer hover:bg-blue-300 transition-colors" : ""}
+        ${active ? "bg-blue-300" : ""}
+        ${className}`}
+    >
+      <span className="inline-flex items-center justify-center gap-1">
+        {children}
+        <SortIcon field={field} sortBy={sortBy} sortDir={sortDir} />
+      </span>
+    </th>
+  );
+}
+
+export function ProjectsTable({ projects, page, limit, sortBy, sortDir, onSort }: Props) {
   return (
     <section className="w-full grid place-items-center relative sm:mx-0 overflow-x-auto ">
       <div className="w-full overflow-y-auto rounded bg-white">
@@ -72,9 +109,15 @@ export function ProjectsTable({ projects, page, limit }: Props) {
               <Th className="w-100">ชื่อโครงการ</Th>
               <Th className="w-20 text-xs whitespace-nowrap">รหัสโครงการ</Th>
               <Th className="w-50 whitespace-nowrap">หน่วยงาน</Th>
-              <Th className="w-50 whitespace-nowrap">ระยะเวลา</Th>
-              <Th className="w-45 whitespace-nowrap text-center">สถานะ</Th>
-              <Th className="w-50 text-center ">งบประมาณที่อนุมัติ</Th>
+              <SortableTh field="start_date" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="w-50 whitespace-nowrap">
+                ระยะเวลา
+              </SortableTh>
+              <SortableTh field="status" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="w-45 whitespace-nowrap">
+                สถานะ
+              </SortableTh>
+              <SortableTh field="approved_budget" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="w-50">
+                งบประมาณที่อนุมัติ
+              </SortableTh>
               <Th className="w-40 text-center">จัดการ</Th>
             </tr>
           </thead>
@@ -143,3 +186,4 @@ export function ProjectsTable({ projects, page, limit }: Props) {
     </section>
   );
 }
+

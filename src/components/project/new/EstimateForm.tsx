@@ -9,14 +9,23 @@ import { GetUserRespond } from "@/dto/userDto";
 type Props = {
   value?: EstimateParams;
   onChange: (params: EstimateParams) => void;
+  lockedEvaluator?: boolean;
 };
 
-export default function EstimateForm({ value, onChange }: Props) {
+export default function EstimateForm({ value, onChange, lockedEvaluator = false }: Props) {
   const [estimateType, setEstimateType] = React.useState(
     value?.estimateType ?? ""
   );
 
   const [evaluator, setEvaluator] = React.useState(value?.evaluator ?? "");
+
+  // Sync evaluator from parent when locked (authUser loaded after mount)
+  React.useEffect(() => {
+    if (lockedEvaluator && value?.evaluator) {
+      setEvaluator(value.evaluator);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value?.evaluator]);
 
   const [startDate, setStartDate] = React.useState(value?.startDate ?? "");
   const [endDate, setEndDate] = React.useState(value?.endDate ?? "");
@@ -67,18 +76,30 @@ export default function EstimateForm({ value, onChange }: Props) {
       <div className="lg:flex grid gap-4 pb-4">
         <label className="font-medium">ผู้รับผิดชอบการประเมินผล</label>
 
-        <select
-          value={evaluator}
-          onChange={(e) => setEvaluator(e.target.value)}
-          className="ml-2 w-80 border-b border-gray-400 focus:outline-none bg-white"
-        >
-          <option value="">เลือกผู้รับผิดชอบ</option>
-          {users.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.full_name || u.username}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={evaluator}
+            onChange={(e) => !lockedEvaluator && setEvaluator(e.target.value)}
+            disabled={lockedEvaluator}
+            className={`ml-2 w-80 border-b focus:outline-none ${
+              lockedEvaluator
+                ? "bg-indigo-50 text-indigo-800 border-indigo-300 cursor-not-allowed"
+                : "bg-white border-gray-400"
+            }`}
+          >
+            <option value="">เลือกผู้รับผิดชอบ</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.full_name || u.username}
+              </option>
+            ))}
+          </select>
+          {lockedEvaluator && (
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-indigo-400 font-medium pointer-events-none">
+              จากบัญชีของคุณ
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="grid lg:flex gap-4">

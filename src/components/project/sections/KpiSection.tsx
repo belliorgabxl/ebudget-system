@@ -14,7 +14,6 @@ type Props = {
   onEdit: () => void;
   onCancel: () => void;
   onSave: (draft: KpiSectionDraft) => Promise<void> | void;
-//   loadKpis: () => Promise<KpiMaster[]>;
 };
 
 export function KpiSection({
@@ -26,22 +25,24 @@ export function KpiSection({
   onEdit,
   onCancel,
   onSave,
-//   loadKpis,
 }: Props) {
   const [allKpis, setAllKpis] = useState<KpiMaster[]>([]);
+  const [kpisLoading, setKpisLoading] = useState(false);
   const [draft, setDraft] = useState<KpiSectionDraft>({
     kpi_ids: [],
   });
 
   useEffect(() => {
     if (!isEditing) return;
-
-    // loadKpis().then(setAllKpis);
-
-    setDraft({
-      kpi_ids: selectedKpis.map((k) => k.id),
-    });
-  }, [isEditing, selectedKpis,]); // loadkpis แปะไว้กันลืมหว่ะ
+    setDraft({ kpi_ids: selectedKpis.map((k) => k.id) });
+    if (allKpis.length > 0) return;
+    setKpisLoading(true);
+    fetch("/api/kpis", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: KpiMaster[]) => setAllKpis(Array.isArray(data) ? data : []))
+      .catch(() => {})
+      .finally(() => setKpisLoading(false));
+  }, [isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedLabels = useMemo(() => {
     const selectedIds = selectedKpis.map((k) => k.id);
@@ -62,38 +63,69 @@ export function KpiSection({
       onSave={() => onSave(draft)}
     >
       {!isEditing ? (
-        <Field label="ตัวชี้วัดที่เลือก" value={selectedLabels || "—"} />
+        selectedKpis.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">ไม่มีข้อมูล</p>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-gray-200 mt-1">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-100">
+                <tr>
+                  <th className="w-12 px-4 py-2 text-left font-medium text-gray-600 border-r border-gray-200">ลำดับ</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-600">ตัวชี้วัด</th>
+                  <th className="w-36 px-4 py-2 text-left font-medium text-gray-600">เป้าหมาย</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {selectedKpis.map((k, i) => (
+                  <tr key={k.id} className="align-top">
+                    <td className="px-4 py-2 border-r border-gray-200 text-gray-500">{i + 1}</td>
+                    <td className="px-4 py-2">
+                      <p className="font-medium text-gray-800">{k.indicator || "—"}</p>
+                      {k.description && <p className="text-xs text-gray-500 mt-0.5">{k.description}</p>}
+                    </td>
+                    <td className="px-4 py-2 text-gray-700">{k.target_value ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       ) : (
         <div className="space-y-4">
           <BadgeLabel title="เลือกตัวชี้วัด (เลือกได้หลายข้อ)" />
-
-          <div className="space-y-2">
-            {allKpis.map((kpi) => {
-              const checked = draft.kpi_ids.includes(kpi.id);
-
-              return (
-                <label key={kpi.id} className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={(e) => {
-                      setDraft((d) => ({
-                        kpi_ids: e.target.checked
-                          ? [...d.kpi_ids, kpi.id]
-                          : d.kpi_ids.filter((id) => id !== kpi.id),
-                      }));
-                    }}
-                  />
-                  <span>
-                    {kpi.name}{" "}
-                    <span className="text-xs text-gray-500">
-                      ({kpi.type === "output" ? "ผลผลิต" : "ผลลัพธ์"})
+          {kpisLoading ? (
+            <p className="text-sm text-gray-400 italic">กำลังโหลด...</p>
+          ) : allKpis.length === 0 ? (
+            <p className="text-sm text-gray-400 italic">ไม่พบตัวชี้วัดในระบบ</p>
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {allKpis.map((kpi) => {
+                const checked = draft.kpi_ids.includes(kpi.id);
+                return (
+                  <label key={kpi.id} className="flex items-start gap-2 text-sm cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      className="mt-0.5"
+                      onChange={(e) => {
+                        setDraft((d) => ({
+                          kpi_ids: e.target.checked
+                            ? [...d.kpi_ids, kpi.id]
+                            : d.kpi_ids.filter((id) => id !== kpi.id),
+                        }));
+                      }}
+                    />
+                    <span>
+                      {kpi.name}{" "}
+                      <span className="text-xs text-gray-500">
+                        ({kpi.type === "output" ? "ผลผลิต" : "ผลลัพธ์"})
+                      </span>
                     </span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </SectionShell>

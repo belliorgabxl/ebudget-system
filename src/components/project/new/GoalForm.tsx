@@ -6,11 +6,16 @@ import { GoalParams } from "@/dto/projectDto";
 type Props = {
   value: GoalParams;
   onChange: (v: GoalParams) => void;
+  locked?: boolean;
 };
 
-export default function GoalForm({ value, onChange }: Props) {
+export default function GoalForm({ value, onChange, locked = false }: Props) {
   const update = (patch: Partial<GoalParams>) =>
-    onChange({ ...value, ...patch });
+    !locked && onChange({ ...value, ...patch });
+
+  const cls = locked
+    ? "min-h-[120px] w-full py-2 px-4 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-800 cursor-not-allowed"
+    : "min-h-[120px] w-full py-2 px-4 rounded-lg border border-gray-300";
 
   return (
     <div className="space-y-4">
@@ -19,7 +24,8 @@ export default function GoalForm({ value, onChange }: Props) {
       <textarea
         value={value.quantityGoal}
         onChange={(e) => update({ quantityGoal: e.target.value })}
-        className="min-h-[120px] w-full py-2 px-4 rounded-lg border border-gray-300"
+        readOnly={locked}
+        className={cls}
         placeholder="ระบุเป้าหมายเชิงปริมาณ เช่น จำนวนผู้เข้าร่วมอบรม 100 คน หรือผลิตภัณฑ์ที่ได้ 50 ชิ้น"
       />
 
@@ -27,7 +33,8 @@ export default function GoalForm({ value, onChange }: Props) {
       <textarea
         value={value.qualityGoal}
         onChange={(e) => update({ qualityGoal: e.target.value })}
-        className="min-h-[120px] w-full py-2 px-4 rounded-lg border border-gray-300"
+        readOnly={locked}
+        className={cls}
         placeholder="ระบุเป้าหมายเชิงคุณภาพ เช่น ผู้เรียนมีทักษะเพิ่มขึ้น หรือสถานศึกษามีภาพลักษณ์ที่ดีขึ้น"
       />
     </div>

@@ -98,6 +98,22 @@ export default function AdminManageOrgPage() {
       console.log("Create result:", result);
 
       if (result.ok) {
+        // Sync approval-workflow-config for the newly created organization
+        const newOrgId = result.data?.id;
+        if (newOrgId && org.approvalLevels.length > 0) {
+          try {
+            const workflowLevels = org.approvalLevels.map((lvl) => ({
+              level_number: lvl.level,
+            }));
+            await fetch("/api/approve/workflow-config", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ organization_id: newOrgId, levels: workflowLevels }),
+            });
+          } catch {
+            // non-critical
+          }
+        }
         setIsAddOpen(false);
         push('success', 'สร้างองค์กรสำเร็จ');
         // Reload data

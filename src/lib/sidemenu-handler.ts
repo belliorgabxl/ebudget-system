@@ -8,6 +8,7 @@ import {
   Users,
   DollarSign,
   User,
+  BookOpen,
 } from "lucide-react";
 
 // ใช้ role code เป็น string โดยตรง
@@ -63,6 +64,13 @@ export const MENU: MenuItem[] = [
     href: "/organizer/projects/my-project",
     icon: ClipboardList,
     label: "โครงการ",
+    allow: ["department_user", "department_head", "planning", "director"],
+  },
+  {
+    id: "regular-work-project",
+    href: "/organizer/projects/regular-work-project",
+    icon: BookOpen,
+    label: "แผนงานประจำ",
     allow: ["department_user", "department_head", "planning", "director"],
   },
   {

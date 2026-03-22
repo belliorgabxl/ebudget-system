@@ -28,11 +28,15 @@ export default function ApproveProjectClient({
     setLoading(true);
 
     try {
-      await processApprovalAction({
+      const result = await processApprovalAction({
         action: "approve",
         budget_plan_id: projectId,
         comments: "อนุมัติโครงการ",
       });
+
+      if (!result.success) {
+        throw new Error(result.message ?? "ไม่สามารถอนุมัติโครงการได้");
+      }
 
       setOpenApprove(false);
       push("success", "อนุมัติสำเร็จ");
@@ -50,11 +54,15 @@ export default function ApproveProjectClient({
     setLoading(true);
 
     try {
-      await processApprovalAction({
+      const result = await processApprovalAction({
         action: "request_revision",
         budget_plan_id: projectId,
         comments: reason?.trim() || "ขอให้แก้ไขเพิ่มเติม",
       });
+
+      if (!result.success) {
+        throw new Error(result.message ?? "ไม่สามารถส่งกลับโครงการได้");
+      }
 
       setOpenReturn(false);
       push("success", "ส่งกลับโครงการสำเร็จ");
@@ -72,12 +80,16 @@ export default function ApproveProjectClient({
     setLoading(true);
 
     try {
-      await processApprovalAction({
+      const result = await processApprovalAction({
         action: "reject",
         budget_plan_id: projectId,
         rejection_reason: reason?.trim() || "ไม่อนุมัติ",
         comments: reason?.trim(),
       });
+
+      if (!result.success) {
+        throw new Error(result.message ?? "ไม่สามารถทำรายการได้");
+      }
 
       setOpenReject(false);
       push("success", "ปฏิเสธโครงการสำเร็จ");

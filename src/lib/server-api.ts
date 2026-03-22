@@ -59,7 +59,7 @@ export async function nestFetch<T>(
       return { success: false, message: msg, status };
     }
 
-    const json = (await res.json()) as T;
+    const json = (await res.json().catch(() => ({}))) as T;
     return { success: true, data: json, status };
   } catch (e: any) {
     return { success: false, message: e?.message ?? "Unknown error" };
@@ -85,6 +85,13 @@ export const nestPut = <T>(path: string, body?: any) =>
 
 export const nestDelete = <T>(path: string) =>
   nestFetch<T>(path, { method: "DELETE" });
+
+export const nestPatch = <T>(path: string, body?: any) =>
+  nestFetch<T>(path, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
 
 
 export async function updateRole(id: string, data: any) {

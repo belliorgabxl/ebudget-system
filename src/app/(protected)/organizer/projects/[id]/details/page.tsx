@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { formatThaiDateTime, StatusBadge } from "@/components/project/Helper";
 import type {
-  ActivitiesRow,
   ApproveParams,
   BudgetTableValue,
   DateDurationValue,
   EstimateParams,
-  ExpectParams,
   GeneralInfoForUpdateData,
   GoalParams,
   ProjectInformationResponse,
@@ -19,25 +17,7 @@ import { fetchProjectInformationServer } from "@/api/project.server";
 import { ProjectDetailClient } from "@/components/project/details/ProjectDetailClient";
 import BackGroundLight from "@/components/background/bg-light";
 import ApprovalStatusButton from "@/components/project/approval/ApprovalStatusButton";
-
-type Project = {
-  id: string;
-  budgetPlanId?: string;
-  budgetPlanStatus: string;
-  status: "draft" | "in_progress" | "on_hold" | "done";
-  progress: number;
-  updatedAt: string;
-  project_objectives_and_outcomes: ProjectObjectiveOrOutcome[];
-  generalInfo: GeneralInfoForUpdateData;
-  strategy: StrategyParams;
-  duration: DateDurationValue;
-  budget: BudgetTableValue | null;
-  activities: ActivitiesRow[];
-  kpi: ProjectKPI[];
-  estimate: EstimateParams;
-  approve: ApproveParams;
-  goal: GoalParams;
-};
+import type { Project } from "@/types/project";
 
 async function getProject(id: string): Promise<Project | null> {
   try {
@@ -117,15 +97,27 @@ async function getProject(id: string): Promise<Project | null> {
         },
       } satisfies BudgetTableValue;
     }
-    const activities: ActivitiesRow[] = (apiData.progress || []).map(
-      (p, idx) => ({
-        id: p.sequence_number || idx + 1,
-        activity: p.description || "",
-        startDate: p.start_date || "",
-        endDate: p.end_date || "",
-        owner: p.responsible_name || "",
-      })
-    ) as any;
+    const rawProgress = (apiData.progress || []).map((p) => ({
+      id: p.id,
+      project_id: String(id),
+      start_date: p.start_date ?? null,
+      end_date: p.end_date ?? null,
+      sequence_number: p.sequence_number,
+      description: p.description || "",
+      responsible_name: p.responsible_name || "",
+      remarks: p.remarks || "",
+      updated_by: p.updated_by ?? null,
+      updated_at: p.updated_at || "",
+      budget_cost_used: (p as any).budget_cost_used ?? null,
+    }));
+
+    const activities = rawProgress.map((p, idx) => ({
+      id: p.sequence_number || idx + 1,
+      activity: p.description || "",
+      startDate: p.start_date || "",
+      endDate: p.end_date || "",
+      owner: p.responsible_name || "",
+    }));
 
     const strategy: StrategyParams = {
       schoolPlan: "",
@@ -201,7 +193,7 @@ async function getProject(id: string): Promise<Project | null> {
     const project: Project = {
       id,
       budgetPlanId: apiData.budget_plan_id,
-      status: "in_progress",
+      status: (apiData.project_status as Project["status"]) || "in_progress",
       progress: 0,
       updatedAt: apiData.updated_at,
       budgetPlanStatus: apiData.budget_plan_status,
@@ -210,6 +202,7 @@ async function getProject(id: string): Promise<Project | null> {
       duration,
       budget,
       activities,
+      rawProgress,
       kpi: kpis,
       estimate,
       project_objectives_and_outcomes: project_objectives_and_outcomes,
@@ -270,12 +263,12 @@ export default async function Page({ params }: { params: PageParams }) {
               {p.generalInfo?.name || "ไม่ระบุชื่อโครงการ"}
             </h1>
 
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+            <div className="mt-2 mb-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
               <StatusBadge status={p.status} />
 
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-gray-500">
                 อัปเดตล่าสุด:
-                <b className="text-gray-800">
+                <b className="text-gray-700">
                   {formatThaiDateTime(p.updatedAt)}
                 </b>
               </span>
@@ -285,6 +278,7 @@ export default async function Page({ params }: { params: PageParams }) {
             projectId={p.id}
             budgetPlanId={p.budgetPlanId}
             status={p.budgetPlanStatus}
+            progressList={p.rawProgress}
             processSteps={[
               {
                 title: "หัวหน้าแผนก",

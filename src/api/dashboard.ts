@@ -48,7 +48,14 @@ export async function GetProjectsByOrgFromApi(
   if (params.plan_type) qs.set("plan_type", params.plan_type);
   if (params.is_active !== undefined) qs.set("is_active", String(params.is_active));
   if (params.department_id) qs.set("department_id", params.department_id);
+  if (params.department_name) qs.set("department_name", params.department_name);
   if (params.start_date) qs.set("start_date", params.start_date);
+  if (params.end_date) qs.set("end_date", params.end_date);
+  if (params.status) qs.set("status", params.status);
+  if (params.budget_min !== undefined && params.budget_min !== "") qs.set("budget_min", String(params.budget_min));
+  if (params.budget_max !== undefined && params.budget_max !== "") qs.set("budget_max", String(params.budget_max));
+  if (params.sort_by) qs.set("sort_by", params.sort_by);
+  if (params.sort_dir) qs.set("sort_dir", params.sort_dir);
 
   const url = `/api/dashboard/projects${qs.toString() ? `?${qs.toString()}` : ""}`;
 

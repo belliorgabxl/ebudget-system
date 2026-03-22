@@ -9,10 +9,12 @@ import type {
   GeneralInfoForUpdateData,
   ProjectKPI,
   ProjectObjectiveOrOutcome,
+  ProjectProgress,
 } from "@/dto/projectDto";
 
 export type Project = {
   id: string;
+  budgetPlanId?: string;
   budgetPlanStatus: string;
   status: "draft" | "in_progress" | "on_hold" | "done";
   progress: number;
@@ -22,6 +24,7 @@ export type Project = {
   duration: DateDurationValue;
   budget: BudgetTableValue | null;
   activities: ActivitiesRow[];
+  rawProgress: ProjectProgress[];
   kpi: ProjectKPI[];
   estimate: EstimateParams;
   approve: ApproveParams;

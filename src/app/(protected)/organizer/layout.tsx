@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar"
 import TopBar from "@/components/TopBar"    
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SessionGuard from "@/components/SessionGuard";
 export const metadata: Metadata = { title: "E-Budget" }
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
@@ -60,6 +61,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <main className="">
         {children}
       </main>
+      <SessionGuard />
     </div>
   )
 }

@@ -27,6 +27,7 @@ function pathStarts(pathname: string, base: string) {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get("auth_token")?.value ?? null;
+  const refreshToken = request.cookies.get("refresh_token")?.value ?? null;
 
   if (isPublicPath(pathname)) {
     if (pathname !== "/403" && pathname !== "/auth/refresh" && token) {
@@ -42,9 +43,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const destination = pathname + (search || "");
+
   if (!token) {
+    // No auth_token at all
+    if (refreshToken) {
+      // Try silent refresh — redirect to GET /auth/refresh which re-issues cookies and bounces back
+      const refreshUrl = new URL("/auth/refresh", request.url);
+      refreshUrl.searchParams.set("redirect", destination);
+      return NextResponse.redirect(refreshUrl);
+    }
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname + (search || ""));
+    loginUrl.searchParams.set("redirect", destination);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -52,11 +62,19 @@ export async function middleware(request: NextRequest) {
   try {
     ({ payload } = await jwtVerify(token, JWT_SECRET));
   } catch (err) {
+    // auth_token expired or invalid
+    if (refreshToken) {
+      // Silent refresh
+      const refreshUrl = new URL("/auth/refresh", request.url);
+      refreshUrl.searchParams.set("redirect", destination);
+      const res = NextResponse.redirect(refreshUrl);
+      // Clear expired auth_token so the next request doesn't loop
+      res.cookies.set("auth_token", "", { maxAge: 0, path: "/" });
+      return res;
+    }
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname + (search || ""));
-
+    loginUrl.searchParams.set("redirect", destination);
     const res = NextResponse.redirect(loginUrl);
-
     res.cookies.delete("auth_token");
     res.cookies.delete("api_token");
     return res;

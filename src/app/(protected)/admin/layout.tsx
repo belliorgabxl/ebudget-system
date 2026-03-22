@@ -4,6 +4,7 @@ import { jwtVerify } from "jose"
 import Sidebar from "@/components/Sidebar"  
 import TopBar from "@/components/TopBar"    
 import SciFiBackgroundNormal from "@/components/background/bg-normal"
+import SessionGuard from "@/components/SessionGuard";
 
 export const metadata: Metadata = { title: "E-Budget" }
 
@@ -58,6 +59,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         
         {children}
       </main>
+      <SessionGuard />
     </div>
   )
 }

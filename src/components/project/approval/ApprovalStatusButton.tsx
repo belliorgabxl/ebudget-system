@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { SquareArrowUp, CheckCircle, Clock, XCircle } from "lucide-react";
+import { SquareArrowUp, Clock, XCircle, Flag } from "lucide-react";
 import { ClipboardClockIcon } from "@/components/icons/ClipboardClockIcon";
 import { useRouter } from "next/navigation";
-import { ProcessStep, ProcessTooltip } from "../details/ProgressDetail";
+import { useState } from "react";
+import type { ProcessStep } from "../details/ProgressDetail";
 
 interface ApprovalStatusButtonProps {
   projectId: string;
   budgetPlanId?: string;
   status: string;
   processSteps?: ProcessStep[];
+  progressList?: { budget_cost_used?: number | string | null }[];
 }
 
 export default function ApprovalStatusButton({
@@ -18,11 +20,36 @@ export default function ApprovalStatusButton({
   budgetPlanId,
   status,
   processSteps,
+  progressList,
 }: ApprovalStatusButtonProps) {
   const router = useRouter();
+  const [showDoneConfirm, setShowDoneConfirm] = useState(false);
+  const [completing, setCompleting] = useState(false);
+
+  const canComplete =
+    !progressList ||
+    progressList.length === 0 ||
+    progressList.every(
+      (p) => p.budget_cost_used !== null && p.budget_cost_used !== undefined && p.budget_cost_used !== ""
+    );
 
   const onNavigationToProcess = (budgetPlanId: string) => {
     router.push(`/organizer/approve/process/${budgetPlanId}`);
+  };
+
+  const handleCompleteProject = async () => {
+    setCompleting(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/complete`, { method: "PATCH" });
+      if (res.ok) {
+        router.refresh();
+      }
+    } catch {
+      // silently handle; status update is best-effort
+    } finally {
+      setCompleting(false);
+      setShowDoneConfirm(false);
+    }
   };
 
   if (status === "draft") {
@@ -41,13 +68,52 @@ export default function ApprovalStatusButton({
 
   if (status === "approved") {
     return (
-      <div className="flex gap-1">
-        <div
-          className="rounded-md flex justify-center items-center gap-3
-          bg-green-600 px-4 py-2 text-sm font-medium text-white cursor-default"
-        >
-          <CheckCircle className="h-5 w-5" />
-          โครงการได้รับการอนุมัติแล้ว
+      <div className="flex gap-1 flex-wrap items-center">
+        {/* Done confirm dialog */}
+        {showDoneConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+              <h2 className="text-base font-semibold text-gray-900">เสร็จสิ้นโครงการ</h2>
+              <p className="text-sm text-gray-600">
+                คุณต้องการยืนยันว่าโครงการนี้เสร็จสิ้นแล้วใช่หรือไม่?
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDoneConfirm(false)}
+                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleCompleteProject}
+                  disabled={completing}
+                  className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60"
+                >
+                  ยืนยัน
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="relative group">
+          <button
+            onClick={() => canComplete && setShowDoneConfirm(true)}
+            disabled={!canComplete}
+            className="rounded-md flex justify-center items-center gap-2
+              bg-emerald-600 px-4 py-2 text-sm font-medium text-white
+              hover:bg-emerald-700 transition
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
+          >
+            <Flag className="h-4 w-4" />
+            เสร็จสิ้นโครงการ
+          </button>
+          {!canComplete && (
+            <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2
+              whitespace-nowrap rounded-md bg-gray-900 px-3 py-1.5 text-xs text-white
+              opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+              กรุณากรอกยอดใช้จริงทุกรายการความคืบหน้าก่อน
+            </div>
+          )}
         </div>
         {budgetPlanId && (
           <div className="relative group">
@@ -68,15 +134,6 @@ export default function ApprovalStatusButton({
             >
               กดเพื่อดูสถานะการอนุมัติ
             </div>
-            {processSteps?.length ? (
-              <div className="mt-16 pointer-events-none absolute -top-9 -left-20
-             -translate-x-1/2
-                whitespace-nowrap  px-3 py-1.5 text-xs text-white
-                opacity-0 transition-opacity duration-200
-                group-hover:opacity-100">
-                <ProcessTooltip steps={processSteps} />
-              </div>
-            ) : null}
           </div>
         )}
       </div>
@@ -112,15 +169,6 @@ export default function ApprovalStatusButton({
             >
               กดเพื่อดูสถานะการอนุมัติ
             </div>
-             {processSteps?.length ? (
-              <div className="mt-16 pointer-events-none absolute -top-9 -left-20
-             -translate-x-1/2
-                whitespace-nowrap  px-3 py-1.5 text-xs text-white
-                opacity-0 transition-opacity duration-200
-                group-hover:opacity-100">
-                <ProcessTooltip steps={processSteps} />
-              </div>
-            ) : null}
           </div>
         )}
       </div>

@@ -1,7 +1,8 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Loader2, Save } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Save, ListChecks, Briefcase } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import {
   ActivitiesRow,
@@ -13,6 +14,7 @@ import {
   GoalParams,
   KPIParams,
   ObjectiveParams,
+  RegularWorkTemplate,
   StrategyParams,
   ValidationIssue,
 } from "@/dto/projectDto";
@@ -32,7 +34,7 @@ import { generateSixDigitCode } from "@/lib/util";
 import ObjectiveForm from "@/components/project/new/ObjectiveForm";
 import { toast } from "react-toastify";
 import { validateStep } from "@/lib/helper";
-import { createProject } from "@/api/project.client";
+import { createProject, getRegularWorkTemplates } from "@/api/project.client";
 
 const steps = [
   "ข้อมูลพื้นฐาน",
@@ -81,6 +83,90 @@ export default function CreateProjectPage() {
 
     loadUser();
   }, []);
+
+  // Project type selection state: null = not selected yet, "general" = ทั่วไป, "regular" = แผนงานประจำ
+  const [projectTypeChoice, setProjectTypeChoice] = useState<"general" | "regular" | null>(null);
+  const [regularTemplates, setRegularTemplates] = useState<RegularWorkTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<RegularWorkTemplate | null>(null);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+
+  const loadRegularTemplates = useCallback(async () => {
+    setLoadingTemplates(true);
+    try {
+      const items = await getRegularWorkTemplates();
+      setRegularTemplates(items);
+    } catch {
+      toast.error("โหลดแผนงานประจำไม่สำเร็จ");
+    } finally {
+      setLoadingTemplates(false);
+    }
+  }, []);
+
+  // Auto-fill generalInfo when a regular template is selected
+  const handleSelectTemplate = (template: RegularWorkTemplate) => {
+    setSelectedTemplate(template);
+    setGeneralInfo((prev) => ({
+      ...prev,
+      name: template.name,
+      type: template.plan_type || "regular_work",
+      description: template.description ?? "",
+      department_id: template.department_id ?? prev.department_id,
+      owner_user_id: prev.owner_user_id || authUser?.id || "",
+    }));
+    setEstimate((prev) => ({ ...prev, evaluator: prev.evaluator || authUser?.id || "" }));
+    if (template.rationale) setRetional(template.rationale);
+    if (template.quantitative_goal || template.qualitative_goal) {
+      setGoal({
+        quantityGoal: template.quantitative_goal ?? "",
+        qualityGoal: template.qualitative_goal ?? "",
+      });
+    }
+  };
+
+  const filteredTemplates = regularTemplates.filter((t) =>
+    t.name.toLowerCase().includes(templateSearch.toLowerCase())
+  );
+
+  const resetFormState = useCallback(() => {
+    setGeneralInfo({ name: "", type: "", department_id: "", owner_user_id: "", description: "" });
+    setRetional("");
+    setGoal({ quantityGoal: "", qualityGoal: "" });
+    setBudget(null);
+    setKpi({ output: "", outcome: "" });
+    setObjective({ results: [{ description: "", type: "objective" }] });
+    setExpectation({ results: [{ description: "", type: "expectation" }] });
+    setDateDur({ startDate: "", endDate: "", durationMonths: 0 });
+    setLocation("");
+    setStrategy({ schoolPlan: "", ovEcPolicy: "", qaIndicator: "" });
+    setActivity([{ id: 1, activity: "", startDate: "", endDate: "", owner: "" }]);
+    setEstimate({ estimateType: "", evaluator: "", startDate: "", endDate: "" });
+    setStep(0);
+    setFormKey((k) => k + 1);
+  }, []);
+
+  // Reset all form state every time the type-selection screen is shown (projectTypeChoice === null)
+  useEffect(() => {
+    if (projectTypeChoice === null) {
+      resetFormState();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectTypeChoice]);
+
+  // Auto-fill owner_user_id, department_id from authUser when loaded
+  useEffect(() => {
+    if (!authUser) return;
+    setGeneralInfo((prev) => ({
+      ...prev,
+      owner_user_id: prev.owner_user_id || authUser.id,
+      department_id: prev.department_id || (authUser.department_id ?? ""),
+    }));
+    setEstimate((prev) => ({
+      ...prev,
+      evaluator: prev.evaluator || authUser.id,
+    }));
+  }, [authUser]);
 
   // setup state
   const router = useRouter();
@@ -237,6 +323,7 @@ export default function CreateProjectPage() {
       qualitative_goal: goal.qualityGoal,
       rationale: retaional,
       updated_by: generalInfo.owner_user_id,
+      regular_work_template_id: selectedTemplate?.id ?? undefined,
 
       budgets: budget
         ? {
@@ -357,30 +444,172 @@ export default function CreateProjectPage() {
 
   return (
     <main className="lg:mx-auto lg:max-w-7xl w-full px-2 lg:px-6 py-0">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+      <h1 className="text-2xl font-semibold text-gray-900 mb-1 mt-10">
         สร้างโครงการใหม่
       </h1>
       <p className="text-sm text-gray-600 mb-6">
         กรอกข้อมูลทั้งหมดเพื่อสร้างโครงการ
       </p>
-      <div className="flex items-start gap-2 mb-6">
-        {steps.map((label, index) => (
-          <div key={index} className="flex-1">
-            <div
-              className={`h-2 rounded-full ${
-                index <= step ? "bg-indigo-600" : "bg-gray-200"
-              }`}
-            />
-            <p
-              className={`text-[10px] lg:block hidden mt-1 text-center ${
-                index === step ? "text-indigo-700 font-medium" : "text-gray-500"
-              }`}
-            >
-              {label}
+
+      {/* ── Step 0: Project type selection ── */}
+      {projectTypeChoice === null && (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="type-select"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <button
+                onClick={() => router.back()}
+                className="text-sm text-indigo-600 hover:underline flex items-center gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" /> ย้อนกลับ
+              </button>
+            </div>
+            <p className="text-base font-medium text-gray-700">
+              เลือกประเภทโครงการที่ต้องการสร้าง
             </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+              {/* ทั่วไป */}
+              <button
+                onClick={() => {
+                  resetFormState();
+                  setProjectTypeChoice("general");
+                  setGeneralInfo({ name: "", type: "project", department_id: authUser?.department_id ?? "", owner_user_id: authUser?.id ?? "", description: "" });
+                  setEstimate((prev) => ({ ...prev, evaluator: authUser?.id ?? "" }));
+                }}
+                className="flex flex-col items-center gap-3 rounded-xl border-2 border-gray-200 p-6 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+              >
+                <Briefcase className="h-10 w-10 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                <span className="text-base font-semibold text-gray-800 group-hover:text-indigo-700">
+                  ทั่วไป
+                </span>
+                <span className="text-xs text-gray-500 text-center">
+                  สร้างโครงการใหม่ตามแบบฟอร์มมาตรฐาน
+                </span>
+              </button>
+
+              {/* แผนงานประจำ */}
+              <button
+                onClick={() => {
+                  resetFormState();
+                  setProjectTypeChoice("regular");
+                  loadRegularTemplates();
+                }}
+                className="flex flex-col items-center gap-3 rounded-xl border-2 border-gray-200 p-6 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+              >
+                <ListChecks className="h-10 w-10 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                <span className="text-base font-semibold text-gray-800 group-hover:text-indigo-700">
+                  แผนงานประจำ
+                </span>
+                <span className="text-xs text-gray-500 text-center">
+                  เลือกแผนงานประจำที่มีในระบบเพื่อสร้างแผนงบประมาณ
+                </span>
+              </button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      )}
+
+      {/* ── Step 0.5: Regular template picker ── */}
+      {projectTypeChoice === "regular" && selectedTemplate === null && (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="template-picker"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-4 max-w-2xl"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <button
+                onClick={() => { setProjectTypeChoice(null); setSelectedTemplate(null); setRegularTemplates([]); setTemplateSearch(""); resetFormState(); }}
+                className="text-sm text-indigo-600 hover:underline flex items-center gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" /> ย้อนกลับ
+              </button>
+            </div>
+            <p className="text-base font-medium text-gray-700">
+              เลือกแผนงานประจำ
+            </p>
+            <input
+              type="text"
+              value={templateSearch}
+              onChange={(e) => setTemplateSearch(e.target.value)}
+              placeholder="ค้นหาแผนงานประจำ..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+
+            {loadingTemplates ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
+              </div>
+            ) : filteredTemplates.length === 0 ? (
+              <p className="text-sm text-gray-500 py-6 text-center">
+                ไม่พบแผนงานประจำในระบบ
+              </p>
+            ) : (
+              <ul className="divide-y border rounded-lg overflow-hidden">
+                {filteredTemplates.map((t) => (
+                  <li key={t.id}>
+                    <button
+                      onClick={() => handleSelectTemplate(t)}
+                      className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors"
+                    >
+                      <p className="font-medium text-gray-800 text-sm">{t.name}</p>
+                      {t.description && (
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{t.description}</p>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      )}
+
+      {/* ── Main form (shown after type selection) ── */}
+      {(projectTypeChoice === "general" || (projectTypeChoice === "regular" && selectedTemplate !== null)) && (
+        <React.Fragment key={formKey}>
+          {/* Show selected template badge for regular plan */}
+          {projectTypeChoice === "regular" && selectedTemplate && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-2 text-sm">
+              <ListChecks className="h-4 w-4 text-indigo-500 shrink-0" />
+              <span className="text-gray-700">
+                แผนงานประจำ:{" "}
+                <span className="font-semibold text-indigo-700">{selectedTemplate.name}</span>
+              </span>
+              <button
+                onClick={() => { setSelectedTemplate(null); resetFormState(); }}
+                className="ml-auto text-xs text-gray-400 hover:text-gray-700"
+              >
+                เปลี่ยน
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-start gap-2 mb-6">
+            {steps.map((label, index) => (
+              <div key={index} className="flex-1">
+                <div
+                  className={`h-2 rounded-full ${
+                    index <= step ? "bg-indigo-600" : "bg-gray-200"
+                  }`}
+                />
+                <p
+                  className={`text-[10px] lg:block hidden mt-1 text-center ${
+                    index === step ? "text-indigo-700 font-medium" : "text-gray-500"
+                  }`}
+                >
+                  {label}
+                </p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
       <div className="relative min-h-[320px]">
         <AnimatePresence mode="wait">
@@ -393,7 +622,12 @@ export default function CreateProjectPage() {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <GeneralInfoTable onChange={setGeneralInfo} value={generalInfo} />
+              <GeneralInfoTable
+                key={selectedTemplate?.id ?? "default"}
+                onChange={setGeneralInfo}
+                value={generalInfo}
+                lockedFields={projectTypeChoice === "regular" ? ["name" as const, "type" as const, "description" as const, "department_id" as const] : ["type" as const]}
+              />
             </motion.div>
           )}
           {step === 1 && (
@@ -417,9 +651,14 @@ export default function CreateProjectPage() {
             >
               <BadgeCreateFormProject title="หลักการและเหตุผล" />
               <textarea
-                onChange={(e) => setRetional(e.target.value)}
+                onChange={(e) => projectTypeChoice !== "regular" && setRetional(e.target.value)}
                 value={retaional}
-                className="input min-h-[120px] w-full py-1 px-4 rounded-lg border border-gray-300"
+                readOnly={projectTypeChoice === "regular"}
+                className={`input min-h-[120px] w-full py-1 px-4 rounded-lg border ${
+                  projectTypeChoice === "regular"
+                    ? "border-indigo-200 bg-indigo-50 text-indigo-800 cursor-not-allowed"
+                    : "border-gray-300"
+                }`}
                 placeholder="ระบุหลักการและเหตุผล..."
               />
             </motion.div>
@@ -440,7 +679,7 @@ export default function CreateProjectPage() {
                 placeholder="ระบุวัตถุประสงค์ของโครงการ..."
               /> */}
 
-              <ObjectiveForm value={objective} onChange={setObjective} />
+              <ObjectiveForm value={objective} onChange={setObjective} locked={false} />
             </motion.div>
           )}
           {step === 4 && (
@@ -451,7 +690,7 @@ export default function CreateProjectPage() {
               exit={{ opacity: 0, x: 40 }}
               className="space-y-4"
             >
-              <GoalForm value={goal} onChange={handleGoalChange} />
+              <GoalForm value={goal} onChange={handleGoalChange} locked={projectTypeChoice === "regular" && !!(selectedTemplate?.quantitative_goal || selectedTemplate?.qualitative_goal)} />
             </motion.div>
           )}
           {step === 5 && (
@@ -519,7 +758,7 @@ export default function CreateProjectPage() {
               exit={{ opacity: 0, x: 40 }}
               className="space-y-4"
             >
-              <KPIForm value={kpi} onChange={handleKpiChange} />
+              <KPIForm value={kpi} onChange={handleKpiChange} locked={false} />
             </motion.div>
           )}
           {step === 10 && (
@@ -541,7 +780,7 @@ export default function CreateProjectPage() {
               exit={{ opacity: 0, x: 40 }}
               className="space-y-4"
             >
-              <ExpectForm value={expectation} onChange={handleExpectChange} />
+              <ExpectForm value={expectation} onChange={handleExpectChange} locked={false} />
             </motion.div>
           )}
           {/* {step === 12 && (
@@ -575,10 +814,8 @@ export default function CreateProjectPage() {
 
       <div className="mt-8 flex items-center justify-between">
         <button
-          onClick={prev}
-          disabled={step === 0}
-          className="flex items-center gap-1 text-gray-700 hover:text-gray-900 enabled:hover:bg-slate-200 
-          py-1 px-4 rounded-sm disabled:opacity-40"
+          onClick={step === 0 ? () => { setProjectTypeChoice(null); setSelectedTemplate(null); setRegularTemplates([]); setTemplateSearch(""); } : prev}
+          className="flex items-center gap-1 text-gray-700 hover:text-gray-900 hover:bg-slate-200 py-1 px-4 rounded-sm"
         >
           <ChevronLeft className="h-4 w-4" /> ย้อนกลับ
         </button>
@@ -609,6 +846,8 @@ export default function CreateProjectPage() {
           </div>
         )}
       </div>
+        </React.Fragment>
+      )}
     </main>
   );
 }

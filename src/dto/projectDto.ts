@@ -1,3 +1,17 @@
+export interface RegularWorkTemplate {
+  id: string;
+  organization_id: string;
+  department_id?: string | null;
+  name: string;
+  description: string;
+  plan_type: string;
+  rationale: string;
+  quantitative_goal: string;
+  qualitative_goal: string;
+  display_order: number;
+  is_active: boolean;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -141,6 +155,7 @@ export type ObjectiveParams = {
 
 export interface ProjectInformationResponse {
   project_name: string;
+  project_status?: string;
   plan_type: string;
   project_code: string;
   project_description:string;
@@ -200,6 +215,15 @@ export interface ProjectProgress {
   remarks: string;
   updated_by: string | null;
   updated_at: string;
+  budget_cost_used?: number | null;
+}
+
+export interface ProjectProgressFile {
+  id: number;
+  progress_id: number;
+  file_name: string;
+  file_key: string;
+  created_at: string;
 }
 
 export interface ProjectKPI {

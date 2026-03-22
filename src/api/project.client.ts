@@ -8,6 +8,7 @@ import {
   GeneralInfoForUpdateData,
   KpiMaster,
   ProjectListItem,
+  RegularWorkTemplate,
 } from "@/dto/projectDto";
 import { normalizeDateOnly } from "@/lib/helper";
 import { UpdateBudgetPlanPayload } from "@/app/api/budget/update-by-project/route";
@@ -77,6 +78,13 @@ export async function getProjects(params: {
   }
 
   return r.data ?? [];
+}
+
+export async function getRegularWorkTemplates(): Promise<RegularWorkTemplate[]> {
+  const r = await clientFetch<RegularWorkTemplate[]>("/api/regular-work-templates", {
+    cache: "no-store",
+  });
+  return r.success ? r.data ?? [] : [];
 }
 
 export async function updateProjectDetail(

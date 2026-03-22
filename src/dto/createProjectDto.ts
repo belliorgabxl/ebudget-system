@@ -60,6 +60,7 @@ export interface CreateProjectPayload {
   organization_id: string;
   owner_user_id: string;
   plan_type: string; 
+  regular_work_template_id?: string;
   project_kpis?: ProjectKPI[];
   project_objective_and_outcomes?: ProjectObjectiveOutcome[];
   project_progress?: ProjectProgress[];

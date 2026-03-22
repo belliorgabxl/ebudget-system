@@ -142,6 +142,15 @@ export async function POST(req: Request) {
       priority: "high",
     });
 
+    // เซ็ต token_exp (readable by JS) เพื่อให้ SessionGuard อ่านเวลาหมดอายุได้
+    res.cookies.set("token_exp", String(Math.floor(Date.now() / 1000) + expiretoken), {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      path: "/",
+      maxAge: expiretoken,
+    });
+
     // เซ็ต refresh_token เป็น httpOnly cookie (ตัวอย่าง 30 วัน)
     const refreshMaxAge = 30 * 24 * 3600; // 30 days in seconds
     if (externalRefreshToken) {

@@ -65,9 +65,16 @@ export type ProjectsQuery = {
   name?: string;
   code?: string;
   plan_type?: string;
-  is_active?: boolean | string; 
+  is_active?: boolean | string;
   department_id?: string;
-  start_date?: string; 
+  department_name?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+  budget_min?: number | string;
+  budget_max?: number | string;
+  sort_by?: string;
+  sort_dir?: string;
 };
 
 // Dashboard KPI Types

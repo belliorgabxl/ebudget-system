@@ -51,6 +51,19 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+type OrgQuota = {
+  id: string;
+  organization_id: string;
+  max_users: number;
+  current_users: number;
+  user_usage_percent: number;
+  max_storage_bytes: number;
+  used_storage_bytes: number;
+  max_storage_mb: number;
+  used_storage_mb: number;
+  storage_usage_percent: number;
+};
+
 export default function OrgDetailPage() {
   const params = useParams();
   const orgId = params?.id as string;
@@ -59,7 +72,7 @@ export default function OrgDetailPage() {
   const [org, setOrg] = useState<OrganizationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingTabs, setLoadingTabs] = useState(false);
-  const [activeTab, setActiveTab] = useState<"employees" | "departments" | "roles">("employees");
+  const [activeTab, setActiveTab] = useState<"employees" | "departments" | "roles" | "quota">("employees");
   const [isEditingOpen, setIsEditingOpen] = useState(false);
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
@@ -69,6 +82,8 @@ export default function OrgDetailPage() {
   const [isEditingRoles, setIsEditingRoles] = useState(false);
   const [editedRoles, setEditedRoles] = useState<OrganizationRole[]>([]);
   const [approvalLevels, setApprovalLevels] = useState<{ level: number; roles: OrganizationRole[] }[]>([]);
+  const [quota, setQuota] = useState<OrgQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = useState(false);
 
   useEffect(() => {
     loadOrganization();
@@ -125,6 +140,19 @@ export default function OrgDetailPage() {
     }
   };
 
+  const loadQuota = async () => {
+    setQuotaLoading(true);
+    try {
+      const res = await fetch(`/api/org-quota/${orgId}`);
+      const json = await res.json();
+      if (json.success) setQuota(json.data);
+    } catch {
+      /* ignore */
+    } finally {
+      setQuotaLoading(false);
+    }
+  };
+
   const handleEditRole = (role: OrganizationRole) => {
     setEditingRole(role);
   };
@@ -137,6 +165,19 @@ export default function OrgDetailPage() {
 
   const handleEditRoles = () => {
     setIsEditingRoles(true);
+  };
+
+  // Sync approval-workflow-config whenever role levels change
+  const syncWorkflowConfig = async (levels: { level: number; roles: OrganizationRole[] }[]) => {
+    const workflowLevels = levels
+      .filter((lvl) => lvl.roles.length > 0)
+      .map((lvl) => ({ level_number: lvl.level }));
+    if (workflowLevels.length === 0) return;
+    await fetch("/api/approve/workflow-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ organization_id: orgId, levels: workflowLevels }),
+    });
   };
 
   const handleSaveRoles = async () => {
@@ -191,6 +232,14 @@ export default function OrgDetailPage() {
 
     console.log('API result:', result);
     console.log('=== END SAVE ROLES LOG ===');
+
+    // Sync approval-workflow-config regardless of org update result
+    // (workflow config is independent of org metadata)
+    try {
+      await syncWorkflowConfig(trimmedLevels);
+    } catch {
+      // non-critical
+    }
 
     if (result.ok) {
       toast.push("success", "สำเร็จ", "บันทึกการแก้ไขลำดับการอนุมัติเรียบร้อยแล้ว");
@@ -462,6 +511,18 @@ export default function OrgDetailPage() {
                       <span>บทบาท ({org.roles?.length || 0})</span>
                     </div>
                   </button>
+                  <button
+                    onClick={() => { setActiveTab("quota"); loadQuota(); }}
+                    className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "quota"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600 hover:text-gray-900"
+                      }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>📊</span>
+                      <span>โควต้า</span>
+                    </div>
+                  </button>
                 </div>
                 {activeTab === "employees" && (
                   <button
@@ -501,6 +562,15 @@ export default function OrgDetailPage() {
                   org={org}
                 />
               )}
+              {activeTab === "quota" && (
+                <QuotaTab
+                  orgId={orgId}
+                  quota={quota}
+                  loading={quotaLoading}
+                  onRefresh={loadQuota}
+                  onToast={(type, title, msg) => toast.push(type, title, msg)}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -519,11 +589,18 @@ export default function OrgDetailPage() {
       {isAddRoleOpen && (
         <AddRoleModal
           organizationId={orgId}
-          onSave={(newRole) => {
+          onSave={async (newRole) => {
             const updatedRoles = [...editedRoles, newRole];
             setEditedRoles(updatedRoles);
-            setApprovalLevels(groupRolesByLevel(updatedRoles));
+            const newLevels = groupRolesByLevel(updatedRoles);
+            setApprovalLevels(newLevels);
             setIsAddRoleOpen(false);
+            // Sync workflow config with the new role's approval level
+            try {
+              await syncWorkflowConfig(newLevels);
+            } catch {
+              // non-critical
+            }
             loadOrganization();
           }}
           onClose={() => setIsAddRoleOpen(false)}
@@ -1088,4 +1165,230 @@ function DepartmentsTab({ departments, loading }: { departments: Department[]; l
           </table>
         </div>
       );
+}
+
+// ─── QuotaTab ─────────────────────────────────────────────────────────────────
+
+function ProgressBar({ value, color = "blue" }: { value: number; color?: string }) {
+  const pct = Math.min(100, Math.max(0, value));
+  const colorMap: Record<string, string> = {
+    blue: "bg-blue-500",
+    green: "bg-green-500",
+    amber: "bg-amber-500",
+    red: "bg-red-500",
+  };
+  const barColor = pct >= 90 ? colorMap.red : pct >= 70 ? colorMap.amber : colorMap[color] ?? colorMap.blue;
+  return (
+    <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+      <div className={`h-3 rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+function QuotaField({
+  label,
+  current,
+  max,
+  unit,
+  pct,
+  editValue,
+  saving,
+  onChange,
+  onSave,
+  onCancel,
+  editing,
+  onEdit,
+}: {
+  label: string;
+  current: number | string;
+  max: number | string;
+  unit: string;
+  pct: number;
+  editValue: string;
+  saving: boolean;
+  onChange: (v: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  editing: boolean;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className="text-xs text-gray-500">{(pct ?? 0).toFixed(1)}%</span>
+      </div>
+      <ProgressBar value={pct ?? 0} />
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <span className="text-xs text-gray-600">
+          ใช้แล้ว <b className="text-gray-900">{String(current)}</b> / {String(max)} {unit}
+        </span>
+        {editing ? (
+          <div className="flex items-center gap-1.5">
+            <input
+              type="number"
+              min={0}
+              value={editValue}
+              onChange={(e) => onChange(e.target.value)}
+              className="w-24 text-xs border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+            />
+            <button
+              onClick={onSave}
+              disabled={saving}
+              className="text-xs px-2 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {saving ? "..." : "บันทึก"}
+            </button>
+            <button
+              onClick={onCancel}
+              className="text-xs px-2 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50"
+            >
+              ยกเลิก
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onEdit}
+            className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+          >
+            <Edit2 className="h-3 w-3" /> แก้ไข
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function QuotaTab({
+  orgId,
+  quota,
+  loading,
+  onRefresh,
+  onToast,
+}: {
+  orgId: string;
+  quota: OrgQuota | null;
+  loading: boolean;
+  onRefresh: () => void;
+  onToast: (type: "success" | "error", title: string, msg: string) => void;
+}) {
+  const [editUsers, setEditUsers] = useState(false);
+  const [editStorage, setEditStorage] = useState(false);
+  const [userVal, setUserVal] = useState("");
+  const [storageVal, setStorageVal] = useState("");
+  const [savingUsers, setSavingUsers] = useState(false);
+  const [savingStorage, setSavingStorage] = useState(false);
+
+  const handleSaveUsers = async () => {
+    setSavingUsers(true);
+    try {
+      const res = await fetch(`/api/org-quota/${orgId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ max_users: parseInt(userVal, 10) }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message ?? "เกิดข้อผิดพลาด");
+      onToast("success", "สำเร็จ", "อัปเดตโควต้าผู้ใช้เรียบร้อยแล้ว");
+      setEditUsers(false);
+      onRefresh();
+    } catch (err: any) {
+      onToast("error", "ข้อผิดพลาด", err?.message ?? "ไม่สามารถบันทึกได้");
+    } finally {
+      setSavingUsers(false);
+    }
+  };
+
+  const handleSaveStorage = async () => {
+    setSavingStorage(true);
+    try {
+      const mb = parseFloat(storageVal);
+      const bytes = Math.round(mb * 1024 * 1024);
+      const res = await fetch(`/api/org-quota/${orgId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ max_storage_bytes: bytes }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message ?? "เกิดข้อผิดพลาด");
+      onToast("success", "สำเร็จ", "อัปเดตโควต้าพื้นที่จัดเก็บเรียบร้อยแล้ว");
+      setEditStorage(false);
+      onRefresh();
+    } catch (err: any) {
+      onToast("error", "ข้อผิดพลาด", err?.message ?? "ไม่สามารถบันทึกได้");
+    } finally {
+      setSavingStorage(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (!quota) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
+        <span className="text-4xl">📊</span>
+        <p className="text-sm">ยังไม่มีข้อมูลโควต้า</p>
+        <button onClick={onRefresh} className="text-sm text-blue-600 hover:underline">โหลดใหม่</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-5">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+          <span>📊</span> โควต้าองค์กร
+        </h3>
+        <button
+          onClick={onRefresh}
+          className="text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1 border border-gray-200 rounded-lg px-2.5 py-1.5"
+        >
+          <RotateCcw className="h-3.5 w-3.5" /> รีเฟรช
+        </button>
+      </div>
+
+      <QuotaField
+        label="จำนวนผู้ใช้"
+        current={quota.current_users}
+        max={quota.max_users}
+        unit="คน"
+        pct={quota.user_usage_percent}
+        editing={editUsers}
+        editValue={userVal}
+        saving={savingUsers}
+        onEdit={() => { setUserVal(String(quota.max_users)); setEditUsers(true); }}
+        onChange={setUserVal}
+        onSave={handleSaveUsers}
+        onCancel={() => setEditUsers(false)}
+      />
+
+      <QuotaField
+        label="พื้นที่จัดเก็บ ไฟล์และเอกสาร"
+        current={(quota.used_storage_mb ?? 0).toFixed(2)}
+        max={(quota.max_storage_mb ?? 0).toFixed(2)}
+        unit="MB"
+        pct={quota.storage_usage_percent ?? 0}
+        editing={editStorage}
+        editValue={storageVal}
+        saving={savingStorage}
+        onEdit={() => { setStorageVal(String((quota.max_storage_mb ?? 0).toFixed(2))); setEditStorage(true); }}
+        onChange={setStorageVal}
+        onSave={handleSaveStorage}
+        onCancel={() => setEditStorage(false)}
+      />
+
+      <div className="mt-4 rounded-lg bg-blue-50 border border-blue-100 p-3 text-xs text-blue-700">
+        <p>• โควต้าผู้ใช้: ไม่สามารถตั้งค่าต่ำกว่าจำนวนผู้ใช้ปัจจุบัน ({quota.current_users ?? 0} คน)</p>
+        <p className="mt-1">• โควต้าพื้นที่: ไม่สามารถตั้งค่าต่ำกว่าพื้นที่ที่ใช้อยู่ ({(quota.used_storage_mb ?? 0).toFixed(2)} MB)</p>
+        <p className="mt-1">• ใส่ค่าเป็น MB สำหรับพื้นที่จัดเก็บ (เช่น 5120 = 5 GB)</p>
+      </div>
+    </div>
+  );
 }
