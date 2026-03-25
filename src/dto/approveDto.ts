@@ -70,12 +70,15 @@ export type PendingApprovalsParams = {
 };
 
 export type ApprovalFlowItem = {
-  action: string;
-  actionDate: string;
+  action: string;       // "อนุมัติ" | "ไม่อนุมัติ" | "แก้ไข" | "รอดำเนินการ"
+  actionDate: string;   // pre-formatted Thai date string (do NOT parse with new Date())
   comments: string;
   level: number;
   reviewerName: string;
   roleTitle: string;
+  isApproved: boolean;
+  cycleNumber: number;
+  cycleIsCompleted: boolean;
 };
 
 export type ApprovalQueueData = {

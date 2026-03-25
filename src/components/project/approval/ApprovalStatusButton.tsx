@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SquareArrowUp, Clock, XCircle, Flag } from "lucide-react";
+import { SquareArrowUp, Clock, XCircle, Flag, CheckCircle, Ban } from "lucide-react";
 import { ClipboardClockIcon } from "@/components/icons/ClipboardClockIcon";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,6 +11,7 @@ interface ApprovalStatusButtonProps {
   projectId: string;
   budgetPlanId?: string;
   status: string;
+  projectStatus?: string;
   processSteps?: ProcessStep[];
   progressList?: { budget_cost_used?: number | string | null }[];
 }
@@ -19,6 +20,7 @@ export default function ApprovalStatusButton({
   projectId,
   budgetPlanId,
   status,
+  projectStatus,
   processSteps,
   progressList,
 }: ApprovalStatusButtonProps) {
@@ -40,7 +42,11 @@ export default function ApprovalStatusButton({
   const handleCompleteProject = async () => {
     setCompleting(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/complete`, { method: "PATCH" });
+      const res = await fetch(`/api/projects/${projectId}/close`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
       if (res.ok) {
         router.refresh();
       }
@@ -67,6 +73,15 @@ export default function ApprovalStatusButton({
   }
 
   if (status === "approved") {
+    // Project already completed → show static badge
+    if (projectStatus === "completed") {
+      return (
+        <div className="rounded-md flex justify-center items-center gap-2 bg-green-600 px-4 py-2 text-sm font-medium text-white cursor-default">
+          <CheckCircle className="h-4 w-4" />
+          โครงการเสร็จสิ้นแล้ว
+        </div>
+      );
+    }
     return (
       <div className="flex gap-1 flex-wrap items-center">
         {/* Done confirm dialog */}
@@ -177,15 +192,51 @@ export default function ApprovalStatusButton({
 
   if (status === "in_revision") {
     return (
+      <Link
+        href={`/organizer/projects/approval/${projectId}`}
+        className="rounded-md flex justify-center items-center gap-3
+          bg-amber-500 px-4 py-2 text-sm font-medium text-white
+          hover:bg-amber-600 transition"
+      >
+        <SquareArrowUp className="h-5 w-5" />
+        ถูกส่งกลับแก้ไข — ยื่นอนุมัติใหม่
+      </Link>
+    );
+  }
+
+  if (status === "rejected") {
+    return (
       <div
         className="rounded-md flex justify-center items-center gap-3
           bg-red-600 px-4 py-2 text-sm font-medium text-white cursor-default"
       >
         <XCircle className="h-5 w-5" />
-        โครงการถูกปฏิเสธ
+        ถูกปฏิเสธ
       </div>
     );
   }
 
-  return null;
+  if (status === "closed") {
+    return (
+      <div
+        className="rounded-md flex justify-center items-center gap-3
+          bg-slate-500 px-4 py-2 text-sm font-medium text-white cursor-default"
+      >
+        <CheckCircle className="h-5 w-5" />
+        ปิดแผนงบประมาณแล้ว
+      </div>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <div
+        className="rounded-md flex justify-center items-center gap-3
+          bg-gray-400 px-4 py-2 text-sm font-medium text-white cursor-default"
+      >
+        <Ban className="h-5 w-5" />
+        ยกเลิกแล้ว
+      </div>
+    );
+  }
 }

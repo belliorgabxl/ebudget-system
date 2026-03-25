@@ -16,7 +16,7 @@ export type Project = {
   id: string;
   budgetPlanId?: string;
   budgetPlanStatus: string;
-  status: "draft" | "in_progress" | "on_hold" | "done";
+  status: "draft" | "pending_approval" | "in_progress" | "completed" | "cancelled" | "rejected" | "out_of_date";
   progress: number;
   updatedAt: string;
   generalInfo: GeneralInfoForUpdateData;
