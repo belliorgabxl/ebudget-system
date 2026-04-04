@@ -6,6 +6,7 @@ interface AnnualBudgetYearData {
   year_label: string;
   total_budget: number;
   used_budget: number;
+  actual_used_budget: number;
   remaining_budget: number;
   usage_percentage: number;
 }
@@ -23,6 +24,7 @@ interface OrgKpiSummaryProps {
   totalDepartments: number;
   selectedYear?: string;
   annualBudgetSummary?: AnnualBudgetSummary | null;
+  loading?: boolean;
 }
 
 export function OrgKpiSummary({
@@ -33,6 +35,7 @@ export function OrgKpiSummary({
   totalDepartments,
   selectedYear,
   annualBudgetSummary,
+  loading,
 }: OrgKpiSummaryProps) {
   // Determine which budget data to use
  const toChristianYear = (thaiYear?: string) =>
@@ -41,6 +44,7 @@ export function OrgKpiSummary({
     : null
 
 let usedBudget = 0
+let actualUsedBudget = 0
 let maxBudget = 0
 let displayYear = ""
 
@@ -49,6 +53,7 @@ if (annualBudgetSummary) {
   if (selectedYear === "all") {
     const summary = annualBudgetSummary.summary
     usedBudget = summary.used_budget
+    actualUsedBudget = summary.actual_used_budget ?? 0
     maxBudget = summary.total_budget
     displayYear = "ทั้งหมด"
   } 
@@ -62,11 +67,13 @@ if (annualBudgetSummary) {
 
     if (yearData) {
       usedBudget = yearData.used_budget
+      actualUsedBudget = yearData.actual_used_budget ?? 0
       maxBudget = yearData.total_budget
       displayYear = yearData.year_label
     } else {
       // ถ้าไม่มีข้อมูลปีนั้นจริง ๆ → แสดง 0 ชัด ๆ
       usedBudget = 0
+      actualUsedBudget = 0
       maxBudget = 0
       displayYear = `ปี ${selectedYear}`
     }
@@ -79,40 +86,47 @@ if (annualBudgetSummary) {
       <KpiCard
         icon={<DollarSign className="h-5 w-5" />}
         label="งบประมาณที่ใช้ / งบประมาณทั้งหมด"
-        value={
+        value={loading ? "-" : (
           <div className="flex flex-col">
             <span className="text-2xl">฿{formatCompactNumber(usedBudget)} / <span className="text-md text-muted-foreground text-gray-600">฿{formatCompactNumber(maxBudget)}</span></span>
           </div>
-        }
+        )}
         color="blue"
-        subtitle={displayYear ? `ปี ${displayYear}` : undefined}
+        subtitle={loading ? undefined : (
+          <>
+            {displayYear ? <span>ปี {displayYear}</span> : null}
+            {actualUsedBudget > 0 && (
+              <span className="block text-xs text-purple-600 mt-0.5">ใช้จริง (ปิดแล้ว): ฿{formatCompactNumber(actualUsedBudget)}</span>
+            )}
+          </>
+        )}
       />
 
       <KpiCard
         icon={<Folder className="h-5 w-5" />}
         label="จำนวนโครงการทั้งหมด"
-        value={totalProjects}
+        value={loading ? "-" : totalProjects}
         color="violet"
       />
 
       <KpiCard
         icon={<TrendingUp className="h-5 w-5" />}
         label="งบเฉลี่ย / โครงการ"
-        value={`฿${formatCompactNumber(avgBudget ?? 0)}`}
+        value={loading ? "-" : `฿${formatCompactNumber(avgBudget ?? 0)}`}
         color="emerald"
       />
 
       <KpiCard
         icon={<User2Icon className="h-5 w-5" />}
         label="จำนวนพนักงานในองค์กร"
-        value={totalEmployees}
+        value={loading ? "-" : totalEmployees}
         color="emerald"
       />
 
       <KpiCard
         icon={<Users className="h-5 w-5" />}
         label="จำนวนหน่วยงานในองค์กร"
-        value={totalDepartments}
+        value={loading ? "-" : totalDepartments}
         color="yellow"
       />
     </div>
@@ -131,7 +145,7 @@ function KpiCard({
   label: string
   value: React.ReactNode
   color: "blue" | "emerald" | "violet" | "red" | "yellow"
-  subtitle?: string
+  subtitle?: React.ReactNode
 }) {
   const colorMap = {
     blue: "bg-blue-100 text-blue-600",

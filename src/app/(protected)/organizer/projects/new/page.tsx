@@ -626,7 +626,8 @@ export default function CreateProjectPage() {
                 key={selectedTemplate?.id ?? "default"}
                 onChange={setGeneralInfo}
                 value={generalInfo}
-                lockedFields={projectTypeChoice === "regular" ? ["name" as const, "type" as const, "description" as const, "department_id" as const] : ["type" as const]}
+                currentUserName={authUser ? [authUser.first_name, authUser.last_name].filter(Boolean).join(" ") || authUser.full_name : undefined}
+                lockedFields={projectTypeChoice === "regular" ? ["name" as const, "type" as const, "description" as const, "department_id" as const, "owner_user_id" as const] : ["type" as const, "owner_user_id" as const]}
               />
             </motion.div>
           )}

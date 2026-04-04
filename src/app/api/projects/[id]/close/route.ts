@@ -11,15 +11,24 @@ export async function POST(
   const cookieStore = cookies();
   const token = (await cookieStore).get("api_token")?.value;
 
-  const body = await req.text().catch(() => "{}");
+  const contentType = req.headers.get("content-type") ?? "";
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  let body: BodyInit;
+  if (contentType.includes("multipart/form-data")) {
+    // Forward multipart as-is (don't set Content-Type manually; fetch will set boundary)
+    body = await req.formData();
+  } else {
+    headers["Content-Type"] = "application/json";
+    body = await req.text().catch(() => "{}") || "{}";
+  }
 
   const res = await fetch(`${BACKEND}/projects/${encodeURIComponent(id)}/close`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: body || "{}",
+    headers,
+    body,
   });
 
   const json = await res.json().catch(() => ({}));

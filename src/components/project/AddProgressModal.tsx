@@ -15,7 +15,7 @@ const MAX_FILE_SIZE_MB = 50; // 50 MB per file limit
 export default function AddProgressModal({ projectId, onClose, onSuccess }: AddProgressModalProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
+  const [file, setFile] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     description: "",
@@ -30,20 +30,15 @@ export default function AddProgressModal({ projectId, onClose, onSuccess }: AddP
     setForm((p) => ({ ...p, [field]: val }));
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files ?? []);
-    const oversized = selected.filter((f) => f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
-    if (oversized.length > 0) {
-      toast.error(`ไฟล์ ${oversized.map((f) => f.name).join(", ")} มีขนาดเกิน ${MAX_FILE_SIZE_MB} MB`);
+    const selected = e.target.files?.[0] ?? null;
+    e.target.value = "";
+    if (!selected) return;
+    if (selected.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`ไฟล์มีขนาดเกิน ${MAX_FILE_SIZE_MB} MB`);
       return;
     }
-    setFiles((prev) => {
-      const names = new Set(prev.map((f) => f.name));
-      return [...prev, ...selected.filter((f) => !names.has(f.name))];
-    });
-    e.target.value = "";
+    setFile(selected);
   };
-
-  const removeFile = (name: string) => setFiles((p) => p.filter((f) => f.name !== name));
 
   const handleSubmit = async () => {
     if (!form.description.trim()) {
@@ -59,7 +54,7 @@ export default function AddProgressModal({ projectId, onClose, onSuccess }: AddP
     if (form.end_date) fd.append("end_date", form.end_date);
     if (form.remarks) fd.append("remarks", form.remarks);
     if (form.budget_cost_used) fd.append("budget_cost_used", form.budget_cost_used);
-    files.forEach((f) => fd.append("file", f));
+    if (file) fd.append("file", file);
 
     setIsLoading(true);
     try {
@@ -160,34 +155,32 @@ export default function AddProgressModal({ projectId, onClose, onSuccess }: AddP
             />
           </div>
 
-          {/* File upload */}
+          {/* File upload — 1 PDF only */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              แนบไฟล์ <span className="text-gray-400 font-normal">(ขนาดสูงสุด {MAX_FILE_SIZE_MB} MB ต่อไฟล์)</span>
+              แนบไฟล์ PDF{" "}
+              <span className="text-gray-400 font-normal">(1 ไฟล์ ขนาดสูงสุด {MAX_FILE_SIZE_MB} MB)</span>
             </label>
-            <input ref={fileRef} type="file" multiple className="hidden" onChange={handleFileChange} />
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2 text-sm border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors w-full justify-center"
-            >
-              <Upload className="h-4 w-4" />
-              เลือกไฟล์แนบ
-            </button>
-            {files.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
-                {files.map((f) => (
-                  <li key={f.name} className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <FileText className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                      <span className="text-xs text-gray-700 truncate">{f.name}</span>
-                      <span className="text-xs text-gray-400 flex-shrink-0">({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
-                    </div>
-                    <button onClick={() => removeFile(f.name)} className="text-gray-400 hover:text-red-500 flex-shrink-0 ml-2">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            <input ref={fileRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={handleFileChange} />
+            {file ? (
+              <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-xs text-gray-700 truncate">{file.name}</span>
+                  <span className="text-xs text-gray-400 flex-shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                </div>
+                <button onClick={() => setFile(null)} className="text-gray-400 hover:text-red-500 flex-shrink-0 ml-2">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 text-sm border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors w-full justify-center"
+              >
+                <Upload className="h-4 w-4" />
+                เลือกไฟล์ PDF
+              </button>
             )}
           </div>
         </div>

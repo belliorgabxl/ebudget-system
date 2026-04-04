@@ -19,16 +19,8 @@ import BackGroundLight from "@/components/background/bg-light";
 import ApprovalStatusButton from "@/components/project/approval/ApprovalStatusButton";
 import type { Project } from "@/types/project";
 
-async function getProject(id: string): Promise<Project | null> {
+async function getProject(id: string): Promise<{ project: Project; isEdit: boolean; latestRemark: string } | null> {
   try {
-    const cookieStore = cookies();
-    const accessToken = (await cookieStore).get("api_token")?.value;
-
-    if (!accessToken) {
-      console.error("getProject: no api_token in server cookies");
-      return null;
-    }
-
     const apiData: ProjectInformationResponse =
       await fetchProjectInformationServer(id);
 
@@ -190,6 +182,9 @@ async function getProject(id: string): Promise<Project | null> {
       directorComment: "",
     };
 
+    const isEdit = apiData.is_edit !== false; // default true if field absent
+    const latestRemark = (apiData as any).latest_remark || "";
+
     const project: Project = {
       id,
       budgetPlanId: apiData.budget_plan_id,
@@ -208,9 +203,10 @@ async function getProject(id: string): Promise<Project | null> {
       project_objectives_and_outcomes: project_objectives_and_outcomes,
       approve,
       goal,
+      closureRecord: (apiData as any).closure_record ?? null,
     };
 
-    return project;
+    return { project, isEdit, latestRemark };
   } catch (e) {
     console.error("getProject error:", e);
     return null;
@@ -221,9 +217,9 @@ type PageParams = Promise<{ id: string }>;
 
 export default async function Page({ params }: { params: PageParams }) {
   const { id } = await params;
-  const p = await getProject(id);
+  const result = await getProject(id);
 
-  if (!p) {
+  if (!result) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-10 space-y-8">
         <h1 className="text-xl font-semibold text-gray-900">ไม่พบโครงการ</h1>
@@ -241,6 +237,8 @@ export default async function Page({ params }: { params: PageParams }) {
       </main>
     );
   }
+
+  const { project: p, isEdit, latestRemark } = result;
 
   return (
     <BackGroundLight>
@@ -275,32 +273,65 @@ export default async function Page({ params }: { params: PageParams }) {
             </div>
           </div>
           <ApprovalStatusButton
-            projectId={p.id}
-            budgetPlanId={p.budgetPlanId}
-            status={p.budgetPlanStatus}
-            progressList={p.rawProgress}
-            processSteps={[
-              {
-                title: "หัวหน้าแผนก",
-                status: "approved",
-                by: "สมชาย ใจดี",
-                at: "10 ม.ค. 2569 14:32",
-              },
-              {
-                title: "ฝ่ายวางแผน",
-                status: "approved",
-                by: "นางสาวศิริพร",
-                at: "11 ม.ค. 2569 09:10",
-              },
-              {
-                title: "ผู้อำนวยการ",
-                status: "pending",
-                note: "ยังไม่ได้ดำเนินการ",
-              },
-            ]}
-          />
+              projectId={p.id}
+              budgetPlanId={p.budgetPlanId}
+              status={p.budgetPlanStatus}
+              projectStatus={p.status}
+              progressList={p.rawProgress}
+              budgetTotal={p.budget?.total ?? 0}
+              startDate={p.duration?.startDate ?? null}
+              endDate={p.duration?.endDate ?? null}
+              processSteps={[
+                {
+                  title: "หัวหน้าแผนก",
+                  status: "approved",
+                  by: "สมชาย ใจดี",
+                  at: "10 ม.ค. 2569 14:32",
+                },
+                {
+                  title: "ฝ่ายวางแผน",
+                  status: "approved",
+                  by: "นางสาวศิริพร",
+                  at: "11 ม.ค. 2569 09:10",
+                },
+                {
+                  title: "ผู้อำนวยการ",
+                  status: "pending",
+                  note: "ยังไม่ได้ดำเนินการ",
+                },
+              ]}
+            />
         </div>
-        <ProjectDetailClient initialProject={p} />
+        {latestRemark && (p.budgetPlanStatus === "in_revision" || p.budgetPlanStatus === "rejected") && (
+          <div
+            className={`mb-6 rounded-lg border px-4 py-3 flex gap-3 items-start ${
+              p.budgetPlanStatus === "rejected"
+                ? "bg-red-50 border-red-200"
+                : "bg-amber-50 border-amber-200"
+            }`}
+          >
+            <span
+              className={`mt-0.5 text-lg ${
+                p.budgetPlanStatus === "rejected" ? "text-red-500" : "text-amber-500"
+              }`}
+            >
+              {p.budgetPlanStatus === "rejected" ? "✕" : "↩"}
+            </span>
+            <div>
+              <p
+                className={`text-sm font-semibold ${
+                  p.budgetPlanStatus === "rejected" ? "text-red-700" : "text-amber-700"
+                }`}
+              >
+                {p.budgetPlanStatus === "rejected"
+                  ? "โครงการถูกปฏิเสธ"
+                  : "โครงการถูกส่งกลับเพื่อแก้ไข"}
+              </p>
+              <p className="mt-0.5 text-sm text-gray-700">{latestRemark}</p>
+            </div>
+          </div>
+        )}
+        <ProjectDetailClient initialProject={p} isOwner={true} projectStatus={p.status} />
       </main>
     </BackGroundLight>
   );

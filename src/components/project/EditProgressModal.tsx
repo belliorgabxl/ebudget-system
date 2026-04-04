@@ -28,7 +28,7 @@ export default function EditProgressModal({
 }: EditProgressModalProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newFile, setNewFile] = useState<File | null>(null);
   const [existingFiles, setExistingFiles] = useState<ProjectProgressFile[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [deletingFileId, setDeletingFileId] = useState<string | number | null>(null);
@@ -72,13 +72,19 @@ export default function EditProgressModal({
 
   const handleDownload = async (file: ProjectProgressFile) => {
     try {
-      const res = await fetch(
-        `/api/project-progress/${progress.id}/files/${file.id}/download-url`
+      const fileRes = await fetch(
+        `/api/project-progress/${progress.id}/files/${file.id}/content`
       );
-      const json = await res.json();
-      const url = json?.data?.url ?? json?.data;
-      if (!url) throw new Error("ไม่พบ URL");
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (!fileRes.ok) throw new Error(`HTTP ${fileRes.status}`);
+      const blob = await fileRes.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = blobUrl;
+      anchor.download = file.file_name;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(blobUrl);
     } catch {
       toast.error("ไม่สามารถดาวน์โหลดไฟล์ได้");
     }
@@ -104,25 +110,15 @@ export default function EditProgressModal({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files ?? []);
-    const oversized = selected.filter(
-      (f) => f.size > MAX_FILE_SIZE_MB * 1024 * 1024
-    );
-    if (oversized.length > 0) {
-      toast.error(
-        `ไฟล์ ${oversized.map((f) => f.name).join(", ")} มีขนาดเกิน ${MAX_FILE_SIZE_MB} MB`
-      );
+    const selected = e.target.files?.[0] ?? null;
+    e.target.value = "";
+    if (!selected) return;
+    if (selected.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`ไฟล์มีขนาดเกิน ${MAX_FILE_SIZE_MB} MB`);
       return;
     }
-    setNewFiles((prev) => {
-      const names = new Set(prev.map((f) => f.name));
-      return [...prev, ...selected.filter((f) => !names.has(f.name))];
-    });
-    e.target.value = "";
+    setNewFile(selected);
   };
-
-  const removeNewFile = (name: string) =>
-    setNewFiles((p) => p.filter((f) => f.name !== name));
 
   const handleSubmit = async () => {
     if (!form.description.trim()) {
@@ -137,7 +133,7 @@ export default function EditProgressModal({
     if (form.end_date) fd.append("end_date", form.end_date);
     if (form.remarks) fd.append("remarks", form.remarks);
     if (form.budget_cost_used) fd.append("budget_cost_used", form.budget_cost_used);
-    newFiles.forEach((f) => fd.append("file", f));
+    if (newFile) fd.append("file", newFile);
 
     setIsLoading(true);
     try {
@@ -311,13 +307,13 @@ export default function EditProgressModal({
             )}
           </div>
 
-          {/* New file upload */}
+          {/* New file upload — 1 PDF only, blocked if existing file present */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              เพิ่มไฟล์แนบใหม่{" "}
+              เพิ่มไฟล์ PDF ใหม่{" "}
               {!loadingFiles && existingFiles.length === 0 && (
                 <span className="text-gray-400 font-normal">
-                  (ขนาดสูงสุด {MAX_FILE_SIZE_MB} MB ต่อไฟล์)
+                  (1 ไฟล์ ขนาดสูงสุด {MAX_FILE_SIZE_MB} MB)
                 </span>
               )}
             </label>
@@ -326,12 +322,28 @@ export default function EditProgressModal({
                 <Upload className="h-4 w-4" />
                 ไม่สามารถเพิ่มไฟล์ได้ เนื่องจากมีไฟล์แนบอยู่แล้ว
               </div>
+            ) : newFile ? (
+              <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-xs text-gray-700 truncate">{newFile.name}</span>
+                  <span className="text-xs text-gray-400 flex-shrink-0">
+                    ({(newFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                </div>
+                <button
+                  onClick={() => setNewFile(null)}
+                  className="text-gray-400 hover:text-red-500 flex-shrink-0 ml-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             ) : (
               <>
                 <input
                   ref={fileRef}
                   type="file"
-                  multiple
+                  accept=".pdf,application/pdf"
                   className="hidden"
                   onChange={handleFileChange}
                 />
@@ -341,35 +353,9 @@ export default function EditProgressModal({
                   className="flex items-center gap-2 px-4 py-2 text-sm border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Upload className="h-4 w-4" />
-                  เลือกไฟล์แนบ
+                  เลือกไฟล์ PDF
                 </button>
               </>
-            )}
-            {newFiles.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
-                {newFiles.map((f) => (
-                  <li
-                    key={f.name}
-                    className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <FileText className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                      <span className="text-xs text-gray-700 truncate">
-                        {f.name}
-                      </span>
-                      <span className="text-xs text-gray-400 flex-shrink-0">
-                        ({(f.size / 1024 / 1024).toFixed(2)} MB)
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => removeNewFile(f.name)}
-                      className="text-gray-400 hover:text-red-500 flex-shrink-0 ml-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
             )}
           </div>
         </div>

@@ -13,6 +13,7 @@ type Props = {
   sortBy?: string;
   sortDir?: SortDir;
   onSort?: (field: string) => void;
+  readOnly?: boolean;
 };
 
 const getStatusBadge = (status?: string) => {
@@ -98,7 +99,7 @@ function SortableTh({ field, sortBy, sortDir, onSort, children, className = "" }
   );
 }
 
-export function ProjectsTable({ projects, page, limit, sortBy, sortDir, onSort }: Props) {
+export function ProjectsTable({ projects, page, limit, sortBy, sortDir, onSort, readOnly = false }: Props) {
   return (
     <section className="w-full grid place-items-center relative sm:mx-0 overflow-x-auto ">
       <div className="w-full overflow-y-auto rounded bg-white">
@@ -170,8 +171,11 @@ export function ProjectsTable({ projects, page, limit, sortBy, sortDir, onSort }
                     <div className="flex flex-col items-center gap-1">
                       <Link
                         href={`/organizer/projects/${p.id}/details`}
-                        className="inline-flex items-center rounded-md border text-white
-                          bg-slate-400 border-gray-300 px-2 py-1 text-xs hover:bg-gray-600"
+                        className={`inline-flex items-center rounded-md border text-white px-2 py-1 text-xs
+                          ${readOnly
+                            ? "bg-gray-400 border-gray-300 hover:bg-gray-500"
+                            : "bg-slate-400 border-gray-300 hover:bg-gray-600"
+                          }`}
                       >
                         ดูรายละเอียด
                       </Link>

@@ -75,6 +75,7 @@ export type ProjectsQuery = {
   budget_max?: number | string;
   sort_by?: string;
   sort_dir?: string;
+  my_projects_only?: boolean;
 };
 
 // Dashboard KPI Types

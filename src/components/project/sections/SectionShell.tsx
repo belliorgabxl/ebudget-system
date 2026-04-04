@@ -6,6 +6,7 @@ type Props = {
   title: string;
   isEditing: boolean;
   isSaving?: boolean;
+  canEdit?: boolean;
   onEdit: () => void;
   onCancel: () => void;
   onSave: () => void;
@@ -16,6 +17,7 @@ export function SectionShell({
   title,
   isEditing,
   isSaving,
+  canEdit = true,
   onEdit,
   onCancel,
   onSave,
@@ -29,14 +31,14 @@ export function SectionShell({
         </div>
         
 
-        {!isEditing ? (
+        {canEdit && !isEditing ? (
           <button
             onClick={onEdit}
             className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             แก้ไข
           </button>
-        ) : (
+        ) : canEdit && isEditing ? (
           <div className="flex items-center gap-2">
             <button
               onClick={onCancel}
@@ -53,7 +55,7 @@ export function SectionShell({
               {isSaving ? "กำลังบันทึก..." : "บันทึก"}
             </button>
           </div>
-        )}
+        ) : null}
       </div>
 
       {children}

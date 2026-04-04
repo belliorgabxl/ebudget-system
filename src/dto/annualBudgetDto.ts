@@ -5,6 +5,7 @@ export type AnnualBudget = {
   fiscal_year: number;
   amount: number;
   used_amount: number;
+  actual_used_amount: number;
   remaining_amount: number;
   usage_percentage: number;
   created_at: string;
@@ -33,6 +34,7 @@ export type BudgetSummary = {
   year_label: string;
   total_budget: number;
   used_budget: number;
+  actual_used_budget: number;
   remaining_budget: number;
   usage_percentage: number;
 };

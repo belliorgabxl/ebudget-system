@@ -210,8 +210,11 @@ export default function BudgetSettingsPage() {
                     <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
                       งบที่ใช้ไป
                     </th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                      งบคงเหลือ
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                     งบคงเหลือ(อนุมัติไปแล้ว)
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                      ใช้จริง (ปิดโครงการแล้ว)	
                     </th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
                       สถานะการใช้งาน
@@ -224,7 +227,7 @@ export default function BudgetSettingsPage() {
                 <tbody className="divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center">
+                      <td colSpan={7} className="px-6 py-12 text-center">
                         <div className="flex items-center justify-center">
                           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
                         </div>
@@ -233,7 +236,7 @@ export default function BudgetSettingsPage() {
                   ) : budgets.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-6 py-12 text-center text-gray-500"
                       >
                         ยังไม่มีข้อมูลงบประมาณ กรุณาเพิ่มงบประมาณ
@@ -264,7 +267,7 @@ export default function BudgetSettingsPage() {
                               ฿{formatCompactNumber(budget.used_amount)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-6 py-4 text-center">
                             <span className={`text-sm font-medium ${
                               budget.remaining_amount < 0 
                                 ? "text-red-600" 
@@ -273,6 +276,12 @@ export default function BudgetSettingsPage() {
                               ฿{formatCompactNumber(budget.remaining_amount)}
                             </span>
                           </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="text-sm text-purple-600 font-medium">
+                              ฿{formatCompactNumber(budget.actual_used_amount ?? 0)}
+                            </span>
+                          </td>
+                    
                           <td className="px-6 py-4">
                             <div className="flex justify-center">
                               <UsageBar

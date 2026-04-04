@@ -58,6 +58,7 @@ export function KpiSection({
       title="ตัวชี้วัดความสำเร็จของโครงการ (KPIs)"
       isEditing={isEditing}
       isSaving={isSaving}
+      canEdit={canEdit}
       onEdit={() => canEdit && onEdit()}
       onCancel={onCancel}
       onSave={() => onSave(draft)}

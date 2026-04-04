@@ -91,6 +91,7 @@ export function ObjectiveOutcomeSection({
       title="วัตถุประสงค์และผลที่คาดว่าจะได้รับ"
       isEditing={isEditing}
       isSaving={isSaving}
+      canEdit={canEdit}
       onEdit={() => canEdit && onEdit()}
       onCancel={onCancel}
       onSave={() => onSave(draft)}

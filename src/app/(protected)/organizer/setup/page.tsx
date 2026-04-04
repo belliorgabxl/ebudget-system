@@ -40,6 +40,7 @@ async function fetchProfile(): Promise<ApiResult<ProfileData>> {
   try {
     const resp = await fetch("/api/users/me", {
       cache: "no-store",
+      credentials: "include",
     });
     if (!resp.ok) return { ok: false, message: `Failed to fetch profile (${resp.status})` };
     const data = await resp.json();
@@ -56,6 +57,7 @@ async function saveProfile(payload: ProfilePayload): Promise<ApiResult> {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      credentials: "include",
     });
     if (!resp.ok) return { ok: false, message: `Save failed (${resp.status})` };
     const data = await resp.json();

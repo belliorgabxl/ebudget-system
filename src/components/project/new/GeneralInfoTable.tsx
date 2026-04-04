@@ -12,9 +12,10 @@ type Props = {
   value?: GeneralInfoCreateParams;
   onChange: (params: GeneralInfoCreateParams) => void;
   lockedFields?: LockedField[];
+  currentUserName?: string;
 };
 
-export default function GeneralInfoTable({ value, onChange, lockedFields = [] }: Props) {
+export default function GeneralInfoTable({ value, onChange, lockedFields = [], currentUserName }: Props) {
   const isLocked = (field: LockedField) => lockedFields.includes(field);
 
   // Only fetch-data lists kept as internal state — all form values come from parent
@@ -132,10 +133,16 @@ export default function GeneralInfoTable({ value, onChange, lockedFields = [] }:
                   : "border-gray-300"
               }`}
             >
-              <option value="">เลือกผู้รับผิดชอบ</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>{u.full_name}</option>
-              ))}
+              {isLocked("owner_user_id") && currentUserName ? (
+                <option value={owner_user_id}>{currentUserName}</option>
+              ) : (
+                <>
+                  <option value="">เลือกผู้รับผิดชอบ</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.full_name}</option>
+                  ))}
+                </>
+              )}
             </select>
             {isLocked("owner_user_id") && (
               <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] text-indigo-400 font-medium pointer-events-none">

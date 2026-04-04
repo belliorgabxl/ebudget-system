@@ -192,6 +192,37 @@ export interface ProjectInformationResponse {
   project_evaluation: ProjectEvaluation[];
 
   project_objectives_and_outcomes: ProjectObjectiveOrOutcome[];
+  is_edit?: boolean;
+  latest_remark?: string;
+  closure_record?: ClosureRecord | null;
+}
+
+export interface ClosureDocument {
+  id: string;
+  closure_record_id?: string;
+  organization_id?: string;
+  file_name: string;
+  original_file_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  description?: string;
+  uploaded_by?: string;
+}
+
+export interface ClosureRecord {
+  id: string;
+  organization_id?: string;
+  project_id?: string;
+  budget_plan_id?: string;
+  closed_by_user_id?: string;
+  outcome_description?: string;
+  development_recommendations?: string;
+  lessons_learned?: string;
+  actual_budget_used: number;
+  variance_from_planned: number;
+  variance_reason?: string;
+  documents?: ClosureDocument[];
 }
 
 export interface BudgetItem {

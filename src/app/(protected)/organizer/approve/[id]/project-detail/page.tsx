@@ -1,90 +1,50 @@
 import Link from "next/link";
-import {
-  formatThaiDateTime,
-  formatBaht,
-  ProgressBar,
-  StatusBadge,
-  Section,
-  Field,
-  Grid2,
-  EmptyRow,
-  RichOrDash,
-  dateOrDash,
-  moneyOrDash,
-  BudgetSources,
-  numOrDash,
-} from "@/components/project/Helper";
+import { formatThaiDateTime, StatusBadge } from "@/components/project/Helper";
 import type {
-  ActivitiesRow,
   ApproveParams,
   BudgetTableValue,
   DateDurationValue,
   EstimateParams,
-  ExpectParams,
-  GeneralInfoCreateParams,
+  GeneralInfoForUpdateData,
   GoalParams,
-  KPIParams,
   ProjectInformationResponse,
+  ProjectKPI,
+  ProjectObjectiveOrOutcome,
   StrategyParams,
 } from "@/dto/projectDto";
-import { cookies } from "next/headers";
 import { fetchProjectInformationServer } from "@/api/project.server";
+import { ProjectDetailClient } from "@/components/project/details/ProjectDetailClient";
 import BackGroundLight from "@/components/background/bg-light";
-import { Td, Th } from "@/components/approve/Helper";
 import {
   checkApprovalPermissionServer,
   CheckPermissionResponse,
 } from "@/api/approval.server";
-import { ArrowRight, Calendar, Coins, FileClock } from "lucide-react";
+import { ArrowRight, FileClock } from "lucide-react";
 import { ROLE_LABEL } from "@/constants/project";
-
-type Project = {
-  id: string;
-
-  status: "draft" | "in_progress" | "on_hold" | "done";
-  progress: number;
-  updatedAt: string;
-  budgetPlanId: string;
-  generalInfo: GeneralInfoCreateParams;
-  strategy: StrategyParams;
-  duration: DateDurationValue;
-  budget: BudgetTableValue | null;
-  activities: ActivitiesRow[];
-  kpi: KPIParams;
-  estimate: EstimateParams;
-  expect: ExpectParams;
-  approve: ApproveParams;
-  goal: GoalParams;
-};
+import type { Project } from "@/types/project";
 
 async function getProject(id: string): Promise<Project | null> {
   try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("api_token")?.value;
-
-    if (!accessToken) {
-      console.error("getProject: no api_token in server cookies");
-      return null;
-    }
-
     const apiData: ProjectInformationResponse =
       await fetchProjectInformationServer(id);
 
-    const generalInfo: GeneralInfoCreateParams = {
-      name: apiData.project_name || "",
-      type: apiData.plan_type || "",
-      department: apiData.department_name || "",
-      owner_user_id: apiData.owner_user || "",
-      description: apiData.project_description || "",
-      code: apiData.project_code || "",
-      rationale: apiData.rationale || "",
-      location: apiData.location || "",
-    } as any;
+    const generalInfo: GeneralInfoForUpdateData = {
+      name: apiData.project_name,
+      plan_type: apiData.plan_type,
+      code: apiData.project_code,
+      description: apiData.project_description,
+      rationale: apiData.rationale,
+      start_date: apiData.start_date,
+      end_date: apiData.end_date,
+      location: apiData.location,
+      project_id: id,
+      quantitative_goal: apiData.quantitative_goal,
+      qualitative_goal: apiData.qualitative_goal,
+    } as GeneralInfoForUpdateData;
 
     const goal: GoalParams = {
       quantityGoal: apiData.quantitative_goal || "",
       qualityGoal: apiData.qualitative_goal || "",
-      objectiveDescription: apiData.objective_description || "",
     };
 
     const startDate = apiData.start_date || "";
@@ -95,54 +55,59 @@ async function getProject(id: string): Promise<Project | null> {
       const s = new Date(startDate);
       const e = new Date(endDate);
       if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime())) {
-        const months =
+        const m =
           (e.getFullYear() - s.getFullYear()) * 12 +
           (e.getMonth() - s.getMonth());
-        durationMonths = Math.max(0, months || 0);
+        durationMonths = Math.max(0, m);
       }
     }
 
-    const duration: DateDurationValue = {
-      startDate,
-      endDate,
-      durationMonths,
-    };
+    const duration: DateDurationValue = { startDate, endDate, durationMonths };
 
     let budget: BudgetTableValue | null = null;
-
-    const budgetRows =
-      apiData.budget_items?.map((b, idx) => ({
-        id: idx + 1,
-        item: b.name || "",
-        amount: String(b.amount ?? 0),
-        note: b.remark || "",
-      })) ?? [];
-
+    const budgetItems = apiData.budget_items ?? [];
+    const rows = budgetItems.map((b, idx) => ({
+      id: idx + 1,
+      name: b.name || "",
+      amount: String(b.amount ?? 0),
+      remark: b.remark || "",
+    }));
     const budgetTotal =
       typeof apiData.budget_amount === "number"
         ? apiData.budget_amount
-        : budgetRows.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-
-    if (budgetRows.length || typeof apiData.budget_amount === "number") {
+        : rows.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+    if (rows.length > 0 || typeof apiData.budget_amount === "number") {
       budget = {
-        rows: budgetRows,
+        rows,
         total: budgetTotal,
         sources: {
           source: apiData.budget_source || "",
           externalAgency: apiData.budget_source_department || "",
         },
-      } as any;
+      } satisfies BudgetTableValue;
     }
 
-    const activities: ActivitiesRow[] = (apiData.progress || []).map(
-      (p, idx) => ({
-        id: p.sequence_number || idx + 1,
-        activity: p.description || "",
-        startDate: p.start_date || "",
-        endDate: p.end_date || "",
-        owner: p.responsible_name || "",
-      })
-    ) as any;
+    const rawProgress = (apiData.progress || []).map((p) => ({
+      id: p.id,
+      project_id: String(id),
+      start_date: p.start_date ?? null,
+      end_date: p.end_date ?? null,
+      sequence_number: p.sequence_number,
+      description: p.description || "",
+      responsible_name: p.responsible_name || "",
+      remarks: p.remarks || "",
+      updated_by: p.updated_by ?? null,
+      updated_at: p.updated_at || "",
+      budget_cost_used: (p as any).budget_cost_used ?? null,
+    }));
+
+    const activities = rawProgress.map((p, idx) => ({
+      id: p.sequence_number || idx + 1,
+      activity: p.description || "",
+      startDate: p.start_date || "",
+      endDate: p.end_date || "",
+      owner: p.responsible_name || "",
+    }));
 
     const strategy: StrategyParams = {
       schoolPlan: "",
@@ -150,45 +115,27 @@ async function getProject(id: string): Promise<Project | null> {
       qaIndicator: "",
     };
 
-    const outputKpis = (apiData.project_kpis || [])
-      .filter(k => k.indicator === "Output" || k.indicator?.toLowerCase() === "output")
-      .map((k) => {
-        const t =
-          k.target_value !== null && k.target_value !== undefined
-            ? ` (เป้า: ${k.target_value})`
-            : "";
-        const desc = k.description?.trim() ? ` — ${k.description.trim()}` : "";
-        return `• ${k.indicator}${t}${desc}`;
-      })
-      .filter(Boolean)
-      .join("\n");
+    const kpis: ProjectKPI[] = Array.isArray(apiData.project_kpis)
+      ? apiData.project_kpis.map((k: any) => ({
+          id: Number(k.id),
+          indicator: String(k.indicator ?? ""),
+          target_value:
+            k.target_value !== null && k.target_value !== undefined
+              ? String(k.target_value)
+              : "",
+          description: String(k.description ?? ""),
+        }))
+      : [];
 
-    const outcomeKpis = (apiData.project_kpis || [])
-      .filter(k => k.indicator === "Outcome" || k.indicator?.toLowerCase() === "outcome")
-      .map((k) => {
-        const t =
-          k.target_value !== null && k.target_value !== undefined
-            ? ` (เป้า: ${k.target_value})`
-            : "";
-        const desc = k.description?.trim() ? ` — ${k.description.trim()}` : "";
-        return `• ${k.indicator}${t}${desc}`;
-      })
-      .filter(Boolean)
-      .join("\n");
-
-    const kpi: KPIParams = {
-      output: outputKpis || "",
-      outcome: outcomeKpis || "",
-    };
-
-    const evalList = apiData.project_evaluation || [];
-    const latestEval = evalList.length
-      ? [...evalList]
-          .sort((a, b) =>
-            (a.updated_at || "").localeCompare(b.updated_at || "")
-          )
-          .at(-1)
-      : null;
+    const evals = (apiData as any).project_evaluation ?? [];
+    const latestEval =
+      Array.isArray(evals) && evals.length
+        ? [...evals].sort((a: any, b: any) =>
+            String(a?.updated_at ?? "").localeCompare(
+              String(b?.updated_at ?? "")
+            )
+          )[evals.length - 1]
+        : null;
 
     const estimate: EstimateParams = {
       estimateType: latestEval?.estimate_type || "",
@@ -197,14 +144,15 @@ async function getProject(id: string): Promise<Project | null> {
       endDate: latestEval?.end_date || "",
     } as any;
 
-    const expectResults = (apiData.project_objectives_and_outcomes || [])
-      .filter((x) => x.type === "expectation")
-      .map((x) => ({ description: x.description || "" }))
-      .filter((x) => x.description.trim());
-
-    const expect: ExpectParams = {
-      results: expectResults as any,
-    };
+    const project_objectives_and_outcomes: ProjectObjectiveOrOutcome[] =
+      Array.isArray((apiData as any).project_objectives_and_outcomes)
+        ? (apiData as any).project_objectives_and_outcomes.map((x: any) => ({
+            id: Number(x?.id ?? 0),
+            project_id: String(x?.project_id ?? id),
+            type: (x?.type as "objective" | "expectation") ?? "objective",
+            description: String(x?.description ?? ""),
+          }))
+        : [];
 
     const approve: ApproveParams = {
       proposerName: "",
@@ -214,25 +162,26 @@ async function getProject(id: string): Promise<Project | null> {
       directorComment: "",
     };
 
-    const project: Project = {
+    return {
       id,
-      status: "in_progress",
+      budgetPlanId: apiData.budget_plan_id,
+      status: (apiData.project_status as Project["status"]) || "in_progress",
       progress: 0,
       updatedAt: apiData.updated_at,
-      budgetPlanId: (apiData as any).budget_plan_id ?? id,
+      budgetPlanStatus: apiData.budget_plan_status,
       generalInfo,
       strategy,
       duration,
       budget,
       activities,
-      kpi,
+      rawProgress,
+      kpi: kpis,
       estimate,
-      expect,
+      project_objectives_and_outcomes,
       approve,
       goal,
+      closureRecord: (apiData as any).closure_record ?? null,
     };
-
-    return project;
   } catch (e) {
     console.error("getProject error:", e);
     return null;
@@ -253,318 +202,73 @@ export default async function Page({ params }: { params: PageParams }) {
           โครงการอาจถูกลบหรือคุณไม่มีสิทธิ์เข้าถึง
         </p>
         <div className="mt-6">
-          <Link
-            href="/organizer/approve/"
-            className="text-indigo-600 hover:underline"
-          >
+          <Link href="/organizer/approve/" className="text-indigo-600 hover:underline">
             กลับไปยังหน้าหลัก
           </Link>
         </div>
       </main>
     );
   }
-  const budgetPlanId = p.budgetPlanId;
+
   let permission: CheckPermissionResponse | null = null;
   try {
-    permission = await checkApprovalPermissionServer(budgetPlanId);
+    permission = await checkApprovalPermissionServer(p.budgetPlanId!);
   } catch (e) {
     console.error("checkApprovalPermissionServer error:", e);
-    permission = null;
   }
-  const canApprove = Boolean(permission?.has_permission);
-  const currentRole = permission?.currentRole ?? 0;
-  const currentLevel = permission?.current_level ?? 0;
-  const {
-    generalInfo,
-    strategy,
-    duration,
-    budget,
-    activities,
-    kpi,
-    estimate,
-    expect,
-    approve,
-    goal,
-  } = p;
+
   return (
     <BackGroundLight>
-      <div className="w-full flex py-5 justify-center">
-        <main className="lg:max-w-5/6 py-4 lg:px-0 px3 w-full">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <Link
-                href="/organizer/approve/"
-                className="rounded-md  bg-gray-200 hover:bg-gray-400 hover:text-white px-4 py-2 text-sm font-medium
-           text-slate-700  disabled:opacity-60"
-              >
-                กลับ
-              </Link>
-              <h1 className="text-2xl mt-5 font-bold text-gray-900">
-                ชื่อโครงการ : {generalInfo?.name || "ไม่ระบุชื่อโครงการ"}
-              </h1>
-
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                <StatusBadge status={p.status} />
-
-                <span className="flex items-center gap-1">
-                  อัปเดตล่าสุด:
-                  <b className="text-gray-800">
-                    {formatThaiDateTime(p.updatedAt)}
-                  </b>
-                </span>
-              </div>
+      <main className="lg:mx-10 lg:pl-16 px-4 py-8">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <Link
+              href="/organizer/approve/"
+              className="rounded-md bg-gray-200 hover:bg-gray-400 hover:text-white px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-60"
+            >
+              กลับ
+            </Link>
+            <h1 className="text-2xl mt-5 font-bold text-gray-900">
+              {p.generalInfo?.name || "ไม่ระบุชื่อโครงการ"}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+              <StatusBadge status={p.status} />
+              <span className="flex items-center gap-1">
+                อัปเดตล่าสุด:
+                <b className="text-gray-800">{formatThaiDateTime(p.updatedAt)}</b>
+              </span>
             </div>
-
-            {permission?.has_permission && (
-              <div className="flex flex-col gap-1">
-                <Link
-                  href={`/organizer/approve/${id}/approve`}
-                  className="rounded-md flex justify-center items-center gap-4
-                    bg-indigo-600 hover:bg-indigo-900
-                    px-4 py-2 text-sm font-semibold text-white"
-                >
-                  <FileClock className="h-5 w-5 text-white" />
-                  อนุมัติโครงการ
-                  <ArrowRight className="h-5 w-5 text-white" />
-                </Link>
-
-                <p className="text-xs text-gray-500 text-center">
-                  คุณกำลังอนุมัติในฐานะ{" "}
-                  <span className="font-medium text-gray-700">
-                    {ROLE_LABEL[permission.currentRole] ?? "—"}
-                  </span>
-                </p>
-              </div>
-            )}
-            {permission && !permission.has_permission && (
-              <div className="rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-500">
-                ขณะนี้ยังไม่ถึงลำดับการอนุมัติของคุณ
-              </div>
-            )}
           </div>
-          <section className="mb-8 rounded-md border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-green-600">
-                ความคืบหน้า
-              </span>
-              <span className="text-sm font-semibold text-gray-900 tabular-nums">
-                {p.progress}%
-              </span>
+
+          {permission?.has_permission && (
+            <div className="flex flex-col gap-1">
+              <Link
+                href={`/organizer/approve/${id}/approve`}
+                className="rounded-md flex justify-center items-center gap-4
+                  bg-indigo-600 hover:bg-indigo-900
+                  px-4 py-2 text-sm font-semibold text-white"
+              >
+                <FileClock className="h-5 w-5 text-white" />
+                อนุมัติโครงการ
+                <ArrowRight className="h-5 w-5 text-white" />
+              </Link>
+              <p className="text-xs text-gray-500 text-center">
+                คุณกำลังอนุมัติในฐานะ{" "}
+                <span className="font-medium text-gray-700">
+                  {ROLE_LABEL[permission.currentRole] ?? "—"}
+                </span>
+              </p>
             </div>
-            <div className="mt-3">
-              <ProgressBar value={p.progress} status={p.status} />
+          )}
+          {permission && !permission.has_permission && (
+            <div className="rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-500">
+              ขณะนี้ยังไม่ถึงลำดับการอนุมัติของคุณ
             </div>
-          </section>
+          )}
+        </div>
 
-          <Section title="ข้อมูลพื้นฐาน">
-            <Grid2>
-              <Field label="ประเภทโครงการ" value={generalInfo?.type || "—"} />
-              <Field
-                label="หน่วยงานที่รับผิดชอบ"
-                value={"หน่วยงานความมั่นคง"}
-              />
-              <Field label="ผู้รับผิดชอบโครงการ" value={generalInfo?.owner_user_id || "—"} />
-            </Grid2>
-          </Section>
-
-          <Section title="เป้าหมายของโครงการ">
-            <Grid2>
-              <Field label="เชิงปริมาณ">
-                <p className="text-sm text-gray-800 whitespace-pre-line">
-                  {goal?.quantityGoal?.trim() || "—"}
-                </p>
-              </Field>
-              <Field label="เชิงคุณภาพ">
-                <p className="text-sm text-gray-800 whitespace-pre-line">
-                  {goal?.qualityGoal?.trim() || "—"}
-                </p>
-              </Field>
-            </Grid2>
-          </Section>
-
-          <Section title="ระยะเวลาดำเนินงาน">
-            <Grid2>
-              <Field
-                label="วันเริ่มต้น"
-                value={dateOrDash(duration?.startDate)}
-              />
-              <Field label="วันสิ้นสุด" value={dateOrDash(duration?.endDate)} />
-              <Field
-                label="ระยะเวลา (เดือน)"
-                value={numOrDash(duration?.durationMonths)}
-              />
-            </Grid2>
-          </Section>
-
-          <Section title="ความสอดคล้องเชิงยุทธศาสตร์">
-            <Grid2>
-              <Field label="แผนยุทธศาสตร์ของสถานศึกษา">
-                <RichOrDash text={strategy?.schoolPlan} />
-              </Field>
-              <Field label="นโยบาย/ยุทธศาสตร์ของ สอศ.">
-                <RichOrDash text={strategy?.ovEcPolicy} />
-              </Field>
-              <Field label="ตัวชี้วัดงานประกันคุณภาพภายใน">
-                <RichOrDash text={strategy?.qaIndicator} />
-              </Field>
-            </Grid2>
-          </Section>
-
-          <Section title="ตัวชี้วัดความสำเร็จ (KPIs)">
-            <Grid2>
-              <Field label="ผลผลิต (Output)">
-                <RichOrDash text={kpi?.output} />
-              </Field>
-              <Field label="ผลลัพธ์ (Outcome)">
-                <RichOrDash text={kpi?.outcome} />
-              </Field>
-            </Grid2>
-          </Section>
-
-          {/* Estimate */}
-          <Section title="การติดตามและประเมินผล">
-            <Grid2>
-              <Field
-                label="วิธีการ / ประเภทการประเมินผล"
-                value={estimate?.estimateType || "—"}
-              />
-              <Field
-                label="ผู้รับผิดชอบการประเมิน"
-                value={estimate?.evaluator || "—"}
-              />
-              <Field
-                label="ระยะเวลา"
-                value={
-                  estimate?.startDate || estimate?.endDate
-                    ? `${dateOrDash(estimate?.startDate)} - ${dateOrDash(
-                        estimate?.endDate
-                      )}`
-                    : "—"
-                }
-              />
-            </Grid2>
-          </Section>
-
-          <Section title="ผลที่คาดว่าจะได้รับ">
-            {expect?.results?.length ? (
-              <ul className="list-disc pl-5 text-sm text-gray-800">
-                {expect.results
-                  .filter((r) => r.description?.trim())
-                  .map((r, idx) => (
-                    <li key={idx} className="whitespace-pre-line">
-                      {r.description}
-                    </li>
-                  ))}
-              </ul>
-            ) : (
-              <span>—</span>
-            )}
-          </Section>
-
-          <Section title="งบประมาณ" icon={<Coins className="h-5 w-5 "/>}>
-            {!budget ? (
-              <EmptyRow>ยังไม่มีการบันทึกงบประมาณ</EmptyRow>
-            ) : (
-              <div className="space-y-4">
-                <Grid2>
-                  <Field label="แหล่งงบประมาณ">
-                    <BudgetSources sources={budget.sources} />
-                  </Field>
-                  <Field label="งบประมาณรวม" value={formatBaht(budget.total)} />
-                </Grid2>
-
-                <div className="overflow-x-auto rounded border border-gray-200">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr className="text-gray-700">
-                        <Th className="font-semibold">#</Th>
-                        <Th className="font-semibold">รายการ</Th>
-                        <Th className="text-right font-semibold">จำนวนเงิน</Th>
-                        <Th className="font-semibold">หมายเหตุ</Th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {budget.rows?.length ? (
-                        budget.rows.map((r) => (
-                          <tr key={r.id}>
-                            <Td className="px-3 py-2 text-center">{r.id}</Td>
-                            <Td className="px-3 py-2">{r.name || "—"}</Td>
-                            <Td className="px-3 py-2 text-right">
-                              {moneyOrDash(r.amount)}
-                            </Td>
-                            <Td className="px-3 py-2">{r.remark || "—"}</Td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="px-3 py-3 text-center text-gray-500"
-                          >
-                            ยังไม่มีรายการงบประมาณ
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </Section>
-
-          <Section title="ขั้นตอนการดำเนินงานกิจกรรม" icon={<Calendar className="h-5 w-5"/>}>
-            {!activities?.length ? (
-              <EmptyRow>ยังไม่มีการบันทึกกิจกรรม</EmptyRow>
-            ) : (
-              <div className="overflow-x-auto rounded border border-gray-200">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 text-gray-700">
-                    <tr>
-                      <Th className="w-16">ลำดับ</Th>
-                      <Th>กิจกรรม</Th>
-                      <Th className="w-56">ระยะเวลา</Th>
-                      <Th className="w-64">ผู้รับผิดชอบ</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {activities.map((a) => (
-                      <tr key={a.id}>
-                        <Td className="px-3 py-2 text-center">{a.id}</Td>
-                        <Td className="px-3 py-2">{a.activity || "—"}</Td>
-                        <Td className="px-3 py-2">
-                          {a.startDate || a.endDate
-                            ? `${dateOrDash(a.startDate)} - ${dateOrDash(
-                                a.endDate
-                              )}`
-                            : "—"}
-                        </Td>
-                        <Td className="px-3 py-2">{a.owner || "—"}</Td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Section>
-
-          <Section title="การอนุมัติและลงนาม">
-            <Grid2>
-              <Field label="ผู้เสนอ" value={approve?.proposerName || "—"} />
-              <Field label="ตำแหน่ง" value={approve?.proposerPosition || "—"} />
-              <Field
-                label="วันที่เสนอ"
-                value={dateOrDash(approve?.proposeDate)}
-              />
-              <Field label="ความเห็นหัวหน้างาน/แผนก">
-                <RichOrDash text={approve?.deptComment} />
-              </Field>
-              <Field label="ความเห็นผู้บริหาร/ผู้อำนวยการ">
-                <RichOrDash text={approve?.directorComment} />
-              </Field>
-            </Grid2>
-          </Section>
-        </main>
-      </div>
+        <ProjectDetailClient initialProject={p} isOwner={false} projectStatus={p.status} />
+      </main>
     </BackGroundLight>
   );
 }

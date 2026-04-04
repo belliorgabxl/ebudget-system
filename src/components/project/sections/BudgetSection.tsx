@@ -124,6 +124,7 @@ export function BudgetSection({
       title="งบประมาณ"
       isEditing={isEditing}
       isSaving={isSaving}
+      canEdit={canEdit}
       onEdit={() => canEdit && onEdit()}
       onCancel={() => {
         setDraft(originalDraft);

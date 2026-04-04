@@ -55,6 +55,7 @@ export function GeneralInfoSection({
       title="ข้อมูลทั่วไป"
       isEditing={isEditing}
       isSaving={isSaving}
+      canEdit={canEdit}
       onEdit={() => canEdit && onEdit()}
       onCancel={() => {
         setDraft(original);

@@ -8,6 +8,7 @@ import {
   Users,
   DollarSign,
   User,
+  FileUser,
   BookOpen,
 } from "lucide-react";
 
@@ -62,8 +63,15 @@ export const MENU: MenuItem[] = [
   {
     id: "projects",
     href: "/organizer/projects/my-project",
+    icon: FileUser,
+    label: "โครงการของฉัน",
+    allow: ["department_user", "department_head", "planning", "director"],
+  },
+  {
+    id: "all-projects",
+    href: "/organizer/projects/all-project",
     icon: ClipboardList,
-    label: "โครงการ",
+    label: "โครงการทั้งหมด",
     allow: ["department_user", "department_head", "planning", "director"],
   },
   {
@@ -107,13 +115,6 @@ export const MENU: MenuItem[] = [
     icon: DollarSign,
     label: "งบประมาณประจำปี",
     allow: ["planning", "director", "department_user", "department_head", "hr"],
-  },
-  {
-    id: "profile",
-    href: "/organizer/profile",
-    icon: User,
-    label: "ข้อมูลผู้ใช้",
-    allow: ["director"],
   },
   {
     id: "setup",

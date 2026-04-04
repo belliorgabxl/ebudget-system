@@ -1,23 +1,17 @@
 import { Department } from "@/dto/projectDto";
-import { mockDepartments } from "@/resource/mock-data";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DepartmentEditForm } from "@/components/department/EditForm";
 import BackGroundLight from "@/components/background/bg-light";
+import { nestGet } from "@/lib/server-api";
 
 async function getDepartment(id: string): Promise<Department | null> {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/departments/${id}`,
-      { cache: "no-store", headers: { accept: "application/json" } }
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = (await res.json()) as { data?: Department } | Department;
-    const dep = "data" in data ? data.data ?? null : (data as Department);
-    if (dep) return dep;
-    return mockDepartments.find((d) => d.id === id) ?? null;
+    const r = await nestGet<{ data: Department }>(`/departments/${id}`);
+    if (!r.success || !r.data?.data) return null;
+    return r.data.data;
   } catch {
-    return mockDepartments.find((d) => d.id === id) ?? null;
+    return null;
   }
 }
 

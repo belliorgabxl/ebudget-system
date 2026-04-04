@@ -56,6 +56,7 @@ export async function GetProjectsByOrgFromApi(
   if (params.budget_max !== undefined && params.budget_max !== "") qs.set("budget_max", String(params.budget_max));
   if (params.sort_by) qs.set("sort_by", params.sort_by);
   if (params.sort_dir) qs.set("sort_dir", params.sort_dir);
+  if (params.my_projects_only) qs.set("my_projects_only", "true");
 
   const url = `/api/dashboard/projects${qs.toString() ? `?${qs.toString()}` : ""}`;
 

@@ -17,16 +17,6 @@ import { ProjectCountByDeptChart } from "@/components/dashboard/ProjectCountByDe
 import { ProjectCountByStatusChart } from "@/components/dashboard/ProjectCountByStatusChart"
 import {yearFilterItems} from "@/lib/util"
 
-// mock data
-import {
-    MOCK_ALLTIME_BUDGET,
-    MOCK_APPROVALS,
-    MOCK_BUDGET_BY_DEPT_YEAR,
-    MOCK_BUDGET_BY_STATUS_YEAR,
-    MOCK_PROJECT_COUNT_BY_DEPT_BY_YEAR,
-    MOCK_PROJECT_COUNT_BY_STATUS_BY_YEAR,
-    MOCK_YEAR_KPI,
-} from "@/app/mock"
 
 import { ApprovalQueue } from "@/components/dashboard/ApprovalQueue"
 import { StrategyQaSection } from "@/components/dashboard/StrategyQaSection"
@@ -327,7 +317,7 @@ export default function DashboardDirectorPage() {
                 annualBudgetSummary: annualBudgetSummary || undefined,
             }
         }
-        return { ...MOCK_YEAR_KPI[year], totalBudget: annualBudgetSummary?.summary.total_budget || 0, selectedYear: year, annualBudgetSummary: annualBudgetSummary || undefined }
+        return { totalBudget: 0, totalProjects: 0, avgBudget: 0, totalEmployees: 0, totalDepartments: 0, selectedYear: year, annualBudgetSummary: undefined }
     }, [kpiData, year, annualBudgetSummary])
 
     /* ===== render ===== */
@@ -368,7 +358,7 @@ export default function DashboardDirectorPage() {
                     />
 
                     <div key={`kpi-${animationKey}`} className="animate-fade-in">
-                        <OrgKpiSummary {...yearKpi} />
+                        <OrgKpiSummary {...yearKpi} loading={kpiLoading || annualBudgetLoading} />
                     </div>
 
                     <div key={`budget-${animationKey}`} className="grid grid-cols-1 xl:grid-cols-2 gap-6 animate-fade-in">

@@ -47,7 +47,7 @@ const INITIAL_FILTERS: FilterState = {
   budget_max: "",
 };
 
-export default function Page() {
+export default function AllProjectPage() {
   const [projects, setProjects] = useState<GetProjectsByOrgRespond[]>([]);
   const [fetchDataLoader, setFetchDataLoader] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
@@ -58,7 +58,6 @@ export default function Page() {
   const [applied, setApplied] = useState<FilterState>(INITIAL_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // Sort state — controlled independently (applied immediately)
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
@@ -118,7 +117,7 @@ export default function Page() {
           ...(applied.budget_max && { budget_max: applied.budget_max }),
           sort_by: sortBy,
           sort_dir: sortDir,
-          my_projects_only: true,
+          // No my_projects_only — show all org projects
         };
 
         const res = await GetProjectsByOrgFromApi(query);
@@ -133,7 +132,7 @@ export default function Page() {
         setProjects(res.data ?? []);
         setPg(res.pagination ?? null);
       } catch (err) {
-        console.error("[Page] loadProjects error:", err);
+        console.error("[AllProjectPage] loadProjects error:", err);
         if (!cancelled) {
           setProjects([]);
           setPg(null);
@@ -157,9 +156,10 @@ export default function Page() {
       <main className="w-full grid place-items-center lg:px-18 md:px-10 sm:px-5 px-1 py-6">
         <div className="lg:px-20 lg:pt-0 pt-10 px-2 w-full">
           <ProjectsHeader
-            title="โครงการของฉัน"
-            subtitle="แสดงเฉพาะโครงการที่คุณเป็นเจ้าของหรือผู้รับผิดชอบ"
-            showCreateButton={true}
+            title="โครงการทั้งหมด"
+            subtitle="แสดงโครงการทั้งหมดในองค์กร — ดูได้อย่างเดียว ไม่สามารถแก้ไขได้"
+            showCreateButton={false}
+            readOnly={true}
           />
           <div className="flex items-center justify-between gap-3 mb-2">
             <ProjectsSummaryCard total={pg?.total} />
@@ -196,10 +196,9 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Collapsible filter panel */}
+          {/* Filter panel */}
           {filterOpen && (
             <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 space-y-3 shadow-sm">
-              {/* Row 1: text searches + status */}
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <input
                   type="text"
@@ -238,7 +237,6 @@ export default function Page() {
                 </select>
               </div>
 
-              {/* Row 2: dates + budget range */}
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">ระยะเวลา เริ่ม</label>
@@ -282,7 +280,6 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex gap-2 justify-end pt-1">
                 <button
                   onClick={handleSearch}
@@ -331,6 +328,7 @@ export default function Page() {
                   sortBy={sortBy}
                   sortDir={sortDir}
                   onSort={handleSort}
+                  readOnly={true}
                 />
               </div>
 
@@ -349,4 +347,3 @@ export default function Page() {
     </BackGroundLight>
   );
 }
-

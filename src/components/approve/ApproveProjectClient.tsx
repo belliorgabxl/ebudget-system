@@ -66,8 +66,7 @@ export default function ApproveProjectClient({
 
       setOpenReturn(false);
       push("success", "ส่งกลับโครงการสำเร็จ");
-      router.back();
-      router.refresh();
+      router.push("/organizer/approve");
     } catch (e: any) {
       const errorMsg = e?.message || e?.response?.data?.message || "ไม่สามารถส่งกลับโครงการได้";
       push("error", "ส่งกลับไม่สำเร็จ", errorMsg);
@@ -93,8 +92,7 @@ export default function ApproveProjectClient({
 
       setOpenReject(false);
       push("success", "ปฏิเสธโครงการสำเร็จ");
-      router.back();
-      router.refresh();
+      router.push("/organizer/approve");
     } catch (e: any) {
       const errorMsg = e?.message || e?.response?.data?.message || "ไม่สามารถทำรายการได้";
       push("error", "ปฏิเสธไม่สำเร็จ", errorMsg);
