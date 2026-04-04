@@ -539,8 +539,7 @@ export function ProjectDetailClient({
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-gray-600 text-xs font-semibold">
                 <tr>
-                  <th className="px-4 py-2.5 text-center w-12">ลำดับ</th>
-                  <th className="px-4 py-2.5 text-left">รายการกิจกรรม / คำอธิบาย</th>
+                  <th className="px-4 py-2.5 text-center">รายการกิจกรรม / คำอธิบาย</th>
                   <th className="px-4 py-2.5 text-center w-32">วันที่เริ่มต้น</th>
                   <th className="px-4 py-2.5 text-center w-32">วันที่สิ้นสุด</th>
                   <th className="px-4 py-2.5 text-left w-36">ผู้รับผิดชอบ</th>
@@ -554,7 +553,6 @@ export function ProjectDetailClient({
                   return (
                     <React.Fragment key={p.id}>
                       <tr className="hover:bg-indigo-50/30 transition-colors">
-                        <td className="px-4 py-2.5 text-center text-gray-400">{p.sequence_number}</td>
                         <td className="px-4 py-2.5 text-gray-800 whitespace-pre-line">{p.description || "—"}</td>
                         <td className="px-4 py-2.5 text-center text-gray-500">
                           {p.start_date ? new Date(p.start_date).toLocaleDateString("th-TH") : "—"}

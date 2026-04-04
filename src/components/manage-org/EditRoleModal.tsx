@@ -9,9 +9,10 @@ interface EditRoleModalProps {
   role: OrganizationRole;
   onSave: (role: any) => void;
   onClose: () => void;
+  pendingLock?: boolean;
 }
 
-export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalProps) {
+export default function EditRoleModal({ role, onSave, onClose, pendingLock = false }: EditRoleModalProps) {
   const { push } = useToast();
   const [form, setForm] = useState({
     name: role.name,
@@ -62,6 +63,34 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
     }
     if (form.approval_level < 0) {
       push('error', 'ระดับการอนุมัติต้องไม่น้อยกว่า 0');
+      return;
+    }
+
+    // pendingLock: only allow display_name and description
+    if (pendingLock) {
+      try {
+        const result = await UpdateRoleFromApi(role.id, {
+          name: role.name,
+          display_name: form.display_name.trim() || role.name,
+          description: form.description.trim(),
+          approval_level: role.approval_level,
+          role_code: role.code,
+          can_create_budget_plan: role.can_create_budget_plan,
+          can_view_all_plans: role.can_view_all_plans,
+          can_approve: role.can_approve,
+          can_edit_qas: role.can_edit_qas,
+          is_system_role: role.is_system,
+          is_active: role.is_active,
+        });
+        if (result.success) {
+          push('success', 'แก้ไขบทบาทสำเร็จ');
+          onSave(result.data);
+        } else {
+          push('error', 'ไม่สามารถแก้ไขบทบาทได้', result.message || '');
+        }
+      } catch {
+        push('error', 'เกิดข้อผิดพลาดในการแก้ไขบทบาท');
+      }
       return;
     }
 
@@ -123,10 +152,15 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
 
         {/* Body */}
         <div className="px-6 py-6 space-y-4">
-          {/* Protected Role Warning */}
+        {/* Protected Role Warning */}
           {isProtected && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
               <strong>⚠️ บทบาทระบบ:</strong> บทบาทนี้เป็นบทบาทเริ่มต้นของระบบ สามารถแก้ไขได้เฉพาะชื่อ, ชื่อแสดง, คำอธิบาย และระดับการอนุมัติเท่านั้น
+            </div>
+          )}
+          {pendingLock && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+              <strong>⚠️ มีรายการรออนุมัติอยู่:</strong> สามารถแก้ไขได้เฉพาะ <strong>ชื่อแสดง</strong> และ <strong>คำอธิบาย</strong> เท่านั้น
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -137,8 +171,9 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className={`w-full rounded-lg border border-gray-300 px-3 py-2 ${pendingLock ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 placeholder="เช่น custom_manager"
+                disabled={pendingLock}
               />
             </div>
             <div>
@@ -161,10 +196,10 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
               <input
                 value={form.role_code}
                 onChange={(e) => setForm({ ...form, role_code: e.target.value })}
-                className={`w-full rounded-lg border border-gray-300 px-3 py-2 ${isProtected ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className={`w-full rounded-lg border border-gray-300 px-3 py-2 ${isProtected || pendingLock ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 placeholder="เช่น custom_manager"
-                disabled={isProtected}
-                title={isProtected ? "ไม่สามารถแก้ไขรหัสบทบาทของบทบาทระบบได้" : ""}
+                disabled={isProtected || pendingLock}
+                title={isProtected ? "ไม่สามารถแก้ไขรหัสบทบาทของบทบาทระบบได้" : pendingLock ? "มีรายการรออนุมัติ" : ""}
               />
             </div>
             <div>
@@ -176,8 +211,9 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
                 min="0"
                 value={form.approval_level}
                 onChange={(e) => setForm({ ...form, approval_level: parseInt(e.target.value) || 0 })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className={`w-full rounded-lg border border-gray-300 px-3 py-2 ${pendingLock ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 placeholder="0"
+                disabled={pendingLock}
               />
             </div>
           </div>
@@ -188,10 +224,11 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
               <div className="flex items-center gap-3">
 
                 <button
-                  onClick={(e) => { e.stopPropagation(); setForm((p) => ({ ...p, is_active: !p.is_active })); }}
+                  onClick={(e) => { e.stopPropagation(); if (!pendingLock) setForm((p) => ({ ...p, is_active: !p.is_active })); }}
                   aria-pressed={form.is_active}
-                  title={form.is_active ? 'ระงับการใช้งาน' : 'เปิดใช้งาน'}
-                  className={`relative inline-flex items-center h-5 w-10 rounded-full transition-colors focus:outline-none ${form.is_active ? 'bg-green-600' : 'bg-gray-300'}`}
+                  title={pendingLock ? 'มีรายการรออนุมัติ' : form.is_active ? 'ระงับการใช้งาน' : 'เปิดใช้งาน'}
+                  disabled={pendingLock}
+                  className={`relative inline-flex items-center h-5 w-10 rounded-full transition-colors focus:outline-none ${form.is_active ? 'bg-green-600' : 'bg-gray-300'} ${pendingLock ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${form.is_active ? 'translate-x-5' : 'translate-x-1'}`} />
                   <span className="sr-only">{form.is_active ? 'เปิดใช้งาน' : 'ระงับการใช้งาน'}</span>
@@ -217,10 +254,10 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
                   type="checkbox"
                   checked={form.can_create_budget_plan}
                   onChange={(e) => setForm({ ...form, can_create_budget_plan: e.target.checked })}
-                  className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${isProtected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={isProtected}
+                  className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${isProtected || pendingLock ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isProtected || pendingLock}
                 />
-                <label className={`ml-2 block text-sm ${isProtected ? 'text-gray-500' : 'text-gray-900'}`}>
+                <label className={`ml-2 block text-sm ${isProtected || pendingLock ? 'text-gray-500' : 'text-gray-900'}`}>
                   สร้างแผนงบประมาณ
                 </label>
               </div>
@@ -229,10 +266,10 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
                   type="checkbox"
                   checked={form.can_view_all_plans}
                   onChange={(e) => setForm({ ...form, can_view_all_plans: e.target.checked })}
-                  className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${isProtected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={isProtected}
+                  className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${isProtected || pendingLock ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isProtected || pendingLock}
                 />
-                <label className={`ml-2 block text-sm ${isProtected ? 'text-gray-500' : 'text-gray-900'}`}>
+                <label className={`ml-2 block text-sm ${isProtected || pendingLock ? 'text-gray-500' : 'text-gray-900'}`}>
                   ดูแผนทั้งหมด
                 </label>
               </div>
@@ -241,10 +278,10 @@ export default function EditRoleModal({ role, onSave, onClose }: EditRoleModalPr
                   type="checkbox"
                   checked={form.can_approve}
                   onChange={(e) => setForm({ ...form, can_approve: e.target.checked })}
-                  className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${isProtected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={isProtected}
+                  className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${isProtected || pendingLock ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isProtected || pendingLock}
                 />
-                <label className={`ml-2 block text-sm ${isProtected ? 'text-gray-500' : 'text-gray-900'}`}>
+                <label className={`ml-2 block text-sm ${isProtected || pendingLock ? 'text-gray-500' : 'text-gray-900'}`}>
                   อนุมัติ
                 </label>
               </div>

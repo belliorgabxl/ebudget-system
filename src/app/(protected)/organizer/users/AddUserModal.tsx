@@ -38,9 +38,11 @@ type AddUserModalProps = {
   open: boolean;
   onClose: () => void;
   onAdd: (u: any) => void;
+  quotaMaxUsers?: number;
+  quotaCurrentUsers?: number;
 };
 
-export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps) {
+export default function AddUserModal({ open, onClose, onAdd, quotaMaxUsers, quotaCurrentUsers }: AddUserModalProps) {
   const { push } = useToast();
 
   const initialForm: NewUser = {
@@ -202,6 +204,12 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
   };
 
   const handleSubmit = async () => {
+    // ตรวจสอบ quota ก่อน
+    if (quotaMaxUsers != null && quotaCurrentUsers != null && quotaCurrentUsers >= quotaMaxUsers) {
+      push("error", "เกินจำนวน quota", `จำนวนผู้ใช้สูงสุดในองค์กรคือ ${quotaMaxUsers} คน (ปัจจุบัน ${quotaCurrentUsers} คน)`);
+      return;
+    }
+
     const ok = validateAll();
     if (!ok) {
       push("error", "ข้อมูลไม่ครบ/ไม่ถูกต้อง", "กรุณาตรวจสอบช่องที่มีข้อความเตือน");
@@ -324,6 +332,19 @@ export default function AddUserModal({ open, onClose, onAdd }: AddUserModalProps
 
         <div className="p-6 space-y-4">
           {optionsError && <div className="text-sm text-red-600">โหลดตัวเลือกผิดพลาด: {optionsError}</div>}
+
+          {quotaMaxUsers != null && quotaCurrentUsers != null && (
+            <div className={`text-sm px-3 py-2 rounded-lg border ${
+              quotaCurrentUsers >= quotaMaxUsers
+                ? "bg-red-50 border-red-200 text-red-700"
+                : quotaCurrentUsers >= quotaMaxUsers * 0.8
+                ? "bg-amber-50 border-amber-200 text-amber-700"
+                : "bg-gray-50 border-gray-200 text-gray-600"
+            }`}>
+              โควต้าผู้ใช้: {quotaCurrentUsers} / {quotaMaxUsers} คน
+              {quotaCurrentUsers >= quotaMaxUsers && " — เต็มโควต้าแล้ว ไม่สามารถเพิ่มผู้ใช้ได้"}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             {/* first_name */}

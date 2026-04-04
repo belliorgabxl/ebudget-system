@@ -243,21 +243,21 @@ export default function RegularWorkTemplateDetailPage() {
           </button>
 
           {/* Title card */}
-          <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white px-6 py-5 shadow-md">
+          <div className="rounded-2xl bg-white border border-indigo-100 px-6 py-5 shadow-sm">
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 bg-white/20 rounded-xl p-3">
-                <BookOpen className="h-7 w-7 text-white" />
+              <div className="flex-shrink-0 bg-indigo-50 rounded-xl p-3">
+                <BookOpen className="h-7 w-7 text-indigo-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold leading-snug">{template.name}</h1>
+                <h1 className="text-xl font-bold text-gray-900 leading-snug">{template.name}</h1>
                 {template.description && (
-                  <p className="mt-1 text-sm text-indigo-100 line-clamp-3">{template.description}</p>
+                  <p className="mt-1 text-sm text-gray-500 line-clamp-3">{template.description}</p>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
                     {template.plan_type === "regular_work" ? "แผนงานประจำ" : template.plan_type}
                   </span>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${template.is_active ? "bg-green-400/30 text-green-100" : "bg-gray-400/30 text-gray-100"}`}>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${template.is_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-500 border-gray-200"}`}>
                     {template.is_active ? "ใช้งาน" : "ปิดใช้งาน"}
                   </span>
                 </div>
@@ -272,17 +272,17 @@ export default function RegularWorkTemplateDetailPage() {
                     onClick={() => !cannotDisable && !actionLoading && handleToggle()}
                     disabled={actionLoading || cannotDisable}
                     aria-pressed={template.is_active}
-                    className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors focus:outline-none ${template.is_active ? "bg-green-400" : "bg-gray-500"} ${cannotDisable || actionLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors focus:outline-none ${template.is_active ? "bg-green-400" : "bg-gray-300"} ${cannotDisable || actionLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${template.is_active ? "translate-x-6" : "translate-x-1"}`} />
                   </button>
-                  <span className="text-xs text-white/80">{template.is_active ? "เปิดอยู่" : "ปิดอยู่"}</span>
+                  <span className="text-xs text-gray-500">{template.is_active ? "เปิดอยู่" : "ปิดอยู่"}</span>
                 </div>
                 <button
                   onClick={() => setConfirm("delete")}
                   disabled={actionLoading || hasProjects}
                   title={hasProjects ? "ไม่สามารถลบได้เนื่องจากมีโครงการอยู่" : "ลบแผนงาน"}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-red-500/80 hover:bg-red-600/80 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="h-4 w-4" /> ลบ
                 </button>
@@ -358,11 +358,11 @@ export default function RegularWorkTemplateDetailPage() {
                   <thead className="bg-gray-50 text-gray-600 text-xs font-semibold">
                     <tr>
                       <th className="px-4 py-2 text-center w-10">No.</th>
-                      <th className="px-4 py-2 text-left">ชื่อโครงการ</th>
-                      <th className="px-4 py-2 text-center w-24">รหัส</th>
+                      <th className="px-4 py-2 text-left w-48 max-w-[12rem]">ชื่อโครงการ</th>
+                      <th className="px-4 py-2 text-center w-28">รหัส</th>
                       <th className="px-4 py-2 text-center w-32">สถานะ</th>
                       <th className="px-4 py-2 text-right w-36">งบประมาณ (บาท)</th>
-                      <th className="px-4 py-2 text-center w-24">วันที่สร้าง</th>
+                      <th className="px-4 py-2 text-center w-28">วันที่สร้าง</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -375,7 +375,9 @@ export default function RegularWorkTemplateDetailPage() {
                           onClick={() => router.push(`/organizer/projects/${p.id}/details`)}
                         >
                           <td className="px-4 py-2.5 text-center text-gray-400">{idx + 1}</td>
-                          <td className="px-4 py-2.5 font-medium text-gray-900">{p.name}</td>
+                          <td className="px-4 py-2.5 w-48 max-w-[12rem]">
+                            <span className="block font-medium text-gray-900 truncate" title={p.name}>{p.name}</span>
+                          </td>
                           <td className="px-4 py-2.5 text-center text-gray-500 font-mono text-xs">{p.code || "—"}</td>
                           <td className="px-4 py-2.5 text-center">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${st.cls}`}>

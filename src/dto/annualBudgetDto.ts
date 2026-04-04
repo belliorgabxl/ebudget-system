@@ -7,6 +7,8 @@ export type AnnualBudget = {
   used_amount: number;
   actual_used_amount: number;
   remaining_amount: number;
+  /** คำนวณใน Next.js route: amount - actual_used_amount */
+  actual_remaining_amount: number;
   usage_percentage: number;
   created_at: string;
   updated_at: string;

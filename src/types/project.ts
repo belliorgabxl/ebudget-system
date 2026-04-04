@@ -32,4 +32,5 @@ export type Project = {
   project_objectives_and_outcomes: ProjectObjectiveOrOutcome[];
   goal: GoalParams;
   closureRecord?: ClosureRecord | null;
+  ownerUser?: string;
 };

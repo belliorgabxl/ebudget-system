@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { formatThaiDateTime, StatusBadge } from "@/components/project/Helper";
+import BackButtonClient from "@/components/BackButtonClient";
+
 import type {
   ApproveParams,
   BudgetTableValue,
@@ -204,6 +206,7 @@ async function getProject(id: string): Promise<{ project: Project; isEdit: boole
       approve,
       goal,
       closureRecord: (apiData as any).closure_record ?? null,
+      ownerUser: apiData.owner_user || "",
     };
 
     return { project, isEdit, latestRemark };
@@ -243,18 +246,7 @@ export default async function Page({ params }: { params: PageParams }) {
   return (
     <BackGroundLight>
       <main className="lg:mx-10 lg:pl-16 px-4 py-8">
-        <nav className="mb-4 text-xs text-gray-500">
-          <Link
-            href="/organizer/projects/my-project"
-            className="hover:underline"
-          >
-            โครงการของคุณ
-          </Link>
-          <span className="mx-1">/</span>
-          <span className="text-gray-700">
-            {p.generalInfo?.name || "ไม่ระบุชื่อโครงการ"}
-          </span>
-        </nav>
+        <BackButtonClient />
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -270,9 +262,16 @@ export default async function Page({ params }: { params: PageParams }) {
                   {formatThaiDateTime(p.updatedAt)}
                 </b>
               </span>
+
+              {p.ownerUser && (
+                <span className="flex items-center gap-1 text-gray-500">
+                  เจ้าของ:
+                  <b className="text-gray-700">{p.ownerUser}</b>
+                </span>
+              )}
             </div>
           </div>
-          <ApprovalStatusButton
+          {isEdit && <ApprovalStatusButton
               projectId={p.id}
               budgetPlanId={p.budgetPlanId}
               status={p.budgetPlanStatus}
@@ -300,7 +299,7 @@ export default async function Page({ params }: { params: PageParams }) {
                   note: "ยังไม่ได้ดำเนินการ",
                 },
               ]}
-            />
+            />}
         </div>
         {latestRemark && (p.budgetPlanStatus === "in_revision" || p.budgetPlanStatus === "rejected") && (
           <div
@@ -331,7 +330,7 @@ export default async function Page({ params }: { params: PageParams }) {
             </div>
           </div>
         )}
-        <ProjectDetailClient initialProject={p} isOwner={true} projectStatus={p.status} />
+        <ProjectDetailClient initialProject={p} isOwner={isEdit} projectStatus={p.status} />
       </main>
     </BackGroundLight>
   );

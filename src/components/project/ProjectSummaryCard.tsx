@@ -30,9 +30,9 @@ export function ProjectsSummaryCard({ total }: Props) {
 
             <div className="flex gap-4 items-center">
               <span className="text-2xl font-extrabold tracking-tight drop-shadow">
-                {total || "กำลังโหลด..."}
+                {total || "0"}
               </span>
-              <span className="text-xl uppercase tracking-wide text-white font-medium">
+              <span className="text-md uppercase tracking-wide text-white font-medium">
                 โครงการ
               </span>
             </div>

@@ -181,13 +181,13 @@ export default function BudgetSettingsPage() {
                 />
                 <StatsCard
                   label="งบรวมทั้งหมด"
-                  value={`฿${budgetSummary?.summary.total_budget ?? "-"}`}
+                  value={budgetSummary?.summary.total_budget != null ? `฿${budgetSummary.summary.total_budget.toLocaleString("th-TH")}` : "-"}
                   icon={<DollarSign className="h-6 w-6" />}
                   color="green"
                 />
                 <StatsCard
-                  label="งบที่ใช้ไปแล้ว"
-                  value={`฿${budgetSummary?.summary.used_budget ?? "-"}`}
+                  label="งบที่ใช้อนุมัติไปแล้ว"
+                  value={budgetSummary?.summary.used_budget != null ? `฿${budgetSummary.summary.used_budget.toLocaleString("th-TH")}` : "-"}
                   icon={<DollarSign className="h-6 w-6" />}
                   color="orange"
                 />
@@ -201,25 +201,29 @@ export default function BudgetSettingsPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900">
                       ปีงบประมาณ
                     </th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-900">
                       งบสูงสุด
                     </th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                      งบที่ใช้ไป
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-900">
+                      งบที่ใช้อนุมัติไปแล้ว
                     </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                     งบคงเหลือ(อนุมัติไปแล้ว)
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-900">
+                      งบคงเหลือหลังอนุมัติ
                     </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                      ใช้จริง (ปิดโครงการแล้ว)	
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-900">
+                      งบที่ใช้จริงในโครงการ
                     </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-900">
+                     <p> งบคงเหลือ</p>
+                      <p>หลังใช้จริงในโครงการ</p>
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-900">
                       สถานะการใช้งาน
                     </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-900">
                       การจัดการ
                     </th>
                   </tr>
@@ -227,7 +231,7 @@ export default function BudgetSettingsPage() {
                 <tbody className="divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center">
+                      <td colSpan={8} className="px-6 py-12 text-center">
                         <div className="flex items-center justify-center">
                           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
                         </div>
@@ -236,7 +240,7 @@ export default function BudgetSettingsPage() {
                   ) : budgets.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={8}
                         className="px-6 py-12 text-center text-gray-500"
                       >
                         ยังไม่มีข้อมูลงบประมาณ กรุณาเพิ่มงบประมาณ
@@ -257,31 +261,45 @@ export default function BudgetSettingsPage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          {/* งบสูงสุด */}
+                          <td className="px-6 py-4 text-center">
                             <span className="text-sm font-medium text-gray-900">
                               ฿{formatCompactNumber(budget.amount)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          {/* งบที่ใช้อนุมัติไปแล้ว */}
+                          <td className="px-6 py-4 text-center">
                             <span className="text-sm text-gray-600">
                               ฿{formatCompactNumber(budget.used_amount)}
                             </span>
                           </td>
+                          {/* งบคงเหลือหลังอนุมัติ = amount - used_amount */}
                           <td className="px-6 py-4 text-center">
                             <span className={`text-sm font-medium ${
-                              budget.remaining_amount < 0 
-                                ? "text-red-600" 
+                              budget.remaining_amount < 0
+                                ? "text-red-600"
                                 : "text-green-600"
                             }`}>
                               ฿{formatCompactNumber(budget.remaining_amount)}
                             </span>
                           </td>
+                          {/* งบที่ใช้จริงในโครงการ (sum ของ closure_record.actual_budget_used) */}
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm text-purple-600 font-medium">
+                            <span className="text-sm text-orange-600 font-medium">
                               ฿{formatCompactNumber(budget.actual_used_amount ?? 0)}
                             </span>
                           </td>
-                    
+                          {/* งบคงเหลือหลังใช้จริงในโครงการ = amount - actual_used_amount */}
+                          <td className="px-6 py-4 text-center">
+                            <span className={`text-sm font-medium ${
+                              (budget.actual_remaining_amount ?? 0) < 0
+                                ? "text-red-600"
+                                : "text-emerald-600"
+                            }`}>
+                              ฿{formatCompactNumber(budget.actual_remaining_amount ?? (budget.amount - (budget.actual_used_amount ?? 0)))}
+                            </span>
+                          </td>
+                          {/* สถานะการใช้งาน */}
                           <td className="px-6 py-4">
                             <div className="flex justify-center">
                               <UsageBar
@@ -290,6 +308,7 @@ export default function BudgetSettingsPage() {
                               />
                             </div>
                           </td>
+                          {/* การจัดการ */}
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
                               <button

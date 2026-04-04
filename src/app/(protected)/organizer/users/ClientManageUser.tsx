@@ -12,6 +12,7 @@ import AddUserModal from "./AddUserModal";
 import UserDetailsModal from "./UserDetailsModal";
 import { useToast } from "@/components/ToastProvider";
 import BackGroundLight from "@/components/background/bg-light";
+import { Users } from "lucide-react";
 
 /* -----------------------------
  * Table contract (สำคัญมาก)
@@ -22,6 +23,11 @@ type TableUser = {
   title: string;
   department_name: string | null;
   isActive: boolean;
+};
+
+type OrgQuota = {
+  max_users: number;
+  current_users: number;
 };
 
 const ORG = { id: "ORG-ADMIN", name: "ระบบผู้ดูแล" };
@@ -47,6 +53,7 @@ export default function ClientManageUser() {
   const [filter, setFilter] =
     useState<"all" | "active" | "inactive">("all");
   const [addOpen, setAddOpen] = useState(false);
+  const [quota, setQuota] = useState<OrgQuota | null>(null);
 
   /* -----------------------------
    * load users
@@ -94,6 +101,26 @@ export default function ClientManageUser() {
   useEffect(() => {
     setPage(1);
   }, [filter]);
+
+  // Load quota on mount and after adding a user
+  const loadQuota = async () => {
+    try {
+      const res = await fetch("/api/org-quota", { cache: "no-store" });
+      if (res.ok) {
+        const json = await res.json();
+        const d = json?.data ?? json;
+        if (d?.max_users != null) {
+          setQuota({ max_users: d.max_users, current_users: d.current_users ?? 0 });
+        }
+      }
+    } catch {
+      // quota fetch failing is non-critical
+    }
+  };
+
+  useEffect(() => {
+    loadQuota();
+  }, []);
 
 
   /* -----------------------------
@@ -162,10 +189,28 @@ export default function ClientManageUser() {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            {quota && (
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border ${
+                quota.current_users >= quota.max_users
+                  ? "bg-red-50 border-red-200 text-red-700"
+                  : quota.current_users >= quota.max_users * 0.8
+                  ? "bg-amber-50 border-amber-200 text-amber-700"
+                  : "bg-gray-50 border-gray-200 text-gray-600"
+              }`}>
+                <Users className="h-4 w-4" />
+                <span>ผู้ใช้: {quota.current_users} / {quota.max_users}</span>
+                {quota.current_users >= quota.max_users && (
+                  <span className="ml-1 font-semibold">เต็มแล้ว</span>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() => setAddOpen(true)}
-              className="px-3 py-2 bg-indigo-600 text-white rounded text-sm"
+              disabled={!!quota && quota.current_users >= quota.max_users}
+              className="px-3 py-2 bg-indigo-600 text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title={quota && quota.current_users >= quota.max_users ? `เต็มโควต้าแล้ว (${quota.current_users}/${quota.max_users})` : undefined}
             >
               เพิ่มผู้ใช้
             </button>
@@ -211,7 +256,10 @@ export default function ClientManageUser() {
           onAdd={() => {
             setAddOpen(false);
             loadUsers();
+            loadQuota();
           }}
+          quotaMaxUsers={quota?.max_users}
+          quotaCurrentUsers={quota?.current_users}
         />
 
         <UserDetailsModal

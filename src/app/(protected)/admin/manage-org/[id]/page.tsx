@@ -609,6 +609,7 @@ export default function OrgDetailPage() {
       {editingRole && (
         <EditRoleModal
           role={editingRole}
+          pendingLock={!!(org?.count_pending_approval && org.count_pending_approval > 0)}
           onSave={(updatedRole) => {
             console.log('EditRoleModal onSave - updatedRole:', updatedRole);
             const updatedRoles = editedRoles.map(r => r.id === updatedRole.id ? updatedRole : r);
@@ -810,6 +811,7 @@ function RolesTab({
               isEditing={isEditing}
               onEdit={onEdit}
               onDelete={onDelete}
+              hasPendingApproval={hasPendingApproval}
             />
           ))}
 
@@ -845,11 +847,13 @@ function ApprovalLevelSection({
   isEditing,
   onEdit,
   onDelete,
+  hasPendingApproval,
 }: {
   levelData: { level: number; roles: OrganizationRole[] };
   isEditing: boolean;
   onEdit: (role: OrganizationRole) => void;
   onDelete: (roleId: string) => void;
+  hasPendingApproval?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `level-${levelData.level}`,
@@ -904,6 +908,7 @@ function ApprovalLevelSection({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   isEditing={isEditing}
+                  hasPendingApproval={hasPendingApproval}
                 />
               ))}
             </div>
@@ -922,6 +927,7 @@ function ApprovalLevelSection({
                 isEditing={false}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                hasPendingApproval={hasPendingApproval}
               />
             ))}
           </div>
@@ -936,11 +942,13 @@ function SortableRoleCard({
   onEdit,
   onDelete,
   isEditing,
+  hasPendingApproval,
 }: {
   role: OrganizationRole;
   onEdit: (role: OrganizationRole) => void;
   onDelete: (roleId: string) => void;
   isEditing: boolean;
+  hasPendingApproval?: boolean;
 }) {
   const {
     attributes,
@@ -965,6 +973,7 @@ function SortableRoleCard({
         onEdit={onEdit} 
         onDelete={onDelete} 
         dragHandlers={{ ...attributes, ...listeners }}
+        hasPendingApproval={hasPendingApproval}
       />
     </div>
   );
@@ -977,7 +986,8 @@ function RoleCardItem({
   onEdit,
   onDelete,
   dragHandlers,
-  isOverlay = false
+  isOverlay = false,
+  hasPendingApproval = false,
 }: {
   role: OrganizationRole;
   isEditing: boolean;
@@ -985,6 +995,7 @@ function RoleCardItem({
   onDelete: (roleId: string) => void;
   dragHandlers?: any;
   isOverlay?: boolean;
+  hasPendingApproval?: boolean;
 }) {
   return (
     <div
@@ -1044,15 +1055,19 @@ function RoleCardItem({
           <button
             onClick={() => onEdit(role)}
             className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition-colors"
-            title="แก้ไข"
+            title={hasPendingApproval ? "แก้ไขได้เฉพาะชื่อแสดงและคำอธิบาย" : "แก้ไข"}
           >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
           <button
-            onClick={() => onDelete(role.id)}
-            className="p-1.5 rounded-md text-red-600 hover:bg-red-50 transition-colors"
-            title="ลบ"
-            disabled={role.is_system}
+            onClick={() => !hasPendingApproval && !role.is_system && onDelete(role.id)}
+            className={`p-1.5 rounded-md transition-colors ${
+              hasPendingApproval || role.is_system
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-red-600 hover:bg-red-50"
+            }`}
+            title={hasPendingApproval ? "มีรายการรออนุมัติ ไม่สามารถลบได้" : role.is_system ? "ไม่สามารถลบบทบาทระบบได้" : "ลบ"}
+            disabled={hasPendingApproval || role.is_system}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>

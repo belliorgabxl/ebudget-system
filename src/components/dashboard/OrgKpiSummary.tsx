@@ -92,14 +92,7 @@ if (annualBudgetSummary) {
           </div>
         )}
         color="blue"
-        subtitle={loading ? undefined : (
-          <>
-            {displayYear ? <span>ปี {displayYear}</span> : null}
-            {actualUsedBudget > 0 && (
-              <span className="block text-xs text-purple-600 mt-0.5">ใช้จริง (ปิดแล้ว): ฿{formatCompactNumber(actualUsedBudget)}</span>
-            )}
-          </>
-        )}
+
       />
 
       <KpiCard

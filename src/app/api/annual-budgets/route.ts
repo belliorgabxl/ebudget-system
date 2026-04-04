@@ -10,6 +10,10 @@ import type {
 /**
  * GET /api/annual-budgets
  * Fetch all annual budgets
+ *
+ * Formula ที่คำนวณใน Next.js layer:
+ *   actual_used_amount     = sum(closure_record.actual_budget_used) ของโครงการปิดแล้วในปีนั้น (คำนวณโดย NestJS backend)
+ *   actual_remaining_amount = amount - actual_used_amount
  */
 export async function GET() {
   try {
@@ -22,7 +26,13 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ success: true, data: r.data ?? [] });
+    // คำนวณ actual_remaining_amount สำหรับแต่ละปี
+    const enriched = (r.data ?? []).map((budget) => ({
+      ...budget,
+      actual_remaining_amount: (budget.amount ?? 0) - (budget.actual_used_amount ?? 0),
+    }));
+
+    return NextResponse.json({ success: true, data: enriched });
   } catch (error) {
     console.error("Error fetching annual budgets:", error);
     return NextResponse.json(
