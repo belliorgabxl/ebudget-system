@@ -2,7 +2,8 @@
 
 import React, { useMemo, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { pickHomeByRole } from "@/lib/rbac";
 import { canSeeMenuHandler, MENU, normalizeRoleCode } from "@/lib/sidemenu-handler";
 
@@ -33,7 +34,13 @@ const normalizePath = (p: string) => {
 
 export default function Sidebar({ serverUser }: { serverUser: ServerUser }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [approvalLevel, setApprovalLevel] = useState<number>(serverUser?.approval_level ?? 0);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  };
 
   const displayName = serverUser?.name ?? serverUser?.username ?? "Guest";
   const roleLabel = serverUser?.role_label ?? "ผู้ใช้";
@@ -146,7 +153,19 @@ export default function Sidebar({ serverUser }: { serverUser: ServerUser }) {
           })}
         </div>
       </nav>
-      <div className="px-2 py-3"></div>
+      <div className="px-2 py-3">
+        <button
+          type="button"
+          onClick={handleLogout}
+          title="ออกจากระบบ"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-red-600 hover:bg-red-50 transition-all duration-200"
+        >
+          <LogOut className="h-5 w-5 flex-shrink-0" />
+          <span className="overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:opacity-100">
+            ออกจากระบบ
+          </span>
+        </button>
+      </div>
     </aside>
   );
 }
