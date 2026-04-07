@@ -73,21 +73,7 @@ export default function ClientDepartmentList() {
     }
   };
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const list = await fetchDepartments();
-        if (!mounted) return;
-        setDepartments(list);
-      } catch (e: any) {
-        if (mounted) setError(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => { mounted = false; };
+    loadDepartments();
   }, []);
 
   /* ---------- toggle department is_active ---------- */
@@ -145,15 +131,12 @@ export default function ClientDepartmentList() {
       {loading ? (
         <DepartmentTableSkeleton rows={6} />
       ) : (
-        <DepartmentTable data={departments} />
+        <DepartmentTable data={departments} onToggleActive={handleToggleActive} />
       )}
       <CreateDepartmentModal
     open={openCreate}
     onClose={() => setOpenCreate(false)}
-    onSuccess={() => {
-      // reload list หลังสร้างเสร็จ
-      fetchDepartments().then(setDepartments);
-    }}
+    onSuccess={() => { loadDepartments(); }}
     
   />
     </>
