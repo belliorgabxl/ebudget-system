@@ -28,7 +28,7 @@ export const MENU: MenuItem[] = [
     href: (roleHome) => roleHome,
     icon: LayoutDashboard,
     label: "ภาพรวม",
-    allow: ["department_user", "department_head", "planning", "director", "hr"],
+    allow: ["department_user", "department_head", "planning", "director"],
   },
   {
     id: "admin-dashboard",
