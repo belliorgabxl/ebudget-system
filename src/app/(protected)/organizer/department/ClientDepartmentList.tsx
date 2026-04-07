@@ -59,11 +59,21 @@ export default function ClientDepartmentList() {
   const [error, setError] = useState<string | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
 
-
   /* ---------- load departments ---------- */
+  const loadDepartments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const list = await fetchDepartments();
+      setDepartments(list);
+    } catch (e: any) {
+      setError(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     let mounted = true;
-
     (async () => {
       try {
         setLoading(true);
@@ -77,11 +87,32 @@ export default function ClientDepartmentList() {
         if (mounted) setLoading(false);
       }
     })();
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
+
+  /* ---------- toggle department is_active ---------- */
+  const handleToggleActive = async (id: string) => {
+    const dept = departments.find((d) => d.id === id);
+    if (!dept) return;
+    const next = !dept.is_active;
+    const label = next ? "เปิดใช้งาน" : "ปิดการใช้งาน";
+    if (!window.confirm(`คุณแน่ใจว่าจะ${label}หน่วยงานนี้หรือไม่?`)) return;
+
+    // optimistic update
+    setDepartments((prev) => prev.map((d) => d.id === id ? { ...d, is_active: next } : d));
+
+    try {
+      const res = await fetch(`/api/department/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: next }),
+      });
+      if (!res.ok) throw new Error("failed");
+    } catch {
+      // rollback
+      setDepartments((prev) => prev.map((d) => d.id === id ? { ...d, is_active: !next } : d));
+    }
+  };
 
   /* ---------- error ---------- */
   if (error) {

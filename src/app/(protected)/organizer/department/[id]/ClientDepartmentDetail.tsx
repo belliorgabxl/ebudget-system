@@ -8,7 +8,7 @@ import {
 } from "@/api/department";
 import type { Department as DepartmentDto } from "@/dto/departmentDto";
 import type { GetUserRespond } from "@/dto/userDto";
-import { GetUserByIdFromApi } from "@/api/users.client";
+import { GetUserByIdFromApi, UpdateUserStatusFromApi } from "@/api/users.client";
 import Link from "next/link";
 import BackGroundLight from "@/components/background/bg-light";
 import UsersTable from "@/components/user/UserTable";
@@ -181,15 +181,7 @@ export default function ClientDepartmentDetail({ id }: Props) {
         const res = await GetUsersByDepartmentIdFromApi(id);
         if (!mounted) return;
 
-        const mapped: TableUser[] = (res.users || []).map((u: any) => ({
-          id: u.id,
-          name: u.full_name || "-",
-          title: u.position || "-",
-          email: u.email || "-",
-          isActive: u.is_active,
-        }));
-
-        setUsers(mapped);
+        setUsers(res.users || []);
       } catch (e: any) {
         if (mounted) setUsersError(e?.message ?? "เกิดข้อผิดพลาด");
       } finally {
@@ -201,6 +193,27 @@ export default function ClientDepartmentDetail({ id }: Props) {
       mounted = false;
     };
   }, [id]);
+
+  /* ---------- toggle user active status ---------- */
+  const handleToggleIsActive = async (userId: string) => {
+    const found = users.find((u) => u.id === userId);
+    if (!found) return;
+
+    const next = !found.isActive;
+    const label = next ? "เปิดใช้งาน" : "ระงับการใช้งาน";
+    if (!window.confirm(`คุณแน่ใจว่าจะ${label}ผู้ใช้นี้หรือไม่?`)) return;
+
+    // optimistic update
+    setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, isActive: next } : u));
+
+    const ok = await UpdateUserStatusFromApi({ user_id: userId, is_active: next } as any);
+    if (!ok) {
+      setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, isActive: !next } : u));
+      toast.push("error", "เปลี่ยนสถานะไม่สำเร็จ");
+    } else {
+      toast.push("success", "เปลี่ยนสถานะเรียบร้อย");
+    }
+  };
 
   /* ---------- fetch user details ---------- */
   const fetchUserDetails = async (userId: string) => {
@@ -293,12 +306,28 @@ export default function ClientDepartmentDetail({ id }: Props) {
             </p>
           </div>
 
-          <button
-            onClick={() => setEditOpen(true)}
-            className="rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            แก้ไขข้อมูล
-          </button>
+          {users.length === 0 && !usersLoading ? (
+            <button
+              onClick={() => setEditOpen(true)}
+              className="rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              แก้ไขข้อมูล
+            </button>
+          ) : (
+            <div className="group relative">
+              <button
+                disabled
+                className="cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2 text-sm font-medium text-gray-400"
+              >
+                แก้ไขข้อมูล
+              </button>
+              {!usersLoading && (
+                <div className="pointer-events-none absolute right-0 top-full mt-1.5 w-56 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600 shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  ไม่สามารถแก้ไขได้ เนื่องจากมีพนักงานในหน่วยงานนี้อยู่แล้ว
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* stats */}
@@ -318,6 +347,9 @@ export default function ClientDepartmentDetail({ id }: Props) {
           loading={usersLoading}
           onDetails={(user) => {
             if (user.id) fetchUserDetails(String(user.id));
+          }}
+          onToggleIsActive={(id) => {
+            if (id) handleToggleIsActive(String(id));
           }}
         />
 

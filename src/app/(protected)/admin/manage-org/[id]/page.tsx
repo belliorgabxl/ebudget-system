@@ -170,7 +170,7 @@ export default function OrgDetailPage() {
   // Sync approval-workflow-config whenever role levels change
   const syncWorkflowConfig = async (levels: { level: number; roles: OrganizationRole[] }[]) => {
     const workflowLevels = levels
-      .filter((lvl) => lvl.roles.length > 0)
+      .filter((lvl) => lvl.roles.length > 0 && lvl.level > 0)
       .map((lvl) => ({ level_number: lvl.level }));
     if (workflowLevels.length === 0) return;
     await fetch("/api/approve/workflow-config", {
@@ -882,7 +882,7 @@ function ApprovalLevelSection({
       >
         <div className="mb-4 flex items-center justify-between">
           <h4 className="font-semibold text-gray-800">
-            ระดับการอนุมัติที่ {levelData.level}
+            {levelData.level === 0 ? "ระดับที่ไม่มีสิทธิ์ในการอนุมัติ" : `ระดับการอนุมัติที่ ${levelData.level}`}
           </h4>
           <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
             {levelData.roles.length} บทบาท

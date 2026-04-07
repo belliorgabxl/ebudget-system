@@ -85,7 +85,9 @@ type User = {
   id?: string | number;
   name?: string;
   title?: string;
+  email?: string;
   department?: string;
+  department_name?: string;
   status?: "Active" | "On leave" | "Inactive" | string;
   isActive?: boolean;
 };
@@ -215,7 +217,7 @@ export default function UsersTable({
                 <TD className="w-2/12">{u.title ?? "-"}</TD>
                 <TD className="w-3/12">
                   <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium text-gray-700">
-                    {u.department_name ?? "-"}
+                    {u.email ?? "-"}
                   </span>
                 </TD>
                 <TD align="center" className="w-1/12">

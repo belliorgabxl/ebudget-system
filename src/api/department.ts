@@ -81,6 +81,7 @@ export async function GetUsersByDepartmentIdFromApi(departmentId: string) {
       id: u.id,
       name: u.full_name || `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || "-",
       title: u.position ?? u.role ?? "-",
+      email: u.email || "-",
       department_name: u.department_name ?? "-",
       status: u.is_active ? "Active" : "Inactive",
       isActive: Boolean(u.is_active),

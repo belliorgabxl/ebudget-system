@@ -21,6 +21,7 @@ type TableUser = {
   id: string;
   name: string;
   title: string;
+  email: string;
   department_name: string | null;
   isActive: boolean;
 };
@@ -69,6 +70,7 @@ export default function ClientManageUser() {
         id: u.id,
         name: u.full_name,
         title: u.position || "-",
+        email: u.email || "-",
         department_name: u.department_name,
         isActive: u.is_active,
       }));

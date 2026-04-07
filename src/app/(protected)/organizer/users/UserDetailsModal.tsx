@@ -390,7 +390,7 @@ export default function UserDetailsModal({ open, user, loading, error, onClose, 
                       className={inputClass(false)}
                     />
                   ) : (
-                    <div className="w-full rounded-lg border px-3 py-2 text-sm border-slate-100 bg-slate-50">{displayedUser.position ?? "-"}</div>
+                    <div className="w-full rounded-lg border px-3 py-2 text-sm border-slate-100 bg-slate-50">{displayedUser.position || "-"}</div>
                   )}
                 </div>
 
