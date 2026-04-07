@@ -7,6 +7,7 @@ import { Department } from "@/dto/departmentDto";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CreateDepartmentModal from "./new/CreateDepartmentModal";
+import { useToast } from "@/components/ToastProvider";
 
 function DepartmentTableSkeleton({ rows = 6 }: { rows?: number }) {
   return (
@@ -54,6 +55,7 @@ function DepartmentTableSkeleton({ rows = 6 }: { rows?: number }) {
 
 export default function ClientDepartmentList() {
   const router = useRouter();
+  const { push: toastPush } = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,9 +96,11 @@ export default function ClientDepartmentList() {
         body: JSON.stringify({ is_active: next }),
       });
       if (!res.ok) throw new Error("failed");
+      toastPush("success", `${label}สำเร็จ`, `อัปเดตสถานะหน่วยงานเรียบร้อยแล้ว`);
     } catch {
       // rollback
       setDepartments((prev) => prev.map((d) => d.id === id ? { ...d, is_active: !next } : d));
+      toastPush("error", "เกิดข้อผิดพลาด", "ไม่สามารถอัปเดตสถานะหน่วยงานได้");
     }
   };
 

@@ -43,9 +43,9 @@ export async function UpdateDepartmentFromApiServer(
   id: string,
   payload: UpdateDepartmentRequest
 ): Promise<boolean> {
-  const r = await nestFetch(`/departments/${id}`, {
+  const r = await nestFetch(`/departments/status`, {
     method: "PATCH",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ department_id: id, ...payload }),
     headers: { "Content-Type": "application/json" },
   });
 
