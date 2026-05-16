@@ -112,7 +112,7 @@ export default function CreateProjectPage() {
       name: template.name,
       type: template.plan_type || "regular_work",
       description: template.description ?? "",
-      department_id: template.department_id ?? prev.department_id,
+      department_id: template.department_id ?? (prev.department_id || (authUser?.department_id ?? "")),
       owner_user_id: prev.owner_user_id || authUser?.id || "",
     }));
     setEstimate((prev) => ({ ...prev, evaluator: prev.evaluator || authUser?.id || "" }));

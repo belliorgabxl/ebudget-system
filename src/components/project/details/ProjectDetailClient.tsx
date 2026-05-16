@@ -515,8 +515,8 @@ export function ProjectDetailClient({
         onSave={saveGeneralInfo}
       />
       
-      {/* Progress table */}
-      <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      {/* Progress table – show only after project is approved */}
+      {isApproved && <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b bg-indigo-50 border-indigo-100">
           <div className="flex items-center gap-3">
             <h3 className="text-base font-semibold text-indigo-700">ความคืบหน้าของโครงการ</h3>
@@ -596,7 +596,7 @@ export function ProjectDetailClient({
             </table>
           </div>
         )}
-      </div>
+      </div>}
       
       <BudgetSection
         projectId={project.id}
