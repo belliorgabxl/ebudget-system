@@ -39,8 +39,10 @@ export default function ApprovalSearchForm({
     ? projectOptions.filter((p) => p.department_id === departmentId)
     : projectOptions;
 
-  // Choosing from a dropdown searches immediately — no need to type or press the button
-  const submitSoon = () => requestAnimationFrame(() => formRef.current?.requestSubmit());
+  // Choosing from a dropdown searches immediately — no need to type or press the button.
+  // setTimeout (not requestAnimationFrame) so it also fires in background tabs, after React
+  // has committed any state reset (e.g. clearing a code that no longer matches the department).
+  const submitSoon = () => setTimeout(() => formRef.current?.requestSubmit(), 0);
 
   const handleDepartmentChange = (value: string) => {
     setDepartmentId(value);
