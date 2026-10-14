@@ -20,9 +20,26 @@ function maxAgeFromJwt(token: string | undefined, fallbackSec: number): number {
   return sec > 0 ? sec : 0;
 }
 
+const BACKEND_UNAVAILABLE_MESSAGE =
+  "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่ภายหลัง หรือแจ้งผู้ดูแลระบบ";
+
+// An error that means "the backend is unreachable or not an API at all" —
+// never an authentication result — so it must not surface as a credentials error.
+function backendUnavailable(reason: string): Error {
+  console.error("[auth/login] backend unavailable:", reason);
+  const e = new Error(BACKEND_UNAVAILABLE_MESSAGE);
+  (e as any).status = 502;
+  return e;
+}
+
 async function loginExternal(username: string, password: string) {
   const baseURL = process.env.API_BASE_URL;
-  if (!baseURL) throw new Error("Missing API_BASE_URL");
+  if (!baseURL) {
+    console.error("[auth/login] API_BASE_URL is not configured");
+    const e = new Error(BACKEND_UNAVAILABLE_MESSAGE);
+    (e as any).status = 500;
+    throw e;
+  }
 
   let res: Response;
   try {
@@ -36,9 +53,7 @@ async function loginExternal(username: string, password: string) {
       cache: "no-store",
     });
   } catch (err: any) {
-    const e = new Error("External login failed");
-    (e as any).status = 502;
-    throw e;
+    throw backendUnavailable(`fetch failed: ${err?.message ?? err}`);
   }
 
   if (!res.ok) {
@@ -57,17 +72,23 @@ async function loginExternal(username: string, password: string) {
       throw e;
     }
 
-    const e = new Error(safe);
-    (e as any).status = res.status || 502;
-    throw e;
+    // 5xx / other non-auth failures: show a generic availability message, not backend internals
+    throw backendUnavailable(`status ${res.status}: ${safe}`);
   }
 
-  const data: any = await res.json().catch(() => ({}));
+  // A 200 that isn't JSON (e.g. a parked domain or proxy error page) is not a login result
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw backendUnavailable(`unexpected content-type "${contentType}" from ${baseURL}`);
+  }
+
+  const data: any = await res.json().catch(() => null);
+  if (!data) throw backendUnavailable("response body is not valid JSON");
 
   const token: string | undefined =
     data?.token || data?.access_token || data?.jwt || data?.data?.token;
 
-  if (!token) throw new Error("No token returned from external API");
+  if (!token) throw backendUnavailable("login response contained no token");
 
   return { token, raw: data };
 }
@@ -189,7 +210,9 @@ export async function POST(req: Request) {
 
     return res;
   } catch (e: any) {
-    const status = e?.status ?? 401;
+    // Only an explicit 401 is a credentials failure. Anything unexpected is a
+    // server-side problem and must not be reported as "wrong password".
+    const status = e?.status ?? 500;
     const message =
       status === 401
         ? "Invalid username or password"
