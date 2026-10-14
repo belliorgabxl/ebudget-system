@@ -33,6 +33,7 @@ export type PendingApprovalProject = {
   id: string;
   organization_id: string;
   department_id: string;
+  department_name?: string | null;
   owner_user_id: string;
   name: string;
   code: string;
@@ -65,6 +66,7 @@ export type PendingApprovalsParams = {
   q?: string;
   code?: string;
   plan_type?: string;
+  department_id?: string;
   page?: string;
   limit?: string;
 };

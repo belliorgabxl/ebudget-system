@@ -95,6 +95,7 @@ export async function getPendingApprovalsServer(
   if (sp.q?.trim()) params.set("q", sp.q.trim());
   if (sp.code?.trim()) params.set("code", sp.code.trim());
   if (sp.plan_type?.trim()) params.set("plan_type", sp.plan_type.trim());
+  if (sp.department_id?.trim()) params.set("department_id", sp.department_id.trim());
 
   params.set("page", String(Number(sp.page ?? "1") || 1));
   params.set("limit", String(Number(sp.limit ?? "10") || 10));

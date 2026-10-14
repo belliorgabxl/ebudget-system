@@ -5,11 +5,13 @@ import { getPendingApprovalsServer } from "@/api/project.server";
 import { buildPageHref } from "@/lib/util";
 import ApprovalSearchForm from "@/components/approve/ApproveSearchForm";
 import PendingProjectList from "@/components/approve/PedingProjectList";
+import type { PendingApprovalProject } from "@/dto/approveDto";
 
 type SearchParams = Promise<{
   q?: string;
   code?: string;
   plan_type?: string;
+  department_id?: string;
   page?: string;
   limit?: string;
 }>;
@@ -17,8 +19,14 @@ type SearchParams = Promise<{
 export default async function Page({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
 
-  const res = await getPendingApprovalsServer(sp);
+  // Unfiltered list (backend max page size) feeds the department / project-code dropdowns,
+  // so users only see options that actually have something waiting for approval.
+  const [res, optionsRes] = await Promise.all([
+    getPendingApprovalsServer(sp),
+    getPendingApprovalsServer({ page: "1", limit: "100" }),
+  ]);
   const projects = res.data ?? [];
+  const { departmentOptions, projectOptions } = buildFilterOptions(optionsRes.data ?? []);
   const pg = res.pagination;
 
   const page = pg?.page ?? Math.max(1, Number(sp.page ?? "1") || 1);
@@ -36,7 +44,12 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
             </div>
           </div>
 
-          <ApprovalSearchForm sp={sp} defaultLimit={pg?.limit ?? 10} />
+          <ApprovalSearchForm
+            sp={sp}
+            defaultLimit={pg?.limit ?? 10}
+            departmentOptions={departmentOptions}
+            projectOptions={projectOptions}
+          />
 
           <PendingProjectList projects={projects} pg={pg ? { total: pg.total } : null} />
 
@@ -72,4 +85,24 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
       </div>
     </BackGroundLight>
   );
+}
+
+function buildFilterOptions(items: PendingApprovalProject[]) {
+  const departments = new Map<string, string>();
+  for (const p of items) {
+    if (p.department_id && !departments.has(p.department_id)) {
+      departments.set(p.department_id, p.department_name || "ไม่ระบุหน่วยงาน");
+    }
+  }
+
+  const departmentOptions = Array.from(departments, ([id, name]) => ({ id, name })).sort((a, b) =>
+    a.name.localeCompare(b.name, "th")
+  );
+
+  const projectOptions = items
+    .filter((p) => p.code)
+    .map((p) => ({ code: p.code, name: p.name, department_id: p.department_id }))
+    .sort((a, b) => a.code.localeCompare(b.code));
+
+  return { departmentOptions, projectOptions };
 }
